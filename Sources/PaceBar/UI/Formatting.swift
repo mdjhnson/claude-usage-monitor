@@ -5,16 +5,21 @@ import PaceBarCore
 enum Format {
     static func percent(_ value: Double) -> String {
         guard value.isFinite else { return "–" }
-        return "\(Int(value.rounded()))%"
+        return "\(Int(clamped(value).rounded()))%"
     }
 
     /// "+7%", "−4%" (true minus sign), "0%".
     static func signedPercent(_ delta: Double) -> String {
         guard delta.isFinite else { return "–" }
-        let n = Int(delta.rounded())
+        let n = Int(clamped(delta).rounded())
         if n > 0 { return "+\(n)%" }
         if n < 0 { return "\u{2212}\(-n)%" }
         return "0%"
+    }
+
+    /// Keeps Double-to-Int conversion in range so display code can never trap.
+    private static func clamped(_ value: Double) -> Double {
+        min(max(value, -1_000_000), 1_000_000)
     }
 
     /// Session: "resets in 2h 14m". Weekly: "resets tomorrow 4:00 AM", "resets Tue 3:00 PM",

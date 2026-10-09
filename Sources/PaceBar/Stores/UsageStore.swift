@@ -95,8 +95,23 @@ final class UsageStore {
 
     static let popoverDebounce: TimeInterval = 30
 
+    static let wakeDelay: TimeInterval = 10
+
     init(settings: SettingsStore) {
         self.settings = settings
+        observeRefreshInterval()
+    }
+
+    /// Applies a new refresh interval wherever it was changed from.
+    private func observeRefreshInterval() {
+        withObservationTracking {
+            _ = settings.refreshInterval
+        } onChange: { [weak self] in
+            Task { @MainActor in
+                self?.reschedule()
+                self?.observeRefreshInterval()
+            }
+        }
     }
 
     /// Data is stale when the last attempt failed or it is older than two poll intervals.
@@ -112,9 +127,13 @@ final class UsageStore {
 
     // MARK: Lifecycle
 
-    func start(refreshImmediately: Bool = true) {
+    /// - Parameter initialDelay: wait before the first refresh (used on wake, so Wi-Fi can reconnect).
+    func start(refreshImmediately: Bool = true, initialDelay: TimeInterval = 0) {
         pollTask?.cancel()
         pollTask = Task { [weak self] in
+            if initialDelay > 0 {
+                do { try await Task.sleep(for: .seconds(initialDelay)) } catch { return }
+            }
             var refreshNow = refreshImmediately
             while !Task.isCancelled {
                 guard let self else { return }
@@ -131,17 +150,23 @@ final class UsageStore {
         pollTask = nil
     }
 
-    /// Apply a new refresh interval without an extra request.
+    /// Apply a new refresh interval without an extra request. A refresh in flight is left alone:
+    /// the loop reads the interval again as soon as it finishes.
     func reschedule() {
-        guard pollTask != nil else { return }
+        guard pollTask != nil, !isRefreshing else { return }
         start(refreshImmediately: false)
     }
 
     func handleSleep() { stop() }
 
-    /// Refresh on wake unless a rate-limit backoff is still running.
+    /// Refresh shortly after wake (not instantly: Wi-Fi is usually still reconnecting), unless a
+    /// rate-limit backoff is still running.
     func handleWake() {
-        start(refreshImmediately: !isBackingOff(now: Date()))
+        if isBackingOff(now: Date()) {
+            start(refreshImmediately: false)
+        } else {
+            start(refreshImmediately: true, initialDelay: Self.wakeDelay)
+        }
     }
 
     func popoverOpened() {
@@ -212,6 +237,8 @@ final class UsageStore {
             backoff.recordSuccess()
             retryNotBefore = nil
         } catch {
+            // Cancelled because polling was restarted or the Mac is going to sleep: not an error.
+            if case .network(let code) = error, code == URLError.Code.cancelled.rawValue { return }
             lastError = .client(error)
             switch error {
             case .rateLimited(let retryAfter):
@@ -228,14 +255,16 @@ final class UsageStore {
 
     // MARK: Diagnostic
 
-    func diagnosticReport() -> DiagnosticReport {
+    func diagnosticReport() async -> DiagnosticReport {
+        let reader = self.reader
+        let itemCount = await Task.detached { reader.itemCount() }.value
         let info = Bundle.main.infoDictionary
         let version = "\(info?["CFBundleShortVersionString"] as? String ?? "dev") (\(info?["CFBundleVersion"] as? String ?? "0"))"
         let os = ProcessInfo.processInfo.operatingSystemVersion
         return DiagnosticReport(
             appVersion: version,
             osVersion: "\(os.majorVersion).\(os.minorVersion).\(os.patchVersion)",
-            keychainItemCount: reader.itemCount(),
+            keychainItemCount: itemCount,
             tokenPresent: tokenPresent,
             tokenExpiresIn: tokenExpiresAt.map { $0.timeIntervalSinceNow },
             lastHTTPStatus: lastHTTPStatus,

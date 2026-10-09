@@ -146,6 +146,27 @@ final class UsageDecodingTests: XCTestCase {
         XCTAssertThrowsError(try decode("not json"))
     }
 
+    /// Absurd values would trap when converted to Int for display; they must become broken buckets.
+    func testOutOfRangeUtilizationIsDropped() throws {
+        let r = try decode("""
+        {
+          "five_hour": { "utilization": 1e19, "resets_at": "2026-07-08T07:00:00Z" },
+          "seven_day": { "utilization": -1e300, "resets_at": "2026-07-08T07:00:00Z" },
+          "limits": [
+            { "kind": "session", "percent": 1e19, "resets_at": "2026-07-08T07:00:00Z" },
+            { "kind": "weekly_scoped", "percent": 9e18, "resets_at": "2026-07-08T07:00:00Z",
+              "scope": { "model": { "display_name": "Opus" } } },
+            { "kind": "weekly_scoped", "percent": 101, "resets_at": "2026-07-08T07:00:00Z",
+              "scope": { "model": { "display_name": "Sonnet" } } }
+          ]
+        }
+        """)
+        XCTAssertNil(r.fiveHour)
+        XCTAssertNil(r.sevenDay)
+        XCTAssertEqual(r.windows.map(\.kind), [.weeklyModel("Sonnet")])
+        XCTAssertEqual(r.windows.first?.bucket.utilization, 101)
+    }
+
     func testUnparseableResetIsNil() throws {
         let r = try decode(#"{ "five_hour": { "utilization": 9, "resets_at": "next tuesday" } }"#)
         XCTAssertEqual(r.fiveHour, UsageBucket(utilization: 9, resetsAt: nil))

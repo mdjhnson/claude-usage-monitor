@@ -68,11 +68,41 @@ final class DiagnosticTests: XCTestCase {
         XCTAssertTrue(shape.contains("$.limits: array(1)"))
         XCTAssertTrue(shape.contains("$.limits[].kind: string = \"weekly_scoped\""))
         XCTAssertTrue(shape.contains("$.limits[].scope.model.display_name: string = \"Sonnet\""))
-        XCTAssertTrue(shape.contains("$.<id>.secret_org_name: string"))
+        XCTAssertTrue(shape.contains("$.<key>.secret_org_name: string"))
 
         for secret in ["42.5", "27000", "USD", "someone", "example.com", "123e4567", "Acme", "claude-sonnet-x", "2026-07-08"] {
             XCTAssertFalse(shape.contains(secret), "leaked \(secret)")
         }
+    }
+
+    /// Values print only at the exact allowlisted paths, so a future `user.display_name` or an
+    /// object keyed by a person's name can't reach the pasteboard.
+    func testValuesOnlyAtAllowlistedPathsAndKeysSanitized() {
+        let json = """
+        {
+          "user": { "display_name": "Jane Doe", "kind": "admin" },
+          "organization": { "display_name": "Acme" },
+          "members": { "Jane Doe": { "role": "owner" }, "jane@example.com": 1, "x\u{FF20}y": 2 },
+          "limits": [ { "kind": "weekly_scoped", "scope": { "model": { "display_name": "Sonnet" } } } ]
+        }
+        """
+        let shape = ResponseShape.describe(Data(json.utf8))
+        XCTAssertTrue(shape.contains("$.limits[].scope.model.display_name: string = \"Sonnet\""))
+        XCTAssertTrue(shape.contains("$.limits[].kind: string = \"weekly_scoped\""))
+        XCTAssertTrue(shape.contains("$.user.display_name: string\n"))
+        XCTAssertTrue(shape.contains("$.members.<key>.role: string"))
+        for leak in ["Jane", "Doe", "Acme", "admin", "jane@", "example.com", "\u{FF20}", "owner"] {
+            XCTAssertFalse(shape.contains(leak), "leaked \(leak)")
+        }
+    }
+
+    func testSafeKey() {
+        XCTAssertEqual(ResponseShape.safeKey("five_hour"), "five_hour")
+        XCTAssertEqual(ResponseShape.safeKey("amber_cistern"), "amber_cistern")
+        XCTAssertEqual(ResponseShape.safeKey("Jane Doe"), "<key>")
+        XCTAssertEqual(ResponseShape.safeKey("deadbeefdeadbeefdeadbeef"), "<key>")
+        XCTAssertEqual(ResponseShape.safeKey(""), "<key>")
+        XCTAssertEqual(ResponseShape.safeKey(String(repeating: "a", count: 41)), "<key>")
     }
 
     func testNonJSON() {

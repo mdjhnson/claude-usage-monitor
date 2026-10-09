@@ -11,6 +11,11 @@ public struct UsageBucket: Equatable, Sendable {
         self.utilization = utilization
         self.resetsAt = resetsAt
     }
+
+    /// Finite and within ±1,000,000%. Anything else is a broken bucket, never a crash later.
+    static func isPlausible(_ value: Double) -> Bool {
+        value.isFinite && abs(value) <= 1_000_000
+    }
 }
 
 public struct UsageWindow: Equatable, Sendable, Identifiable {
@@ -126,8 +131,8 @@ struct RawBucket: Decodable {
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         let utilization = try c.decode(Double.self, forKey: .utilization)
-        guard utilization.isFinite else {
-            throw DecodingError.dataCorruptedError(forKey: .utilization, in: c, debugDescription: "non-finite")
+        guard UsageBucket.isPlausible(utilization) else {
+            throw DecodingError.dataCorruptedError(forKey: .utilization, in: c, debugDescription: "out of range")
         }
         let raw = try? c.decodeIfPresent(String.self, forKey: .resetsAt)
         bucket = UsageBucket(utilization: utilization, resetsAt: raw.flatMap { ISO8601.parse($0) })
@@ -159,7 +164,7 @@ struct LimitEntry: Decodable {
     }
 
     var bucket: UsageBucket? {
-        guard let percent, percent.isFinite else { return nil }
+        guard let percent, UsageBucket.isPlausible(percent) else { return nil }
         return UsageBucket(utilization: percent, resetsAt: resetsAt.flatMap { ISO8601.parse($0) })
     }
 }

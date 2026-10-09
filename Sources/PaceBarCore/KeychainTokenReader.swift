@@ -158,7 +158,11 @@ public struct KeychainTokenReader: Sendable {
             output.clear()
             return .failure(.timedOut)
         }
-        _ = drained.wait(timeout: .now() + 1)
+        // The child has exited, so EOF is imminent; a drain that still hasn't finished fails closed.
+        if drained.wait(timeout: .now() + 5) == .timedOut {
+            output.clear()
+            return .failure(.timedOut)
+        }
 
         switch process.terminationStatus {
         case 0:
@@ -180,12 +184,37 @@ public struct KeychainTokenReader: Sendable {
     }
 }
 
-/// Holds subprocess output across threads.
+/// Holds subprocess output across threads. Once taken or cleared it is closed: output that
+/// arrives later is zeroed instead of being kept.
 private final class OutputCollector: @unchecked Sendable {
     private let lock = NSLock()
     private var data = Data()
+    private var closed = false
 
-    func set(_ new: Data) { lock.withLock { data = new } }
-    func take() -> Data { lock.withLock { defer { data = Data() }; return data } }
-    func clear() { lock.withLock { data.resetBytes(in: 0..<data.count); data = Data() } }
+    func set(_ new: consuming Data) {
+        var incoming = new
+        lock.withLock {
+            if closed {
+                incoming.resetBytes(in: 0..<incoming.count)
+            } else {
+                data = incoming
+            }
+        }
+    }
+
+    func take() -> Data {
+        lock.withLock {
+            closed = true
+            defer { data = Data() }
+            return data
+        }
+    }
+
+    func clear() {
+        lock.withLock {
+            closed = true
+            data.resetBytes(in: 0..<data.count)
+            data = Data()
+        }
+    }
 }

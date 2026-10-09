@@ -61,7 +61,7 @@ struct SettingsView: View {
     let store: UsageStore
     @Bindable var settings: SettingsStore
 
-    @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
+    @State private var launchAtLogin = [.enabled, .requiresApproval].contains(SMAppService.mainApp.status)
     @State private var launchStatus = SMAppService.mainApp.status
     @State private var launchError: String?
     @State private var copied = false
@@ -84,7 +84,6 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .frame(width: 460)
         .fixedSize(horizontal: false, vertical: true)
-        .onChange(of: settings.refreshInterval) { store.reschedule() }
     }
 
     // MARK: Pacing
@@ -280,10 +279,12 @@ struct SettingsView: View {
         Section {
             HStack {
                 Button("Copy diagnostic") {
-                    let text = store.diagnosticReport().text
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(text, forType: .string)
-                    copied = true
+                    Task {
+                        let text = await store.diagnosticReport().text
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(text, forType: .string)
+                        copied = true
+                    }
                 }
                 if copied {
                     Text("Copied")

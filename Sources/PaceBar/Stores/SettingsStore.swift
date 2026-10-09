@@ -75,8 +75,10 @@ final class SettingsStore {
 
         margin = double(Key.margin, PacingCalculator.defaultMargin, PacingCalculator.marginRange).rounded()
         scheduleEnabled = bool(Key.scheduleEnabled, d.enabled)
+        // An empty stored set is meaningful (all days, see WorkSchedule.effectiveDays); only a
+        // missing key falls back to Mon-Fri.
         let days = (defaults.array(forKey: Key.scheduleDays) as? [Int]).map { Set($0.filter { (1...7).contains($0) }) }
-        scheduleDays = (days?.isEmpty == false) ? days! : d.activeDays
+        scheduleDays = days ?? d.activeDays
         hoursEnabled = bool(Key.hoursEnabled, d.hoursEnabled)
         startHour = int(Key.startHour, d.startHour, 0...23)
         endHour = int(Key.endHour, d.endHour, 1...24)

@@ -128,7 +128,7 @@ PaceBar holds a **full-scope Claude Code OAuth token** in memory while a request
 ### Failure behavior
 
 On any error, the last good data stays on screen, dimmed, with "Last updated N min ago" and a short message.
-- Malformed responses never crash the app. Unknown keys are ignored and a broken bucket is dropped individually.
+- Malformed responses never crash the app. Unknown keys are ignored, and a broken bucket is dropped individually. That includes a non-finite or absurd value (beyond ±1,000,000%).
 - **HTTP 429:**
   - `Retry-After` is honored, whether sent as seconds or as an HTTP date, up to a one-hour sanity bound.
   - Without the header, the wait doubles from the refresh interval each time, capped at 15 minutes.
@@ -138,13 +138,17 @@ On any error, the last good data stays on screen, dimmed, with "Last updated N m
 
 ### Auditing
 
-`./scripts/audit.sh` lists every line in `Sources/` containing `http://`, `https://`, `Process(`, `URLSession`, `UserDefaults`, `print(` or `NSLog(`. It then checks for:
-- forbidden constructs: data-returning or writing Keychain calls, shells, AppleScript, listeners
-- URL schemes in Info.plist
-- extra entitlements
-- package dependencies
-
-It prints a summary with the network hosts and subprocess call sites.
+`./scripts/audit.sh` lists every line in `Sources/` containing `http://`, `https://`, `Process`, `URLSession`, `UserDefaults`, `print(` or `NSLog(`. It then fails if any rule is broken:
+- the only literal host is `api.anthropic.com`, and a URL whose host is built at runtime also fails
+- networking APIs (`URLSession`, `URLRequest`, `URLComponents`, host assignment) appear only in `UsageClient.swift`
+- `Process` appears only once, in `KeychainTokenReader.swift`
+- no forbidden constructs:
+  - Keychain data or write APIs
+  - shells, exec/spawn/popen, AppleScript
+  - sockets and listeners, web views, URL opening
+- `Sources/` contains only Swift files
+- `Package.swift` declares no dependencies, binary targets, plugins or unsafe/linker flags
+- the entitlements are exactly `com.apple.security.network.client`, and Info.plist declares no URL schemes
 
 ## Copy diagnostic
 
@@ -156,7 +160,7 @@ Settings › Copy diagnostic copies a plain-text report.
 - whether a token was found, and its expiry relative to now
 - the last HTTP status and error kind
 - the refresh interval and backoff state
-- the response's **shape**: every key path with its JSON type. Only `kind`, `group` and model `display_name` show their values, because they name limit types and models. Dates show their format only.
+- the response's **shape**: every key path with its JSON type. Values appear only at three exact paths, `limits[].kind`, `limits[].group` and `limits[].scope.model.display_name`, because those name limit types and models. Dates show their format only. Keys that aren't plain lowercase field names print as `<key>`.
 
 **It never includes:** the token, account names, email addresses, IDs (keys that look like identifiers are replaced with `<id>`), or usage numbers.
 
