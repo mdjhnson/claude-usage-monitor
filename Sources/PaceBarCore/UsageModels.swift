@@ -17,6 +17,11 @@ public struct UsageWindow: Equatable, Sendable, Identifiable {
     public let kind: WindowKind
     public let bucket: UsageBucket
     public var id: String { kind.id }
+
+    public init(kind: WindowKind, bucket: UsageBucket) {
+        self.kind = kind
+        self.bucket = bucket
+    }
 }
 
 /// Tolerant decode of `GET /api/oauth/usage`.

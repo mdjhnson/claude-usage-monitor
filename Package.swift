@@ -8,6 +8,12 @@ let package = Package(
     targets: [
         // Pure logic and the two I/O services. Foundation + Security only, no AppKit.
         .target(name: "PaceBarCore", path: "Sources/PaceBarCore"),
+        // The menu bar app: AppKit + SwiftUI. build.sh wraps it into PaceBar.app.
+        .executableTarget(
+            name: "PaceBar",
+            dependencies: ["PaceBarCore"],
+            path: "Sources/PaceBar"
+        ),
         .testTarget(
             name: "PaceBarCoreTests",
             dependencies: ["PaceBarCore"],
