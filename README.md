@@ -63,7 +63,7 @@ There is no `Package.resolved`. SwiftPM only writes one when a package has depen
 
 **Menu bar managers (Bartender, Ice):** PaceBar's status item has a fixed autosave name (`io.github.mdjhnson.pacebar.status`), so these tools remember where you put it across launches and rebuilds. In their item lists it appears with the PaceBar icon, a small pacing bar on a dark tile.
 
-The item is drawn lazily. Its label gray follows the menu bar when macOS switches between light and dark menu bar text, for example with a rotating wallpaper. Theme colors stay fixed. If they're hard to read on your wallpaper, try the Pill style or Monochrome.
+The item is drawn lazily. Its label color follows the menu bar when macOS switches between light and dark menu bar text, for example with a rotating wallpaper. Theme colors stay fixed. If they're hard to read on your wallpaper, try the Pill style or Monochrome.
 
 To move the app, copy `build/PaceBar.app` to `/Applications`. Launch at login works from anywhere, but `/Applications` is the conventional place.
 
