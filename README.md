@@ -75,7 +75,7 @@ Open Settings from the gear in the popover.
 |---|---|---|
 | Margin | ±10% | 5–20. The width of the "On track" band. |
 | Workweek pacing | Off | Active days (default Mon–Fri) and optional active hours (default 9 AM–6 PM, local time). Applies to weekly limits only. |
-| Menu bar windows | 5-hour, Weekly | Per-model weekly limits appear as options once the API reports them. |
+| Windows | Menu bar: 5-hour, Weekly. Popover: all | For each limit, choose whether it appears in the menu bar and in the popover. Per-model weekly limits (for example Fable) appear here once the API reports them. |
 | Menu bar style | Classic | Classic (label plus colored value) or Pill. |
 | Color by | Pacing zone | Or Usage threshold. Windows without a reset time always use thresholds. |
 | Monochrome menu bar | Off | Draws in the system label color. |

@@ -27,6 +27,7 @@ final class SettingsStore {
         static let endHour = "pacebar.schedule.endHour"
         static let refreshInterval = "pacebar.refreshInterval"
         static let menuBarWindows = "pacebar.menuBar.windows"
+        static let popoverHidden = "pacebar.popover.hiddenWindows"
         static let menuBarStyle = "pacebar.menuBar.style"
         static let colorMode = "pacebar.menuBar.colorMode"
         static let monochrome = "pacebar.menuBar.monochrome"
@@ -48,6 +49,7 @@ final class SettingsStore {
     var endHour: Int { didSet { defaults.set(endHour, forKey: Key.endHour) } }
     var refreshInterval: Double { didSet { defaults.set(refreshInterval, forKey: Key.refreshInterval) } }
     var menuBarWindowIDs: Set<String> { didSet { defaults.set(menuBarWindowIDs.sorted(), forKey: Key.menuBarWindows) } }
+    var popoverHiddenWindowIDs: Set<String> { didSet { defaults.set(popoverHiddenWindowIDs.sorted(), forKey: Key.popoverHidden) } }
     var menuBarStyle: MenuBarStyle { didSet { defaults.set(menuBarStyle.rawValue, forKey: Key.menuBarStyle) } }
     var colorMode: ColorMode { didSet { defaults.set(colorMode.rawValue, forKey: Key.colorMode) } }
     var monochromeMenuBar: Bool { didSet { defaults.set(monochromeMenuBar, forKey: Key.monochrome) } }
@@ -80,6 +82,7 @@ final class SettingsStore {
         endHour = int(Key.endHour, d.endHour, 1...24)
         refreshInterval = double(Key.refreshInterval, Self.defaultRefresh, Self.refreshRange)
         menuBarWindowIDs = Set(defaults.stringArray(forKey: Key.menuBarWindows) ?? ["session", "weekly"])
+        popoverHiddenWindowIDs = Set(defaults.stringArray(forKey: Key.popoverHidden) ?? [])
         menuBarStyle = MenuBarStyle(rawValue: defaults.string(forKey: Key.menuBarStyle) ?? "") ?? .classic
         colorMode = ColorMode(rawValue: defaults.string(forKey: Key.colorMode) ?? "") ?? .pacing
         monochromeMenuBar = bool(Key.monochrome, false)

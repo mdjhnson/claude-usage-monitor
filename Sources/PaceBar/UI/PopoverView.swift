@@ -62,9 +62,12 @@ struct PopoverView: View {
                 }
 
                 if let snapshot = store.snapshot {
-                    let windows = snapshot.usage.windows
+                    let reported = snapshot.usage.windows
+                    let windows = reported.filter { !settings.popoverHiddenWindowIDs.contains($0.id) }
                     if windows.isEmpty {
-                        Text("No usage windows were reported for this account.")
+                        Text(reported.isEmpty
+                             ? "No usage windows were reported for this account."
+                             : "All windows are hidden. Choose some under Settings › Windows.")
                             .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(text.opacity(0.5))
                             .frame(maxWidth: .infinity, alignment: .leading)

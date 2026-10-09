@@ -36,6 +36,7 @@ struct SettingsView: View {
     var body: some View {
         Form {
             pacingSection
+            windowsSection
             menuBarSection
             appearanceSection
             generalSection
@@ -90,13 +91,40 @@ struct SettingsView: View {
         }
     }
 
+    // MARK: Windows
+
+    private var windowsSection: some View {
+        Section {
+            ForEach(availableWindows, id: \.id) { kind in
+                HStack {
+                    Text(kind.title)
+                    Spacer()
+                    Toggle("Menu bar", isOn: menuBarBinding(for: kind.id))
+                        .toggleStyle(.checkbox)
+                    Toggle("Popover", isOn: popoverBinding(for: kind.id))
+                        .toggleStyle(.checkbox)
+                }
+            }
+        } header: {
+            Text("Windows")
+        } footer: {
+            Text("Choose where each usage limit appears. Per-model limits (like Fable) show up here once your account reports them.")
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func popoverBinding(for id: String) -> Binding<Bool> {
+        Binding {
+            !settings.popoverHiddenWindowIDs.contains(id)
+        } set: { shown in
+            if shown { settings.popoverHiddenWindowIDs.remove(id) } else { settings.popoverHiddenWindowIDs.insert(id) }
+        }
+    }
+
     // MARK: Menu bar
 
     private var menuBarSection: some View {
         Section("Menu bar") {
-            ForEach(availableWindows, id: \.id) { kind in
-                Toggle(kind.title, isOn: menuBarBinding(for: kind.id))
-            }
             Picker("Style", selection: $settings.menuBarStyle) {
                 ForEach(MenuBarStyle.allCases) { Text($0.title).tag($0) }
             }

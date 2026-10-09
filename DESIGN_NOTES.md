@@ -147,18 +147,20 @@ A plain titled `NSWindow`, 460pt wide, using SwiftUI `Form` with `.formStyle(.gr
    - Margin slider, 5–20, step 1, showing "±10%".
    - Workweek toggle; when on, weekday chips (S M T W T F S).
    - "Active hours" toggle with start and end hour pickers. Start is 0–23, end is 1–24, where 24 means midnight.
-2. **Menu bar:**
-   - A checkbox for each window seen in the last response. 5h and weekly are on by default.
+2. **Windows:** one row per window seen in the last response, each with two checkboxes:
+   - **Menu bar.** 5h and weekly are on by default.
+   - **Popover.** All windows are on by default.
+3. **Menu bar:**
    - Style: Classic / Pill.
    - Color mode: Pacing zone / Usage threshold.
    - Monochrome toggle.
-3. **Appearance:**
+4. **Appearance:**
    - Theme preset picker, showing four colored dots per preset.
    - Warning and critical threshold steppers.
-4. **General:**
+5. **General:**
    - Refresh interval stepper, 60–600 s, step 30.
    - Launch at login toggle. Shows "Approve in System Settings › Login Items" when the status is `.requiresApproval`.
-5. **Diagnostics:**
+6. **Diagnostics:**
    - "Copy diagnostic" button, with a short caption saying what is included.
 
 ## Fonts summary
