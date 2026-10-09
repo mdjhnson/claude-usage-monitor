@@ -123,7 +123,7 @@ Note 1: the brief says "gradient fill from the theme's low color to the theme's 
 - Drawn as a non-template `NSImage`, 22pt tall. Segments sit 6pt apart, with 1pt padding at each edge.
 - The image is redrawn when the button's `effectiveAppearance` changes, so dynamic label colors track light and dark menu bars.
 - **Classic style (default)**, per window:
-  - Label "5h", "7d" or "Son": `systemFont 9 .medium`, `secondaryLabelColor`.
+  - Label "5h", "7d" or "Son": `systemFont 9 .medium`, `labelColor` (white on a dark or transparent menu bar, black on a light one).
   - Value "42%": `monospacedDigitSystemFont 12 .bold`, in the zone color or threshold color.
 - **Pill style:**
   - Capsule 17pt tall, horizontal padding 7, radius 8.5.

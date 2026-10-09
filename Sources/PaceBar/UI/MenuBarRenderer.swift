@@ -3,7 +3,7 @@ import AppKit
 /// Draws the status item as a non-template image, like TokenEater's `MenuBarRenderer`.
 ///
 /// The image draws lazily: AppKit calls the drawing handler under the menu bar's current
-/// appearance, so dynamic colors such as the label gray re-resolve whenever macOS flips the
+/// appearance, so dynamic colors such as the label color re-resolve whenever macOS flips the
 /// menu bar between light and dark text (for example when the wallpaper changes).
 enum MenuBarRenderer {
     struct Segment: Sendable {
@@ -43,7 +43,7 @@ enum MenuBarRenderer {
         case .classic:
             let text = NSMutableAttributedString(string: segment.label + " ", attributes: [
                 .font: NSFont.systemFont(ofSize: 9, weight: .medium),
-                .foregroundColor: NSColor.secondaryLabelColor,
+                .foregroundColor: NSColor.labelColor,
             ])
             text.append(NSAttributedString(string: segment.value, attributes: [
                 .font: NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .bold),
