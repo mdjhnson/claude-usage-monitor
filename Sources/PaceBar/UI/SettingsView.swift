@@ -3,17 +3,27 @@ import ServiceManagement
 import SwiftUI
 import PaceBarCore
 
-/// A plain titled window hosting the SwiftUI settings form.
+/// A preferences window with toolbar tabs, one short SwiftUI form per tab.
+/// The window resizes to fit whichever tab is selected.
 @MainActor
 final class SettingsWindowController {
     private let window: NSWindow
 
     init(store: UsageStore, settings: SettingsStore) {
-        let hosting = NSHostingController(rootView: SettingsView(store: store, settings: settings))
-        hosting.sizingOptions = [.preferredContentSize]
-        window = NSWindow(contentViewController: hosting)
-        window.title = "PaceBar Settings"
+        let tabs = NSTabViewController()
+        tabs.tabStyle = .toolbar
+        for pane in SettingsView.Pane.allCases {
+            let hosting = NSHostingController(rootView: SettingsView(pane: pane, store: store, settings: settings))
+            hosting.sizingOptions = [.preferredContentSize]
+            hosting.title = pane.title
+            let item = NSTabViewItem(viewController: hosting)
+            item.label = pane.title
+            item.image = NSImage(systemSymbolName: pane.symbol, accessibilityDescription: pane.title)
+            tabs.addTabViewItem(item)
+        }
+        window = NSWindow(contentViewController: tabs)
         window.styleMask = [.titled, .closable, .miniaturizable]
+        window.toolbarStyle = .preference
         window.isReleasedWhenClosed = false
         window.center()
     }
@@ -25,6 +35,29 @@ final class SettingsWindowController {
 }
 
 struct SettingsView: View {
+    enum Pane: CaseIterable {
+        case pacing, menuBar, appearance, general
+
+        var title: String {
+            switch self {
+            case .pacing: "Pacing"
+            case .menuBar: "Menu Bar"
+            case .appearance: "Appearance"
+            case .general: "General"
+            }
+        }
+
+        var symbol: String {
+            switch self {
+            case .pacing: "gauge.with.needle"
+            case .menuBar: "menubar.rectangle"
+            case .appearance: "paintpalette"
+            case .general: "gearshape"
+            }
+        }
+    }
+
+    let pane: Pane
     let store: UsageStore
     @Bindable var settings: SettingsStore
 
@@ -35,12 +68,18 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            pacingSection
-            windowsSection
-            menuBarSection
-            appearanceSection
-            generalSection
-            diagnosticsSection
+            switch pane {
+            case .pacing:
+                pacingSection
+            case .menuBar:
+                windowsSection
+                menuBarSection
+            case .appearance:
+                appearanceSection
+            case .general:
+                generalSection
+                diagnosticsSection
+            }
         }
         .formStyle(.grouped)
         .frame(width: 460)

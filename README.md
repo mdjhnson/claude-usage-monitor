@@ -69,7 +69,7 @@ To move the app, copy `build/PaceBar.app` to `/Applications`. Launch at login wo
 
 ## Settings
 
-Open Settings from the gear in the popover.
+Open Settings from the gear in the popover. Settings are split into four tabs: Pacing, Menu Bar, Appearance and General.
 
 | Setting | Default | Notes |
 |---|---|---|

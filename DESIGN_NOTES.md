@@ -141,7 +141,14 @@ Note 1: the brief says "gradient fill from the theme's low color to the theme's 
 
 ## Settings window
 
-A plain titled `NSWindow`, 460pt wide, using SwiftUI `Form` with `.formStyle(.grouped)` and the system appearance. Sections:
+A preferences-style window (`NSTabViewController`, toolbar tabs, `.preference` toolbar style), 460pt wide. Each tab is a short SwiftUI `Form` with `.formStyle(.grouped)`, and the window resizes to fit the selected tab. The tabs and their sections:
+
+- **Pacing:** Pacing
+- **Menu Bar:** Windows, Menu bar
+- **Appearance:** Appearance
+- **General:** General, Diagnostics
+
+Sections:
 
 1. **Pacing:**
    - Margin slider, 5–20, step 1, showing "±10%".
