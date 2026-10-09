@@ -16,6 +16,11 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN_DIR/PaceBar" "$APP/Contents/MacOS/PaceBar"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
+
+ICONSET="$(mktemp -d)/AppIcon.iconset"
+swift scripts/make-icon.swift "$ICONSET"
+iconutil --convert icns --output "$APP/Contents/Resources/AppIcon.icns" "$ICONSET"
+rm -rf "${ICONSET:h}"
 plutil -lint "$APP/Contents/Info.plist" >/dev/null
 
 codesign --force --sign "${SIGN_ID:--}" --options runtime --timestamp=none \

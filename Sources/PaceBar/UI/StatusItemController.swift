@@ -17,6 +17,8 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         self.store = store
         self.settings = settings
         super.init()
+        // A stable identity lets macOS and menu bar managers (Bartender, Ice) remember placement.
+        statusItem.autosaveName = "io.github.mdjhnson.pacebar.status"
 
         let hosting = NSHostingController(rootView: PopoverView(store: store, settings: settings, openSettings: { [weak self] in
             self?.popover.performClose(nil)
@@ -34,6 +36,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             button.action = #selector(togglePopover(_:))
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
             button.imagePosition = .imageOnly
+            button.toolTip = "PaceBar"
             appearanceObservation = button.observe(\.effectiveAppearance) { [weak self] _, _ in
                 Task { @MainActor in self?.render() }
             }
@@ -100,13 +103,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             return .init(label: window.kind.shortLabel, value: Format.percent(window.bucket.utilization), color: color)
         }
 
-        button.image = MenuBarRenderer.image(
-            segments: segments,
-            style: settings.menuBarStyle,
-            dimmed: store.isStale(now: now),
-            appearance: button.effectiveAppearance,
-            scale: button.window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2
-        )
+        button.image = MenuBarRenderer.image(segments: segments, style: settings.menuBarStyle, dimmed: store.isStale(now: now))
         button.setAccessibilityLabel(
             "Claude usage: " + windows.map { "\($0.kind.title) \(Format.percent($0.bucket.utilization))" }.joined(separator: ", ")
         )

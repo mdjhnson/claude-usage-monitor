@@ -1,9 +1,12 @@
 import AppKit
 
 /// Draws the status item as a non-template image, like TokenEater's `MenuBarRenderer`.
-@MainActor
+///
+/// The image draws lazily: AppKit calls the drawing handler under the menu bar's current
+/// appearance, so dynamic colors such as the label gray re-resolve whenever macOS flips the
+/// menu bar between light and dark text (for example when the wallpaper changes).
 enum MenuBarRenderer {
-    struct Segment {
+    struct Segment: Sendable {
         let label: String
         let value: String
         let color: NSColor
@@ -13,33 +16,18 @@ enum MenuBarRenderer {
     static let segmentSpacing: CGFloat = 6
     static let edgePadding: CGFloat = 1
 
-    /// - Parameter appearance: the status button's effective appearance, so dynamic label
-    ///   colors resolve for a light or dark menu bar.
-    static func image(segments: [Segment], style: MenuBarStyle, dimmed: Bool, appearance: NSAppearance, scale: CGFloat) -> NSImage {
-        let pieces = segments.map { piece(for: $0, style: style, dimmed: dimmed) }
-        let width = pieces.reduce(edgePadding * 2) { $0 + $1.width } + segmentSpacing * CGFloat(max(pieces.count - 1, 0))
-        let size = NSSize(width: ceil(width), height: height)
-
-        let image = NSImage(size: size)
-        guard let rep = NSBitmapImageRep(
-            bitmapDataPlanes: nil, pixelsWide: Int(size.width * scale), pixelsHigh: Int(size.height * scale),
-            bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
-            colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0
-        ) else { return image }
-        rep.size = size
-
-        NSGraphicsContext.saveGraphicsState()
-        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
-        appearance.performAsCurrentDrawingAppearance {
+    static func image(segments: [Segment], style: MenuBarStyle, dimmed: Bool) -> NSImage {
+        let widths = segments.map { layout($0, style: style, dimmed: dimmed).width }
+        let width = widths.reduce(edgePadding * 2, +) + segmentSpacing * CGFloat(max(widths.count - 1, 0))
+        let image = NSImage(size: NSSize(width: ceil(width), height: height), flipped: false) { _ in
             var x = edgePadding
-            for piece in pieces {
+            for segment in segments {
+                let piece = layout(segment, style: style, dimmed: dimmed)
                 piece.draw(NSRect(x: x, y: 0, width: piece.width, height: height))
                 x += piece.width + segmentSpacing
             }
+            return true
         }
-        NSGraphicsContext.restoreGraphicsState()
-
-        image.addRepresentation(rep)
         image.isTemplate = false
         return image
     }
@@ -49,7 +37,7 @@ enum MenuBarRenderer {
         let draw: (NSRect) -> Void
     }
 
-    private static func piece(for segment: Segment, style: MenuBarStyle, dimmed: Bool) -> Piece {
+    private static func layout(_ segment: Segment, style: MenuBarStyle, dimmed: Bool) -> Piece {
         let tint = dimmed ? segment.color.withAlphaComponent(0.5) : segment.color
         switch style {
         case .classic:

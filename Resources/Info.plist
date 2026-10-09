@@ -8,6 +8,8 @@
 	<string>PaceBar</string>
 	<key>CFBundleExecutable</key>
 	<string>PaceBar</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
 	<string>io.github.mdjhnson.pacebar</string>
 	<key>CFBundleInfoDictionaryVersion</key>
