@@ -44,7 +44,7 @@ Note 1: the brief says "gradient fill from the theme's low color to the theme's 
 
 **Container** (TokenEater `popoverCard`):
 - `RoundedRectangle(cornerRadius: 12)` filled with `white.opacity(0.03)`
-- 0.5pt stroke in `white.opacity(0.05)`
+- 0.5pt inset border (`strokeBorder`) in `white.opacity(0.05)`
 - Inner padding 12; vertical stack with 8pt spacing
 
 **Contents, top to bottom:**
@@ -71,12 +71,13 @@ Note 1: the brief says "gradient fill from the theme's low color to the theme's 
      - During off time: white at 0.45 with a 0.2 shadow.
    - **Expected-pace marker:**
      - Upward triangle 10pt wide and tall, `white 0.5` (0.25 during off time).
-     - Its tip sits under the bar's bottom edge at x = expected%.
+     - Vertically centered on the track, like the knob; the knob draws on top.
+     - x = expected%, or calendar "now" when the workweek schedule is active, so it lines up with the hatch (TokenEater issue #194).
    - **Motion:** the fill springs in from 0 on appear (`response 0.8, damping 0.7`) and on value change (`0.6, 0.8`).
 4. **Axis labels:** "0%", "50%" and "100%" at leading, center and trailing. 9 regular `.monospaced`, `white 0.3`.
 5. **Zone row**
    - **Pill:**
-     - capsule, 1pt stroke in the zone color, zone color at 0.12 fill
+     - capsule, 1pt inset border in the zone color, zone color at 0.12 fill
      - text "On track", "Chill", "Watch out" or "Hot", 10 semibold in the zone color
      - padding 8 horizontal, 3 vertical
    - **Delta:** "+7%" or "−4%", 11 semibold `.rounded`, `white 0.5`, 6pt after the pill.
@@ -92,10 +93,10 @@ Note 1: the brief says "gradient fill from the theme's low color to the theme's 
 7. **Cooling line** (only when delta > 0): "Back on pace around Tue 3:10 PM", or just the time if it falls today. 10 medium, `white 0.4`.
 
 **Card variants:**
-- **Idle window** (`resets_at` is null): the percentage, then "Window not started" in 10 medium at `white 0.4`. No bar, pill or quip.
+- **No reset time** (`resets_at` is null): the percentage, then "Reset time not reported, so pacing is unavailable." in 10 medium at `white 0.4`. No bar, pill or quip.
 - **Stale data:**
-  - The percentage, bar and pill drop to 0.45 opacity.
-  - A line under the header reads `clock.arrow.circlepath` plus "Last updated 12 min ago", 10 regular at `white 0.45`.
+  - The percentage, bar and pill drop to 0.45 opacity on every card.
+  - One line above the cards reads `clock.arrow.circlepath` plus "Last updated 12 min ago", 10 regular at `white 0.45`.
 
 ### Error banner (above the cards)
 
@@ -130,9 +131,9 @@ Note 1: the brief says "gradient fill from the theme's low color to the theme's 
   - Text "5h 42%": `systemFont 11 .bold` in the tint.
 - **Monochrome option:** draws with `labelColor` instead of theme colors, for people who want a quiet menu bar.
 - **Fallback states:**
-  - No data yet: a `gauge.with.needle` template SF Symbol.
+  - No data yet, or no windows selected: a `gauge.with.needle` template SF Symbol.
+  - Error and no data: an `exclamationmark.triangle` template SF Symbol.
   - Stale data: values drawn at 0.5 alpha.
-  - Error and no data: the symbol with a small `exclamationmark`.
 - **Color mode:**
   - "Pacing zone" (default): the window's zone color.
   - "Usage threshold": `gaugeNormal`, `gaugeWarning` or `gaugeCritical`, using the thresholds.
