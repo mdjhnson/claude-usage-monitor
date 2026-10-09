@@ -100,7 +100,8 @@ struct WindowCard: View {
             .font(.system(size: 11, weight: .medium))
             .foregroundStyle(text.opacity(0.6))
 
-        if let cooling = pacing.coolingDate {
+        // Only worth saying once usage is past the on-track band.
+        if let cooling = pacing.coolingDate, pacing.zone == .warning || pacing.zone == .hot {
             Text(Format.cooling(cooling, now: now))
                 .font(.system(size: 10, weight: .medium))
                 .foregroundStyle(text.opacity(0.4))

@@ -90,7 +90,7 @@ Note 1: the brief says "gradient fill from the theme's low color to the theme's 
    | Warning | Session warming · 5h edging up · Tempo creeping | Week picking up · Pace creeping · Cadence edging |
    | Hot | 5h on fire · Session blazing · Burning the hour | Week's burning · Cycle blazing · Torching the week |
 
-7. **Cooling line** (only when delta > 0): "Back on pace around Tue 3:10 PM", or just the time if it falls today. 10 medium, `white 0.4`.
+7. **Cooling line** (only in the Watch out and Hot zones, that is, delta > margin): "Back on pace around Tue 3:10 PM", or just the time if it falls today. 10 medium, `white 0.4`.
 
 **Card variants:**
 - **No reset time** (`resets_at` is null): the percentage, then "Reset time not reported, so pacing is unavailable." in 10 medium at `white 0.4`. No bar, pill or quip.

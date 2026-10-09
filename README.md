@@ -7,7 +7,7 @@ A small macOS menu bar app that shows your Claude usage limits and whether you a
   - the percentage and reset countdown
   - a pacing bar (fill = actual usage, triangle = expected pace)
   - a zone pill with the signed delta ("On track +7%") and a one-line quip
-  - when you're over pace, roughly when you'll be back on it
+  - when you're past the on-track band (Watch out or Hot), roughly when you'll be back on pace
 - **Workweek pacing (optional):** weekly limits pace over your active days and hours only. Weekends and evenings don't count against you.
 
 ## How pacing works
@@ -31,7 +31,7 @@ With margin `m` (default 10, adjustable 5–20):
 
 **Workweek pacing** (weekly windows only) counts only active seconds. Elapsed is `activeSeconds(start, now) / activeSeconds(start, resetsAt)`. Day boundaries come from the calendar, so DST days of 23 or 25 hours stay exact.
 
-**"Back on pace around …"** is when the pace line catches up with your current usage if you stop now. In workweek mode it walks forward through active time only, and it is never later than the reset.
+**"Back on pace around …"** is when the pace line catches up with your current usage if you stop now. It shows only in the Watch out and Hot zones. In workweek mode it walks forward through active time only, and it is never later than the reset.
 
 The pure logic lives in `Sources/PaceBarCore` and is covered by unit tests.
 
