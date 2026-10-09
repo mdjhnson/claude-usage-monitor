@@ -205,6 +205,10 @@ Also not done:
 - **Notarization.** The app is ad hoc or development signed, for personal use.
 - **Localization.** English only.
 
+## License
+
+MIT. See [LICENSE](LICENSE).
+
 ## Credits
 
 The pacing model, quips, theme presets and visual design follow TokenEater by AThevon (MIT). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
