@@ -12,6 +12,9 @@ status=0
 
 section() { printf '\n== %s ==\n' "$1"; }
 hits() { grep -rnF --include='*.swift' -- "$1" "$2" 2>/dev/null; }
+# Drops "file:line:" hits whose code is only a comment. Used for counts and pass/fail;
+# the listings above still show every hit, comments included.
+code_only() { grep -vE '^[^:]+:[0-9]+:[[:space:]]*//'; }
 
 echo "PaceBar source audit ($(date '+%Y-%m-%d %H:%M'))"
 
@@ -26,7 +29,7 @@ forbidden=$(grep -rnE --include='*.swift' \
     -e 'osascript|NSAppleScript|OSAScript' -e '/bin/(ba|z)?sh' -e 'launchPath' \
     -e 'NWListener|bind\(|listen\(' -e 'NSAppleEventManager|handleGetURLEvent' \
     -e 'FileManager.*\.claude' -e 'NSPasteboard.*[Tt]oken' \
-    "$SRC" 2>/dev/null)
+    "$SRC" 2>/dev/null | code_only)
 if [ -n "$forbidden" ]; then echo "$forbidden"; status=1; else echo "(none)"; fi
 
 if [ -d "$RESOURCES" ]; then
@@ -50,11 +53,11 @@ for pattern in 'https://' 'URLSession' 'Process(' 'UserDefaults'; do
 done
 
 section "Summary"
-hosts=$(grep -rhoE --include='*.swift' 'https?://[A-Za-z0-9.-]+' "$SRC" 2>/dev/null \
-    | sed -E 's#^https?://##' | sort -u)
+hosts=$(grep -rnE --include='*.swift' 'https?://' "$SRC" 2>/dev/null | code_only \
+    | grep -oE 'https?://[A-Za-z0-9.-]+' | sed -E 's#^https?://##; s#\.+$##' | sort -u)
 host_count=$(printf '%s' "$hosts" | grep -c . )
-process_count=$(hits 'Process(' "$SRC" | wc -l | tr -d ' ')
-http_count=$(hits 'http://' "$SRC" | wc -l | tr -d ' ')
+process_count=$(hits 'Process(' "$SRC" | code_only | wc -l | tr -d ' ')
+http_count=$(hits 'http://' "$SRC" | code_only | wc -l | tr -d ' ')
 
 echo "network hosts (${host_count}): $(echo $hosts)"
 echo "Process( call sites: ${process_count}"
