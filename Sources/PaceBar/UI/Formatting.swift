@@ -17,18 +17,30 @@ enum Format {
         return "0%"
     }
 
-    /// Session: "resets in 2h 14m". Weekly: "resets Tue 3:00 PM".
+    /// Session: "resets in 2h 14m". Weekly: "resets tomorrow 4:00 AM", "resets Tue 3:00 PM",
+    /// or "resets Oct 16, 3:59 AM" a week out, so a reset on today's weekday isn't misread.
     static func resetCountdown(kind: WindowKind, resetsAt: Date, now: Date) -> String {
         let remaining = resetsAt.timeIntervalSince(now)
         if remaining <= 0 { return "resets now" }
         if kind == .session { return "resets in " + duration(remaining) }
-        return "resets " + weekdayTime(resetsAt)
+        return "resets " + dayTime(resetsAt, now: now)
     }
 
-    /// "Back on pace around 3:10 PM" today, otherwise with the weekday.
+    /// "Back on pace around 3:10 PM" today, otherwise with the day.
     static func cooling(_ date: Date, now: Date, calendar: Calendar = .current) -> String {
-        let when = calendar.isDate(date, inSameDayAs: now) ? time(date) : weekdayTime(date)
+        let when = calendar.isDate(date, inSameDayAs: now) ? time(date) : dayTime(date, now: now, calendar: calendar)
         return "Back on pace around " + when
+    }
+
+    /// "today 3:59 AM", "tomorrow 3:59 AM", "Wed 3:59 AM" within the week, else "Oct 16, 3:59 AM".
+    static func dayTime(_ date: Date, now: Date, calendar: Calendar = .current) -> String {
+        let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: now), to: calendar.startOfDay(for: date)).day ?? 0
+        switch days {
+        case 0: return "today " + time(date)
+        case 1: return "tomorrow " + time(date)
+        case 2...6: return weekdayTime(date)
+        default: return date.formatted(.dateTime.month(.abbreviated).day().hour().minute())
+        }
     }
 
     /// "just now", "1 min ago", "12 min ago", "3 h ago".

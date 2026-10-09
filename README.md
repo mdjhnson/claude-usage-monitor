@@ -58,6 +58,7 @@ There is no `Package.resolved`. SwiftPM only writes one when a package has depen
 
 1. If Gatekeeper blocks the app, right-click `PaceBar.app`, choose **Open**, then **Open** again. A copy built on your own Mac normally isn't quarantined, so this is rare.
 2. macOS asks whether `security` may access the "Claude Code-credentials" Keychain item. Choose **Always Allow**. If you click **Allow** instead, you'll be asked again on every refresh. The first read after launch waits up to 60 seconds for your answer.
+   - If no prompt appears, `security` already has access. Another tool that reads Claude Code's login the same way (TokenEater, for example) granted it earlier. The ACL caveat below then already applies.
 3. The menu bar shows something like `5h 42%  7d 18%`. Click it for the dashboard.
 
 To move the app, copy `build/PaceBar.app` to `/Applications`. Launch at login works from anywhere, but `/Applications` is the conventional place.
@@ -162,7 +163,9 @@ The usage endpoint is undocumented, so PaceBar decodes it tolerantly:
 - On migrated accounts, a `limits[]` array uses `percent` and `kind` (`session`, `weekly_all`, `weekly_scoped` plus `scope.model.display_name`).
 - Each limit is taken from the flat key when that key has a reset time. Otherwise it comes from the matching `limits[]` entry.
 - A bad `limits[]` element is skipped on its own rather than dropping the whole array.
-- `extra_usage` and other unknown keys are ignored.
+- `extra_usage`, `spend`, `weekly_scoped_shares`, per-limit `severity`, per-bucket dollar fields, and other unknown keys (including many code-named null keys) are ignored.
+
+`Tests/PaceBarCoreTests/RealShapeFixtureTests.swift` mirrors a real response shape captured with Copy diagnostic on 2026-10-09. It uses the real key names and types, with invented values.
 
 A window without a reset time shows its percentage but no pacing.
 
