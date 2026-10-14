@@ -79,20 +79,22 @@ To move the app, copy `build/PaceBar.app` to `/Applications`. Launch at login wo
 
 ## Distributing to others
 
-`./release.sh` builds a universal app signed with a Developer ID, notarizes and staples it, and packages it as `dist/PaceBar-<version>.dmg`. Anyone can open that DMG without Gatekeeper warnings. Bump `CFBundleShortVersionString` and `CFBundleVersion` in `Resources/Info.plist` before each release.
+`./release.sh` builds a universal app, has Xcode sign it with your team's cloud-managed Developer ID certificate and notarize it, and packages the stapled app as `dist/PaceBar-<version>.dmg`. Anyone can open that DMG without Gatekeeper warnings. Bump `CFBundleShortVersionString` and `CFBundleVersion` in `Resources/Info.plist` before each release.
+
+```sh
+TEAM_ID=ABCDE12345 ./release.sh
+```
 
 One-time setup:
 
-1. **Developer ID Application certificate.** In the Apple Developer account, open Certificates, Identifiers & Profiles › Certificates › **+** › **Developer ID Application**. Only the Account Holder can create one, or an Admin the Account Holder has given access. Upload a CSR from Keychain Access (Certificate Assistant › Request a Certificate From a Certificate Authority › Saved to disk), download the certificate and double-click it. `security find-identity -v -p codesigning` should now list `Developer ID Application: <Team> (<TEAMID>)`. A team can hold only a few of these certificates, so export it with its private key (a `.p12`) and keep it somewhere safe rather than making another one for each Mac.
-2. **Notary credentials.** Create an app-specific password at account.apple.com › Sign-In and Security › App-Specific Passwords, using an Apple Account on the same team. Then store it in the keychain:
+1. **Team access.** In App Store Connect › Users and Access, your user needs **Access to Certificates, Identifiers & Profiles** and **Access to Cloud Managed Developer ID Certificate**. The Account Holder or an Admin can turn these on. You don't need the Account Holder role, and you don't need a Developer ID certificate in your keychain: Apple holds the certificate and Xcode signs with it.
+2. **Xcode account.** Sign in to that Apple Account in Xcode › Settings › Accounts. `release.sh` uses this account to sign and to notarize, so there's no app-specific password to set up.
 
-   ```sh
-   xcrun notarytool store-credentials pacebar --apple-id you@example.org --team-id TEAMID
-   ```
+Your team ID is in the top right of the Certificates, Identifiers & Profiles page, after the team name.
 
-   An App Store Connect API key works too (`--key`, `--key-id`, `--issuer`). Use `NOTARY_PROFILE=name` if you saved the profile under another name.
+Notarization usually takes a minute or two. The script waits up to 30 minutes. The first time a team uses its cloud-managed Developer ID certificate, Apple may email the Account Holder about it.
 
-Then run `./release.sh`. If the keychain holds more than one Developer ID Application identity, pick one with `SIGN_ID="Developer ID Application: …"`. Notarization usually takes a few minutes per submission, and there are two: the app, then the DMG.
+The DMG itself isn't signed, because the cloud certificate only signs through Xcode, and Xcode signs the app, not the disk image. That doesn't cause a warning: Gatekeeper checks the app when it's opened, and the app carries its notarization ticket, so it opens offline too.
 
 People who install it still go through **First launch** step 2. The Keychain prompt is about `/usr/bin/security`, not PaceBar, so signing doesn't change it.
 
