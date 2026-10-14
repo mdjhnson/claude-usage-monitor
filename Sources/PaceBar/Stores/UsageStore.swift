@@ -97,6 +97,8 @@ enum StoreError: Equatable {
 @MainActor @Observable
 final class UsageStore {
     private(set) var snapshot: UsageSnapshot?
+    /// Readings for each window's current cycle, for the card graphs. Memory only.
+    private(set) var history = UsageHistory()
     private(set) var lastError: StoreError?
     private(set) var isRefreshing = false
     /// Set while a 429 backoff is in force.
@@ -262,7 +264,9 @@ final class UsageStore {
 
         do {
             let result = try await client.fetchUsage(credential: credential)
-            snapshot = UsageSnapshot(usage: result.usage, fetchedAt: Date())
+            let fetchedAt = Date()
+            snapshot = UsageSnapshot(usage: result.usage, fetchedAt: fetchedAt)
+            history.record(result.usage.windows, at: fetchedAt)
             lastResponseShape = result.shape
             lastHTTPStatus = 200
             lastError = nil

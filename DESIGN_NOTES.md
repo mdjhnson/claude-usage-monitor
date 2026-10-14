@@ -92,6 +92,16 @@ Note 1: the brief says "gradient fill from the theme's low color to the theme's 
 
 7. **Cooling line** (only in the Watch out and Hot zones, that is, delta > margin): "Back on pace around Tue 3:10 PM", or just the time if it falls today. 10 medium, `white 0.4`.
 
+**Usage graph** (setting, on by default; last item on the card, below the cooling line):
+- `Canvas` 44pt tall, full card width. X is the window's calendar time (start → reset), Y is 0 → max(100%, highest reading).
+- Baseline: 0.5pt at `white 0.06`.
+- Pace line: 1pt dashed (3, 3) at `white 0.28`. Diagonal, or with workweek pacing, rising during active time and flat during off time.
+- Readings: 1.5pt round line in the zone color, over a fill from zone 0.28 to 0.02, top to bottom.
+- The window's start (0%) to the first reading: 1.25pt dashed (2, 3) in the zone color at 0.55, because nothing was measured there.
+- Latest reading: 5pt white dot.
+- Under it: start and reset labels, 9 monospaced at text 0.3. Session shows times ("11:39 AM"); weekly adds the weekday ("Sat 4 AM").
+- Readings are kept in memory per window and cleared when the reset time moves. Past 2,000, every other one is dropped.
+
 **Card variants:**
 - **No reset time** (`resets_at` is null): the percentage, then "Reset time not reported, so pacing is unavailable." in 10 medium at `white 0.4`. No bar, pill or quip.
 - **Stale data:**

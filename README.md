@@ -8,6 +8,7 @@ A small macOS menu bar app that shows your Claude usage limits and whether you a
   - a pacing bar (fill = actual usage, triangle = expected pace)
   - a zone pill with the signed delta ("On track +7%") and a one-line quip
   - when you're past the on-track band (Watch out or Hot), roughly when you'll be back on pace
+  - a usage graph: this cycle's readings against the steady-pace line, so a slow start and a late ramp show their real shape
 - **Workweek pacing (optional):** weekly limits pace over your active days and hours only. Weekends and evenings don't count against you.
 
 ## How pacing works
@@ -110,6 +111,7 @@ Open Settings from the gear in the popover. Settings are split into five tabs: P
 | Menu bar style | Classic | Classic (label plus colored value) or Pill. |
 | Color by | Pacing zone | Or Usage threshold. Windows without a reset time always use thresholds. |
 | Monochrome menu bar | Off | Draws in the system label color. |
+| Usage graph on each card | On | Plots readings since launch against the pace line. Kept in memory only, so it starts fresh when PaceBar launches; the stretch from the window's start to the first reading is dashed. |
 | Theme | Default | Default, Monochrome, Neon, Pastel. These are TokenEater's presets. |
 | Warning / Critical at | 60% / 85% | Used for threshold coloring. |
 | Refresh every | 3 min | 60–600 s. Opening the popover also refreshes, at most once per 30 s. |

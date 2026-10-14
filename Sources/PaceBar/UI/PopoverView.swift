@@ -90,7 +90,10 @@ struct PopoverView: View {
                             ),
                             theme: theme,
                             stale: stale,
-                            now: now
+                            now: now,
+                            graph: settings.showUsageGraph
+                                ? settings.paceCurve(for: window).map { (store.history.samples(for: window.kind), $0) }
+                                : nil
                         )
                     }
                 } else if store.lastError == nil {
