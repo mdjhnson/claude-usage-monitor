@@ -47,6 +47,7 @@ final class SettingsStore {
         static let monochrome = "pacebar.menuBar.monochrome"
         static let menuBarExtra = "pacebar.menuBar.extra"
         static let theme = "pacebar.theme"
+        static let customTheme = "pacebar.theme.custom"
         static let usageGraph = "pacebar.popover.usageGraph"
         static let warningThreshold = "pacebar.threshold.warning"
         static let criticalThreshold = "pacebar.threshold.critical"
@@ -78,6 +79,13 @@ final class SettingsStore {
     var monochromeMenuBar: Bool { didSet { defaults.set(monochromeMenuBar, forKey: Key.monochrome) } }
     var menuBarExtra: MenuBarExtra { didSet { defaults.set(menuBarExtra.rawValue, forKey: Key.menuBarExtra) } }
     var themePreset: ThemePreset { didSet { defaults.set(themePreset.rawValue, forKey: Key.theme) } }
+    /// The custom theme's colors, stored as "#RRGGBB" strings keyed by token name.
+    var customColors: [Theme.Token: ThemeColor] {
+        didSet {
+            let stored = Dictionary(uniqueKeysWithValues: customColors.map { ($0.key.rawValue, $0.value.hexString) })
+            defaults.set(stored, forKey: Key.customTheme)
+        }
+    }
     var showUsageGraph: Bool { didSet { defaults.set(showUsageGraph, forKey: Key.usageGraph) } }
     var warningThreshold: Double { didSet { defaults.set(warningThreshold, forKey: Key.warningThreshold) } }
     var criticalThreshold: Double { didSet { defaults.set(criticalThreshold, forKey: Key.criticalThreshold) } }
@@ -119,6 +127,12 @@ final class SettingsStore {
         monochromeMenuBar = bool(Key.monochrome, false)
         menuBarExtra = MenuBarExtra(rawValue: defaults.string(forKey: Key.menuBarExtra) ?? "") ?? .none
         themePreset = ThemePreset(rawValue: defaults.string(forKey: Key.theme) ?? "") ?? .default
+        // Unknown tokens and malformed values are dropped; missing ones fall back to Default.
+        let stored = defaults.dictionary(forKey: Key.customTheme) as? [String: String] ?? [:]
+        customColors = stored.reduce(into: [:]) { colors, entry in
+            guard let token = Theme.Token(rawValue: entry.key), let hex = HexColor.parse(entry.value) else { return }
+            colors[token] = ThemeColor(hex: hex)
+        }
         showUsageGraph = bool(Key.usageGraph, true)
         warningThreshold = double(Key.warningThreshold, 60, 5...95)
         criticalThreshold = double(Key.criticalThreshold, 85, 10...100)
@@ -130,6 +144,22 @@ final class SettingsStore {
         }
         sessionReminderMinutes = choice(Key.sessionReminder, Self.sessionReminderChoices)
         weeklyReminderMinutes = choice(Key.weeklyReminder, Self.weeklyReminderChoices)
+    }
+
+    /// The theme in use, including the person's own colors when Custom is chosen.
+    var theme: Theme {
+        themePreset == .custom ? .custom(customColors) : .preset(themePreset)
+    }
+
+    /// Chooses a theme. A first switch to Custom starts from the theme that was showing.
+    func selectTheme(_ preset: ThemePreset) {
+        if preset == .custom && customColors.isEmpty { customColors = theme.colors }
+        themePreset = preset
+    }
+
+    /// Replaces every custom color with a built-in preset's.
+    func resetCustomColors(to preset: ThemePreset) {
+        customColors = Theme.preset(preset).colors
     }
 
     var anyNotificationsOn: Bool {

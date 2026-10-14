@@ -83,7 +83,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     private func render() {
         guard let button = statusItem.button else { return }
         let now = Date()
-        let theme = Theme.preset(settings.themePreset)
+        let theme = settings.theme
 
         guard let snapshot = store.snapshot else {
             let symbol = store.lastError == nil ? "gauge.with.needle" : "exclamationmark.triangle"

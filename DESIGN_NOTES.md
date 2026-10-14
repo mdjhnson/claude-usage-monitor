@@ -30,6 +30,12 @@ Note 1: the brief says "gradient fill from the theme's low color to the theme's 
   - TokenEater uses a fixed `#141417` (rgb 0.08, 0.08, 0.09) and ignores the theme's `widgetBackground`.
   - PaceBar uses `#141417` for Default. For the other presets it uses the preset's `background` blended 50% toward `#141417`, so neon and pastel keep their tint.
   - Text colors use the preset's `text` token.
+- **Custom theme:**
+  - All nine tokens can be set. Unset or malformed stored values fall back to Default.
+  - The first switch to Custom copies the theme that was showing.
+  - Its `background` is used exactly as chosen, with no blend toward `#141417`.
+  - Stored as `pacebar.theme.custom`, a dictionary of token name → `"#RRGGBB"`.
+  - Picker colors are converted to sRGB and rounded to 8 bits per channel.
 
 ## Popover
 
@@ -180,7 +186,12 @@ Sections:
    - After each value: Nothing / Reset countdown / Pace arrows / Fire & ice, with a footer explaining the selected one.
    - Monochrome toggle.
 4. **Appearance:**
-   - Theme preset picker, showing four colored dots per preset.
+   - Theme preset picker, showing four colored dots per preset (the zone colors), plus Custom.
+   - **Custom colors** section, only when Theme is Custom:
+     - A "Start from" menu of the four presets.
+     - A two-column grid: pacing zones on the left, usage thresholds on the right, then popover background and text.
+     - Each color has a 76pt monospaced hex field and a small `ColorPicker` without opacity. A six-digit code applies as it's typed; a three-digit one applies on Return. An invalid code gets a red outline and is reverted when the field loses focus.
+     - An orange warning appears when the text-to-background contrast is below 4.5:1 (WCAG AA).
    - Warning and critical threshold steppers.
 5. **Notifications:**
    - Toggles: Usage alerts; Running hot and back on pace.
