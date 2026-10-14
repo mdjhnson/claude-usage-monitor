@@ -28,6 +28,19 @@ enum MenuBarExtra: String, CaseIterable, Identifiable {
     }
 }
 
+/// How weekly graphs mark the days.
+enum WeeklyDayMarkers: String, CaseIterable, Identifiable {
+    case off, lines, linesAndNames
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .off: "Off"
+        case .lines: "Lines"
+        case .linesAndNames: "Lines and day names"
+        }
+    }
+}
+
 /// Non-sensitive preferences only. Nothing here may ever hold a token or response data.
 @MainActor @Observable
 final class SettingsStore {
@@ -49,6 +62,7 @@ final class SettingsStore {
         static let theme = "pacebar.theme"
         static let customTheme = "pacebar.theme.custom"
         static let usageGraph = "pacebar.popover.usageGraph"
+        static let weeklyDayMarkers = "pacebar.popover.weeklyDayMarkers"
         static let warningThreshold = "pacebar.threshold.warning"
         static let criticalThreshold = "pacebar.threshold.critical"
         static let notifyUsage = "pacebar.notify.usage"
@@ -87,6 +101,7 @@ final class SettingsStore {
         }
     }
     var showUsageGraph: Bool { didSet { defaults.set(showUsageGraph, forKey: Key.usageGraph) } }
+    var weeklyDayMarkers: WeeklyDayMarkers { didSet { defaults.set(weeklyDayMarkers.rawValue, forKey: Key.weeklyDayMarkers) } }
     var warningThreshold: Double { didSet { defaults.set(warningThreshold, forKey: Key.warningThreshold) } }
     var criticalThreshold: Double { didSet { defaults.set(criticalThreshold, forKey: Key.criticalThreshold) } }
     var notifyUsage: Bool { didSet { defaults.set(notifyUsage, forKey: Key.notifyUsage) } }
@@ -134,6 +149,7 @@ final class SettingsStore {
             colors[token] = ThemeColor(hex: hex)
         }
         showUsageGraph = bool(Key.usageGraph, true)
+        weeklyDayMarkers = WeeklyDayMarkers(rawValue: defaults.string(forKey: Key.weeklyDayMarkers) ?? "") ?? .linesAndNames
         warningThreshold = double(Key.warningThreshold, 60, 5...95)
         criticalThreshold = double(Key.criticalThreshold, 85, 10...100)
         notifyUsage = bool(Key.notifyUsage, false)

@@ -93,7 +93,8 @@ struct PopoverView: View {
                             now: now,
                             graph: settings.showUsageGraph
                                 ? settings.paceCurve(for: window).map { (store.history.samples(for: window.kind), $0) }
-                                : nil
+                                : nil,
+                            dayMarkers: settings.weeklyDayMarkers
                         )
                     }
                 } else if store.lastError == nil {

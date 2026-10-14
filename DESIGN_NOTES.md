@@ -106,6 +106,10 @@ Note 1: the brief says "gradient fill from the theme's low color to the theme's 
 - The window's start (0%) to the first reading: 1.25pt dashed (2, 3) in the zone color at 0.55, because nothing was measured there.
 - Latest reading: 5pt white dot.
 - Under it: start and reset labels, 9 monospaced at text 0.3. Session shows times ("11:39 AM"); weekly adds the weekday ("Sat 4 AM").
+- **Days (weekly graphs only; setting, default "Lines and day names"):**
+  - 0.5pt lines at `white 0.09` at each local midnight, behind the data. Midnights come from the calendar, so DST days get their true width.
+  - Names in a 10pt band under the graph: abbreviated weekday, 8 medium at text 0.35, centered in each day's column. Today's is 8 semibold at 0.7.
+  - A partial day narrower than 22pt (for example the last 4 hours of a week resetting at 4 AM) gets a line but no name.
 - **Hover:**
   - Snaps to the nearest reading. Draws a 0.5pt guide at `white 0.3` and a 7pt dot in the zone color with a 1.25pt white ring.
   - The label row switches to "2:14 PM · 42% · pace 38%" (weekly: "Wed 3:30 PM · …") at text 0.75. It's aligned leading, center or trailing by which third of the graph the reading is in, so it never covers the line or runs off the edge.
@@ -189,6 +193,7 @@ Sections:
    - After each value: Nothing / Reset countdown / Pace arrows / Fire & ice, with a footer explaining the selected one.
    - Monochrome toggle.
 4. **Appearance:**
+   - Usage graph toggle, and "Days on weekly graphs": Off / Lines / Lines and day names (disabled when the graph is off).
    - Theme preset picker, showing four colored dots per preset (the zone colors), plus Custom.
    - **Custom colors** section, only when Theme is Custom:
      - A "Start from" menu of the four presets.

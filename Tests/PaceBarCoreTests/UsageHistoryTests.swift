@@ -106,3 +106,42 @@ final class UsageHistoryTests: XCTestCase {
         XCTAssertNil(GraphMath.value(of: [], at: 0.5))
     }
 }
+
+final class GraphDayTests: XCTestCase {
+    func testWeekStartingAt4AMHasTwoPartialEnds() {
+        // Fri 4 AM to the next Fri 4 AM, New York, no DST change.
+        let start = ny(2026, 10, 9, 4), end = ny(2026, 10, 16, 4)
+        let days = GraphMath.days(from: start, to: end, calendar: newYork)
+        XCTAssertEqual(days.count, 8)
+        XCTAssertEqual(days.first?.start, 0)
+        XCTAssertEqual(days.last?.end, 1)
+        XCTAssertEqual(days[0].end, 20.0 / 168, accuracy: 1e-9) // Fri 4 AM → Sat midnight
+        XCTAssertEqual(days[1].date, ny(2026, 10, 10))
+        XCTAssertEqual(days[7].end - days[7].start, 4.0 / 168, accuracy: 1e-9) // Fri midnight → 4 AM
+        // Contiguous.
+        for (a, b) in zip(days, days.dropFirst()) { XCTAssertEqual(a.end, b.start) }
+    }
+
+    func testWindowOnMidnightsHasSevenWholeDays() {
+        let days = GraphMath.days(from: ny(2026, 10, 12), to: ny(2026, 10, 19), calendar: newYork)
+        XCTAssertEqual(days.count, 7)
+        for day in days { XCTAssertEqual(day.end - day.start, 1.0 / 7, accuracy: 1e-9) }
+    }
+
+    func testDSTDayHasItsRealLength() {
+        // US DST ends Sun Nov 1, 2026: that day is 25 hours long.
+        let start = ny(2026, 10, 29), end = ny(2026, 11, 5)
+        let days = GraphMath.days(from: start, to: end, calendar: newYork)
+        XCTAssertEqual(days.count, 7)
+        let span = end.timeIntervalSince(start) / 3600 // 169 hours
+        XCTAssertEqual(span, 169)
+        let sunday = days.first { $0.date == ny(2026, 11, 1) }
+        XCTAssertEqual((sunday!.end - sunday!.start) * span, 25, accuracy: 1e-9)
+    }
+
+    func testEmptyWindow() {
+        let t = ny(2026, 10, 12)
+        XCTAssertEqual(GraphMath.days(from: t, to: t, calendar: newYork), [])
+        XCTAssertEqual(GraphMath.days(from: t, to: t.addingTimeInterval(-1), calendar: newYork), [])
+    }
+}
