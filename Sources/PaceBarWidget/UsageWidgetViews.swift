@@ -55,7 +55,7 @@ struct UsageWidgetView: View {
             if let model, !model.snapshot.windows.isEmpty {
                 switch family {
                 case .systemSmall: SmallUsageView(model: model, limitID: entry.limitID)
-                case .systemMedium: MediumUsageView(model: model)
+                case .systemMedium: MediumUsageView(model: model, graphID: entry.limitID)
                 default: LargeUsageView(model: model)
                 }
             } else {
@@ -116,13 +116,30 @@ struct SmallUsageView: View {
     }
 }
 
-/// Up to two windows as bars, with the first one's graph beside them.
+/// Up to two windows as bars, with the chosen graph, or the session's and weekly's, beside them.
 struct MediumUsageView: View {
     let model: WidgetModel
+    /// A `WindowKind.id`, or `LimitEntity.bothID`. Nil means the session's graph.
+    let graphID: String?
+
+    /// The windows whose graphs to draw. A choice missing from the snapshot falls back to the
+    /// session, then the first shown window.
+    private var graphed: [WidgetSnapshot.Window] {
+        let all = model.snapshot.windows
+        func window(_ kind: WindowKind) -> WidgetSnapshot.Window? { all.first { $0.kind == kind } }
+        if graphID == LimitEntity.bothID {
+            let both = [window(.session), window(.weekly)].compactMap { $0 }
+            if !both.isEmpty { return both }
+        }
+        let chosen = all.first { $0.kind.id == graphID } ?? window(.session) ?? all[0]
+        return [chosen]
+    }
 
     var body: some View {
         let windows = Array(model.snapshot.windows.prefix(2))
-        let first = windows[0]
+        let graphs = graphed.compactMap { window in model.graph(window).map { (window, $0) } }
+        // Two graphs share the column, so they're shorter; day names never fit at this width.
+        let dayMarkers: WeeklyDayMarkers = model.dayMarkers == .off ? .off : .lines
 
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .top, spacing: 14) {
@@ -133,10 +150,15 @@ struct MediumUsageView: View {
                 }
                 .frame(maxWidth: .infinity)
 
-                if let graph = model.graph(first) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        WindowTitle(kind: first.kind, model: model)
-                        Graph(window: first, graph: graph, model: model, dayMarkers: .off)
+                if !graphs.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(graphs, id: \.0.kind) { window, graph in
+                            VStack(alignment: .leading, spacing: graphs.count > 1 ? 2 : 4) {
+                                WindowTitle(kind: window.kind, model: model)
+                                Graph(window: window, graph: graph, model: model, dayMarkers: dayMarkers,
+                                      height: graphs.count > 1 ? 24 : UsageGraph.height)
+                            }
+                        }
                     }
                     .frame(maxWidth: .infinity)
                 }

@@ -8,6 +8,7 @@ import PaceBarCore
 struct PaceBarWidgetBundle: WidgetBundle {
     var body: some Widget {
         LimitWidget()
+        GraphWidget()
         UsageWidget()
     }
 }
@@ -24,7 +25,19 @@ struct LimitWidget: Widget {
     }
 }
 
-/// Medium and large: the popover's limits with bars and graphs.
+/// Medium: two limits' bars beside a graph. Edit Widget chooses which graph.
+struct GraphWidget: Widget {
+    var body: some WidgetConfiguration {
+        AppIntentConfiguration(kind: "PaceBarGraph", intent: GraphWidgetIntent.self, provider: GraphProvider()) { entry in
+            UsageWidgetView(entry: entry)
+        }
+        .configurationDisplayName("Claude Usage")
+        .description("Your limits and a usage graph. Choose the graph with Edit Widget.")
+        .supportedFamilies([.systemMedium])
+    }
+}
+
+/// Large: up to three limits, each with its bar and graph.
 struct UsageWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "PaceBarUsage", provider: Provider()) { entry in
@@ -32,6 +45,6 @@ struct UsageWidget: Widget {
         }
         .configurationDisplayName("Claude Usage")
         .description("Your Claude limits and whether you're on pace.")
-        .supportedFamilies([.systemMedium, .systemLarge])
+        .supportedFamilies([.systemLarge])
     }
 }

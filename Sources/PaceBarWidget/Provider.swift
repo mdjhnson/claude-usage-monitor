@@ -6,7 +6,8 @@ struct UsageEntry: TimelineEntry {
     let date: Date
     /// Nil until PaceBar has written its first snapshot.
     let snapshot: WidgetSnapshot?
-    /// The `WindowKind.id` the small widget was set to show. Nil for the other sizes.
+    /// The small widget's chosen limit, or the medium widget's chosen graph, as a
+    /// `WindowKind.id` (or `LimitEntity.bothID`). Nil for the large widget.
     var limitID: String? = nil
 
     /// Entries at now and every `step` after, each recomputing pacing for its own time.
@@ -57,6 +58,24 @@ struct LimitProvider: AppIntentTimelineProvider {
 
     func timeline(for configuration: LimitWidgetIntent, in context: Context) async -> Timeline<UsageEntry> {
         UsageEntry.timeline(WidgetSnapshotStore()?.read(), limitID: configuration.limit?.id)
+    }
+}
+
+/// The medium widget's provider: the same timeline, carrying the chosen graph.
+struct GraphProvider: AppIntentTimelineProvider {
+    func placeholder(in context: Context) -> UsageEntry {
+        UsageEntry(date: Date(), snapshot: .sample(now: Date()))
+    }
+
+    func snapshot(for configuration: GraphWidgetIntent, in context: Context) async -> UsageEntry {
+        let now = Date()
+        let stored = WidgetSnapshotStore()?.read()
+        return UsageEntry(date: now, snapshot: context.isPreview ? stored ?? .sample(now: now) : stored,
+                          limitID: configuration.graph?.id)
+    }
+
+    func timeline(for configuration: GraphWidgetIntent, in context: Context) async -> Timeline<UsageEntry> {
+        UsageEntry.timeline(WidgetSnapshotStore()?.read(), limitID: configuration.graph?.id)
     }
 }
 

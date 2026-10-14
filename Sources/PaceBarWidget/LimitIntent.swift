@@ -13,7 +13,30 @@ struct LimitWidgetIntent: WidgetConfigurationIntent {
     init() {}
 }
 
-/// One limit, identified by `WindowKind.id` ("session", "weekly", "weekly.sonnet").
+/// The medium widget's setting: which graph it shows beside the bars.
+struct GraphWidgetIntent: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource { "Graph" }
+    static var description: IntentDescription { "Choose which usage graph the widget shows." }
+
+    @Parameter(title: "Graph", optionsProvider: GraphOptions())
+    var graph: LimitEntity?
+
+    init() {}
+}
+
+/// Every limit, plus the session and weekly graphs together.
+struct GraphOptions: DynamicOptionsProvider {
+    func results() async throws -> [LimitEntity] {
+        LimitQuery.available() + [.both]
+    }
+
+    func defaultResult() async -> LimitEntity? {
+        LimitEntity(kind: .session)
+    }
+}
+
+/// One limit, identified by `WindowKind.id` ("session", "weekly", "weekly.sonnet"). The medium
+/// widget's graph setting also has `both`.
 struct LimitEntity: AppEntity {
     static var typeDisplayRepresentation: TypeDisplayRepresentation { "Limit" }
     static var defaultQuery: LimitQuery { LimitQuery() }
@@ -32,13 +55,16 @@ struct LimitEntity: AppEntity {
         self.id = id
         self.title = title
     }
+
+    static let bothID = "session+weekly"
+    static var both: LimitEntity { LimitEntity(id: bothID, title: "5-Hour Session and Weekly") }
 }
 
 /// Offers the 5-hour session and weekly limit always, plus any per-model weekly limits in the
 /// latest snapshot.
 struct LimitQuery: EntityQuery {
     func entities(for identifiers: [String]) async throws -> [LimitEntity] {
-        let known = Self.available()
+        let known = Self.available() + [.both]
         // A limit the API stopped reporting keeps its setting; the widget falls back meanwhile.
         return identifiers.map { id in known.first { $0.id == id } ?? LimitEntity(id: id, title: id) }
     }

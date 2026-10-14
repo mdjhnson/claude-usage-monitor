@@ -218,7 +218,12 @@ Sections:
 
 ## Widgets
 
-Two WidgetKit widgets: **Claude Limit** (kind `PaceBarLimit`, small only, configurable) and **Claude Usage** (kind `PaceBarUsage`, medium and large). It draws with the app's own `Theme`, `PacingBar`, `UsageGraph` and `ZonePill` (the extension compiles those files too), so it matches the popover.
+Three WidgetKit widgets:
+- **Claude Limit:** kind `PaceBarLimit`, small, configurable.
+- **Claude Usage, medium:** kind `PaceBarGraph`, configurable.
+- **Claude Usage, large:** kind `PaceBarUsage`.
+
+Medium and large share a display name. They're separate widgets because a widget's settings apply to every size. It draws with the app's own `Theme`, `PacingBar`, `UsageGraph` and `ZonePill` (the extension compiles those files too), so it matches the popover.
 - **Background:** the popover background, already resolved by the app (`popoverBackgroundColor`) and sent as the snapshot's `background` token. Text uses the `text` token.
 - **Colors:** percentages use the same `Theme.tint` as the cards (pacing zone or usage threshold, per Color by). Rings, bars and graph lines use the zone color.
 - **Windows:** the popover's visible limits, in the popover's order.
@@ -229,7 +234,11 @@ Two WidgetKit widgets: **Claude Limit** (kind `PaceBarLimit`, small only, config
   - Layout: title row (9 semibold caps at text 0.45), then a ring: 8pt stroke, white 0.08 track, zone-tinted round-capped arc from 12 o'clock to usage. Inside: the percentage (22 black rounded, tint) and the zone title (9 semibold, zone color). Bottom: the reset countdown (10 medium at text 0.45).
 - **Medium:** two columns, 14pt apart.
   - Left: up to two rows. Each has the title, then the percentage (15 black rounded, tint), the pacing bar and the reset countdown (10 medium at text 0.35).
-  - Right: the first window's title and its graph, at 44pt, without day markers. It's dropped when the usage graph setting is off.
+  - Right: the graph chosen in the **Graph** setting (default: the 5-hour session) with its title, at 44pt.
+  - "5-Hour Session and Weekly" stacks both graphs, 8pt apart, at 24pt each, with title spacing tightened to 2.
+  - Weekly graphs here get day lines but never names, which don't fit at this width.
+  - A choice missing from the snapshot falls back to the session, then the first shown window.
+  - The graph column is dropped when the usage graph setting is off.
 - **Large:** up to three windows, 14pt apart (10pt with three). Each has:
   - Title, zone pill and percentage on one row, then the pacing bar.
   - The graph, with no countdown line because the graph's axis already ends at the reset. The countdown line appears only when there's no graph.
