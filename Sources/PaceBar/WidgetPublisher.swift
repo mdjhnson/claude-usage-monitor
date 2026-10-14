@@ -10,8 +10,6 @@ final class WidgetPublisher {
     /// A changed percentage or zone reloads at most this often, which keeps PaceBar inside
     /// WidgetKit's daily reload budget at the fastest refresh interval.
     static let minReloadGap: TimeInterval = 5 * 60
-    /// New readings reach the widget graphs at least this often.
-    static let maxReloadGap: TimeInterval = 30 * 60
     /// After a widget's refresh button, every publish reloads for this long, so the fetch it
     /// started reaches the widgets without waiting out `minReloadGap`.
     static let requestedReloadWindow: TimeInterval = 20
@@ -156,6 +154,6 @@ final class WidgetPublisher {
             return true
         }
         let gap = now.timeIntervalSince(lastReload)
-        return gap >= Self.maxReloadGap || (visible != last && gap >= Self.minReloadGap)
+        return gap >= WidgetSnapshot.maxReloadGap || (visible != last && gap >= Self.minReloadGap)
     }
 }

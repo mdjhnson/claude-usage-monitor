@@ -248,7 +248,7 @@ Medium and large share a display name. They're separate widgets because a widget
   - Small: trailing the title row.
   - Medium: trailing the first graph's title, or the top-right corner when there's no graph column.
   - Large: bottom right, after the stale line when there is one.
-- **Stale** (a failed refresh, or data older than the larger of 2× the refresh interval and 10 minutes): values at 0.45 opacity and a bottom line "Updated 12 min ago" with `clock.arrow.circlepath`, 10pt at text 0.45. In the small widget it replaces the countdown.
+- **Stale** (a failed refresh, or data older than the larger of 2× the refresh interval and 45 minutes, which outlasts the 30-minute redraw): values at 0.45 opacity and a bottom line "Updated 12 min ago" with `clock.arrow.circlepath`, 10pt at text 0.45. In the small widget it replaces the countdown.
 - **Empty:** a 22pt `gauge.with.needle` over 11 medium text at text 0.6, centered: "Open PaceBar to start." when there's no snapshot, or "No limits to show. Choose some in PaceBar's Settings › Windows." when every limit is hidden.
 - **Gallery:** sample data (session 52%, weekly 38%) in the Default theme until there's a real snapshot.
 

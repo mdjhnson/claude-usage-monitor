@@ -74,10 +74,18 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
         self.display = display
     }
 
-    /// Matches the popover: stale after a failed refresh or two missed refreshes. Widgets update
-    /// less often than the popover, so the age allowance is never under 10 minutes.
+    /// The app redraws the widgets at least this often while it's running, even when nothing
+    /// changed. WidgetKit's daily budget rules out redrawing on every refresh.
+    public static let maxReloadGap: TimeInterval = 30 * 60
+
+    /// How old data can look before a widget calls it stale. A widget only sees a new
+    /// `fetchedAt` when it's redrawn, so this has to outlast `maxReloadGap`, plus slack.
+    public static let staleAge: TimeInterval = maxReloadGap + 15 * 60
+
+    /// Stale after a failed refresh, or once the app has plainly stopped redrawing the widgets
+    /// (for example, because it isn't running).
     public func isStale(now: Date) -> Bool {
-        hasError || now.timeIntervalSince(fetchedAt) > max(2 * refreshInterval, 600)
+        hasError || now.timeIntervalSince(fetchedAt) > max(2 * refreshInterval, Self.staleAge)
     }
 
     /// Pacing at `now`, recomputed so the zone stays right as time passes without new data.
