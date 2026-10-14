@@ -7,6 +7,14 @@ struct UsageSnapshot: Equatable {
     let fetchedAt: Date
 }
 
+/// What the setup guide in the popover walks someone through.
+enum SetupNeed: Equatable {
+    /// No Claude Code login in the Keychain yet: install Claude Code and sign in.
+    case signIn
+    /// The login exists but has expired or was rejected: start Claude Code so it refreshes.
+    case renew
+}
+
 enum StoreError: Equatable {
     case keychain(KeychainReadError)
     /// The Keychain token's own expiry has passed; no request was sent.
@@ -19,6 +27,24 @@ enum StoreError: Equatable {
         case .keychain, .expiredLogin: true
         case .client(.tokenExpired): true
         case .client: false
+        }
+    }
+
+    /// Errors the person fixes by following the setup guide instead of clicking Retry.
+    var setupNeed: SetupNeed? {
+        switch self {
+        case .keychain(.notFound), .keychain(.unusablePayload): .signIn
+        case .expiredLogin, .client(.tokenExpired): .renew
+        default: nil
+        }
+    }
+
+    /// Errors that a local Keychain check can clear, with no request sent until it does.
+    /// Polled quickly so the popover moves on as soon as the person finishes the guide.
+    var clearsLocally: Bool {
+        switch self {
+        case .keychain(.notFound), .keychain(.unusablePayload), .expiredLogin: true
+        default: false
         }
     }
 
@@ -96,6 +122,9 @@ final class UsageStore {
     static let popoverDebounce: TimeInterval = 30
 
     static let wakeDelay: TimeInterval = 10
+
+    /// How often the Keychain is checked while the setup guide is waiting on the person.
+    static let setupPollInterval: TimeInterval = 5
 
     init(settings: SettingsStore) {
         self.settings = settings
@@ -189,6 +218,7 @@ final class UsageStore {
         if let retryNotBefore, retryNotBefore > now {
             return max(retryNotBefore.timeIntervalSince(now), 1)
         }
+        if lastError?.clearsLocally == true { return min(interval, Self.setupPollInterval) }
         return interval
     }
 
@@ -203,7 +233,9 @@ final class UsageStore {
         isRefreshing = true
         defer { isRefreshing = false }
 
-        let timeout = (userInitiated || nextReadIsInteractive)
+        // While no item exists the read returns before running `security`. When the person has
+        // just signed in, the first read shows the macOS prompt, so it gets the long timeout.
+        let timeout = (userInitiated || nextReadIsInteractive || lastError == .keychain(.notFound))
             ? KeychainTokenReader.interactiveTimeout
             : KeychainTokenReader.backgroundTimeout
         nextReadIsInteractive = false

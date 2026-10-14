@@ -39,7 +39,7 @@ The pure logic lives in `Sources/PaceBarCore` and is covered by unit tests.
 
 - macOS 14 or later.
 - **Toolchain:** Xcode 27.0 (build 27A266a), Swift 6.4 (swiftlang-6.4.0.34.1). It's pinned here because no other build configuration is tested. The scripts use Xcode through `DEVELOPER_DIR`, so `xcode-select` can stay pointed at the Command Line Tools. Accept the Xcode license once, either by launching Xcode or with `sudo /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -license accept`.
-- Claude Code installed and signed in (`claude`, then `/login`).
+- Claude Code installed and signed in (`claude`, then `/login`). If it isn't, the popover walks you through it (see **Setup guide** below). The Claude desktop app's sign-in isn't enough on its own: it doesn't store a login PaceBar can read.
 
 ## Build, test, run
 
@@ -50,7 +50,7 @@ The pure logic lives in `Sources/PaceBarCore` and is covered by unit tests.
 open build/PaceBar.app
 ```
 
-To sign with your development identity instead of ad hoc: `SIGN_ID="Apple Development: Your Name (TEAMID)" ./build.sh`.
+To sign with your development identity instead of ad hoc: `SIGN_ID="Apple Development: Your Name (TEAMID)" ./build.sh`. Add `UNIVERSAL=1` to build for both Apple silicon and Intel.
 
 There is no `Package.resolved`. SwiftPM only writes one when a package has dependencies, and PaceBar has none. `audit.sh` fails if any appear.
 
@@ -61,11 +61,40 @@ There is no `Package.resolved`. SwiftPM only writes one when a package has depen
    - If no prompt appears, `security` already has access. Another tool that reads Claude Code's login the same way (TokenEater, for example) granted it earlier. The ACL caveat below then already applies.
 3. The menu bar shows something like `5h 42%  7d 18%`. Click it for the dashboard.
 
+### Setup guide
+
+When there's no Claude Code login, or it has expired, the popover shows step-by-step instructions instead of an error. This is meant for people who use the Claude desktop app but have never used Claude Code.
+- **Copy & Open Terminal** puts one command on the clipboard and opens Terminal.app. On a Mac without Claude Code, the command is `curl -fsSL https://claude.ai/install.sh | bash && ~/.local/bin/claude`, which installs Claude Code with Anthropic's installer and then starts it. If Claude Code is already installed, the command just starts it. The command is shown in the popover, so it's never hidden from the person running it.
+- The person pastes it with ⌘V, signs in through Claude Code's prompts, and answers the Keychain prompt with **Always Allow**.
+- To renew an expired login, they start Claude Code and run `/usage`, which makes Claude Code refresh its token.
+- While the guide is showing, PaceBar checks the Keychain every 5 seconds and continues on its own. These checks never touch the network until a valid login exists.
+
+PaceBar never runs the command itself and never types into Terminal.
+
 **Menu bar managers (Bartender, Ice):** PaceBar's status item has a fixed autosave name (`io.github.mdjhnson.pacebar.status`), so these tools remember where you put it across launches and rebuilds. In their item lists it appears with the PaceBar icon, a small pacing bar on a dark tile.
 
 The item is drawn lazily. Its label color follows the menu bar when macOS switches between light and dark menu bar text, for example with a rotating wallpaper. Theme colors stay fixed. If they're hard to read on your wallpaper, try the Pill style or Monochrome.
 
 To move the app, copy `build/PaceBar.app` to `/Applications`. Launch at login works from anywhere, but `/Applications` is the conventional place.
+
+## Distributing to others
+
+`./release.sh` builds a universal app signed with a Developer ID, notarizes and staples it, and packages it as `dist/PaceBar-<version>.dmg`. Anyone can open that DMG without Gatekeeper warnings. Bump `CFBundleShortVersionString` and `CFBundleVersion` in `Resources/Info.plist` before each release.
+
+One-time setup:
+
+1. **Developer ID Application certificate.** In the Apple Developer account, open Certificates, Identifiers & Profiles › Certificates › **+** › **Developer ID Application**. Only the Account Holder can create one, or an Admin the Account Holder has given access. Upload a CSR from Keychain Access (Certificate Assistant › Request a Certificate From a Certificate Authority › Saved to disk), download the certificate and double-click it. `security find-identity -v -p codesigning` should now list `Developer ID Application: <Team> (<TEAMID>)`. A team can hold only a few of these certificates, so export it with its private key (a `.p12`) and keep it somewhere safe rather than making another one for each Mac.
+2. **Notary credentials.** Create an app-specific password at account.apple.com › Sign-In and Security › App-Specific Passwords, using an Apple Account on the same team. Then store it in the keychain:
+
+   ```sh
+   xcrun notarytool store-credentials pacebar --apple-id you@example.org --team-id TEAMID
+   ```
+
+   An App Store Connect API key works too (`--key`, `--key-id`, `--issuer`). Use `NOTARY_PROFILE=name` if you saved the profile under another name.
+
+Then run `./release.sh`. If the keychain holds more than one Developer ID Application identity, pick one with `SIGN_ID="Developer ID Application: …"`. Notarization usually takes a few minutes per submission, and there are two: the app, then the DMG.
+
+People who install it still go through **First launch** step 2. The Keychain prompt is about `/usr/bin/security`, not PaceBar, so signing doesn't change it.
 
 ## Settings
 
@@ -123,6 +152,7 @@ PaceBar holds a **full-scope Claude Code OAuth token** in memory while a request
 - **Not sandboxed.** An App Sandbox would prevent running `/usr/bin/security` to read another app's Keychain item, which is the only way PaceBar gets the token.
 - **Hardened runtime is on.** The only entitlement is `com.apple.security.network.client`. There are no library-validation or JIT exceptions.
 - There are no listening sockets, no URL scheme handlers, no AppleScript, and no files written into `~/.claude`.
+- The only app PaceBar opens is `/System/Applications/Utilities/Terminal.app`, at a fixed path, from the setup guide. It opens no URLs.
 - **No auto-update.** You update by pulling and rebuilding.
 
 ### Failure behavior
@@ -139,7 +169,8 @@ On any error, the last good data stays on screen, dimmed, with "Last updated N m
 ### Auditing
 
 `./scripts/audit.sh` lists every line in `Sources/` containing `http://`, `https://`, `Process`, `URLSession`, `UserDefaults`, `print(` or `NSLog(`. It then fails if any rule is broken:
-- the only literal host is `api.anthropic.com`, and a URL whose host is built at runtime also fails
+- the only literal host is `api.anthropic.com`, and a URL whose host is built at runtime also fails. The one exception is `https://claude.ai/install.sh` in `SetupGuideView.swift`, which is copied to the clipboard and never fetched.
+- the only app launch is one `openApplication` call in `SetupGuideView.swift`, opening the fixed Terminal.app path
 - networking APIs (`URLSession`, `URLRequest`, `URLComponents`, host assignment) appear only in `UsageClient.swift`
 - `Process` appears only once, in `KeychainTokenReader.swift`
 - no forbidden constructs:
@@ -205,8 +236,7 @@ These are out of scope for v1. The code has clean seams for them, but none are b
 
 Also not done:
 - **User-Agent version detection.** The app sends `claude-code/0.0.0`. If the endpoint starts rejecting that, add version detection from file metadata, with no shell.
-- **Universal binary.** `build.sh` builds for the host architecture only.
-- **Notarization.** The app is ad hoc or development signed, for personal use.
+- **Updates.** There's no auto-update. Distribute a new DMG for each release.
 - **Localization.** English only.
 
 ## License
