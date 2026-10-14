@@ -9,7 +9,7 @@ struct PopoverView: View {
     let openSettings: () -> Void
 
     var body: some View {
-        let theme = Theme.preset(settings.themePreset)
+        let theme = settings.theme
         TimelineView(.periodic(from: .now, by: 20)) { context in
             content(theme: theme, now: context.date)
         }

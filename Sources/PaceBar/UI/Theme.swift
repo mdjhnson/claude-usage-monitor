@@ -17,6 +17,24 @@ struct ThemeColor: Equatable {
 
     var color: Color { Color(nsColor: nsColor) }
 
+    /// "#0A84FF".
+    var hexString: String { HexColor.format(hex) }
+
+    /// The nearest sRGB color, for values coming from the system color picker (which may be P3).
+    init(nsColor: NSColor) {
+        let srgb = nsColor.usingColorSpace(.sRGB) ?? .black
+        func byte(_ v: CGFloat) -> UInt32 { UInt32((min(max(v, 0), 1) * 255).rounded()) }
+        hex = byte(srgb.redComponent) << 16 | byte(srgb.greenComponent) << 8 | byte(srgb.blueComponent)
+    }
+
+    init(_ color: Color) {
+        self.init(nsColor: NSColor(color))
+    }
+
+    init(hex: UInt32) {
+        self.hex = hex & 0xFFFFFF
+    }
+
     /// TokenEater's `lighter()`: saturation down 0.3 × amount, brightness up by amount.
     func lighter(by amount: CGFloat = 0.15) -> Color {
         var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
@@ -26,9 +44,12 @@ struct ThemeColor: Equatable {
 }
 
 enum ThemePreset: String, CaseIterable, Identifiable {
-    case `default`, monochrome, neon, pastel
+    case `default`, monochrome, neon, pastel, custom
     var id: String { rawValue }
     var title: String { rawValue == "default" ? "Default" : rawValue.capitalized }
+
+    /// The presets a custom theme can start from.
+    static let builtIn: [ThemePreset] = [.default, .monochrome, .neon, .pastel]
 }
 
 /// Theme tokens. Hex values are TokenEater's presets (`Shared/Models/ThemeModels.swift`).
@@ -36,13 +57,70 @@ struct Theme: Equatable {
     let gaugeNormal, gaugeWarning, gaugeCritical: ThemeColor
     let chill, onTrack, warning, hot: ThemeColor
     let background, text: ThemeColor
+    /// A custom background is used exactly as chosen; preset backgrounds are blended (see `popoverBackground`).
+    var isCustom = false
+
+    /// Each color a custom theme can set, in the order Settings lists them.
+    enum Token: String, CaseIterable, Identifiable {
+        case chill, onTrack, warning, hot, gaugeNormal, gaugeWarning, gaugeCritical, background, text
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .chill: "Chill"
+            case .onTrack: "On track"
+            case .warning: "Watch out"
+            case .hot: "Hot"
+            case .gaugeNormal: "Normal"
+            case .gaugeWarning: "Warning"
+            case .gaugeCritical: "Critical"
+            case .background: "Background"
+            case .text: "Text"
+            }
+        }
+
+        static let zones: [Token] = [.chill, .onTrack, .warning, .hot]
+        static let thresholds: [Token] = [.gaugeNormal, .gaugeWarning, .gaugeCritical]
+        static let popover: [Token] = [.background, .text]
+    }
+
+    subscript(token: Token) -> ThemeColor {
+        switch token {
+        case .chill: chill
+        case .onTrack: onTrack
+        case .warning: warning
+        case .hot: hot
+        case .gaugeNormal: gaugeNormal
+        case .gaugeWarning: gaugeWarning
+        case .gaugeCritical: gaugeCritical
+        case .background: background
+        case .text: text
+        }
+    }
+
+    /// A custom theme. Tokens it doesn't set come from `base`.
+    static func custom(_ colors: [Token: ThemeColor], base: Theme = .preset(.default)) -> Theme {
+        func pick(_ token: Token) -> ThemeColor { colors[token] ?? base[token] }
+        return Theme(
+            gaugeNormal: pick(.gaugeNormal), gaugeWarning: pick(.gaugeWarning), gaugeCritical: pick(.gaugeCritical),
+            chill: pick(.chill), onTrack: pick(.onTrack), warning: pick(.warning), hot: pick(.hot),
+            background: pick(.background), text: pick(.text), isCustom: true
+        )
+    }
+
+    /// Every token's color, for seeding a custom theme from this one.
+    var colors: [Token: ThemeColor] {
+        Dictionary(uniqueKeysWithValues: Token.allCases.map { ($0, self[$0]) })
+    }
 
     /// TokenEater's popover surface, rgb(0.08, 0.08, 0.09).
     static let popoverSurface = ThemeColor(hex: 0x141417)
 
+    /// A built-in preset. `.custom` needs the person's colors, so it lives on `SettingsStore.theme`;
+    /// here it falls back to Default, which is also where a new custom theme starts.
     static func preset(_ preset: ThemePreset) -> Theme {
         switch preset {
-        case .default:
+        case .default, .custom:
             Theme(gaugeNormal: .init(hex: 0x22C55E), gaugeWarning: .init(hex: 0xF97316), gaugeCritical: .init(hex: 0xEF4444),
                   chill: .init(hex: 0x32D74B), onTrack: .init(hex: 0x0A84FF), warning: .init(hex: 0xFF9500), hot: .init(hex: 0xFF453A),
                   background: .init(hex: 0x000000), text: .init(hex: 0xFFFFFF))
@@ -82,12 +160,20 @@ struct Theme: Equatable {
         return usage(utilization, warningAt: warningAt, criticalAt: criticalAt)
     }
 
-    /// Default keeps TokenEater's surface exactly; other presets blend their background in by half.
-    var popoverBackground: Color {
-        guard background != Theme.preset(.default).background else { return Self.popoverSurface.color }
+    /// The popover's actual background color.
+    /// Default keeps TokenEater's surface exactly; other presets blend their background in by half;
+    /// a custom theme uses its background as chosen.
+    var popoverBackgroundColor: ThemeColor {
+        if isCustom { return background }
+        guard background != Theme.preset(.default).background else { return Self.popoverSurface }
         let a = Self.popoverSurface.nsColor, b = background.nsColor
-        return Color(nsColor: a.blended(withFraction: 0.5, of: b) ?? a)
+        return ThemeColor(nsColor: a.blended(withFraction: 0.5, of: b) ?? a)
     }
+
+    var popoverBackground: Color { popoverBackgroundColor.color }
+
+    /// WCAG contrast between the text and the popover background.
+    var textContrast: Double { HexColor.contrastRatio(text.hex, popoverBackgroundColor.hex) }
 
     var textColor: Color { text.color }
 }

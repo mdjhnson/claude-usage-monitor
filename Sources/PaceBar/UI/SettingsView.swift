@@ -81,6 +81,9 @@ struct SettingsView: View {
                 menuBarSection
             case .appearance:
                 appearanceSection
+                if settings.themePreset == .custom {
+                    customColorsSection
+                }
             case .notifications:
                 notificationsSection
             case .general:
@@ -223,10 +226,10 @@ struct SettingsView: View {
     private var appearanceSection: some View {
         Section {
             Toggle("Usage graph on each card", isOn: $settings.showUsageGraph)
-            Picker("Theme", selection: $settings.themePreset) {
+            Picker("Theme", selection: themeSelection) {
                 ForEach(ThemePreset.allCases) { preset in
                     HStack(spacing: 6) {
-                        ThemeSwatch(theme: .preset(preset))
+                        ThemeSwatch(theme: preset == .custom ? .custom(settings.customColors) : .preset(preset))
                         Text(preset.title)
                     }
                     .tag(preset)
@@ -244,6 +247,81 @@ struct SettingsView: View {
             Text("The usage graph plots this cycle's readings against the steady pace. It starts when PaceBar launches; before the first reading the line from the window's start is dashed. Thresholds color percentages when “Color by” is Usage threshold, or when a window has no reset time.")
                 .foregroundStyle(.secondary)
         }
+    }
+
+    /// A first switch to Custom copies the theme that was showing, so editing starts from it.
+    private var themeSelection: Binding<ThemePreset> {
+        Binding { settings.themePreset } set: { settings.selectTheme($0) }
+    }
+
+    // MARK: Custom colors
+
+    private var customColorsSection: some View {
+        Section {
+            LabeledContent("Start from") {
+                Menu("Preset") {
+                    ForEach(ThemePreset.builtIn) { preset in
+                        Button(preset.title) { settings.resetCustomColors(to: preset) }
+                    }
+                }
+                .fixedSize()
+            }
+            // Two columns keep all nine colors on screen: zones beside thresholds, popover below.
+            Grid(alignment: .leading, horizontalSpacing: 8, verticalSpacing: 8) {
+                GridRow {
+                    groupTitle("Pacing zones").gridCellColumns(2)
+                    groupTitle("Usage thresholds").gridCellColumns(2)
+                }
+                ForEach(Theme.Token.zones.indices, id: \.self) { i in
+                    GridRow {
+                        colorCells(Theme.Token.zones[i])
+                        if i < Theme.Token.thresholds.count {
+                            colorCells(Theme.Token.thresholds[i])
+                        }
+                    }
+                }
+                GridRow {
+                    groupTitle("Popover").gridCellColumns(4)
+                }
+                .padding(.top, 4)
+                GridRow {
+                    ForEach(Theme.Token.popover) { colorCells($0) }
+                }
+            }
+            .padding(.vertical, 2)
+            let contrast = settings.theme.textContrast
+            if contrast < Self.minimumContrast {
+                Label("Text may be hard to read on this background (contrast \(String(format: "%.1f", contrast)):1; aim for 4.5:1 or more).",
+                      systemImage: "exclamationmark.triangle.fill")
+                    .font(.callout)
+                    .foregroundStyle(.orange)
+            }
+        } header: {
+            Text("Custom colors")
+        } footer: {
+            Text("Type a hex code (#0A84FF or #08F) or click a swatch to pick a color. “Start from” replaces every custom color with a preset's. The popover is designed for dark backgrounds: its cards and dividers are light overlays that fade on a light background.")
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    /// WCAG AA for normal text.
+    static let minimumContrast = 4.5
+
+    private func groupTitle(_ title: String) -> some View {
+        Text(title)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(.secondary)
+    }
+
+    /// Two grid cells: the color's name, then its hex field and swatch.
+    @ViewBuilder
+    private func colorCells(_ token: Theme.Token) -> some View {
+        Text(token.title)
+        HexColorField(title: token.title, color: Binding {
+            settings.theme[token]
+        } set: { newValue in
+            settings.customColors[token] = newValue
+        })
     }
 
     private var warningThreshold: Binding<Double> {
@@ -400,9 +478,58 @@ private struct ThemeSwatch: View {
 
     var body: some View {
         HStack(spacing: 2) {
-            ForEach([theme.chill, theme.onTrack, theme.warning, theme.hot], id: \.hex) { c in
-                Circle().fill(c.color).frame(width: 7, height: 7)
+            // By position: a custom theme may repeat a color.
+            ForEach(Array(Theme.Token.zones.enumerated()), id: \.offset) { _, token in
+                Circle().fill(theme[token].color).frame(width: 7, height: 7)
             }
         }
+    }
+}
+
+/// One custom color: a hex field and the system color picker, kept in step both ways.
+private struct HexColorField: View {
+    let title: String
+    @Binding var color: ThemeColor
+
+    @State private var text = ""
+    @FocusState private var focused: Bool
+
+    private var isValid: Bool { HexColor.parse(text) != nil }
+
+    var body: some View {
+        HStack(spacing: 6) {
+            TextField(title, text: $text, prompt: Text("#RRGGBB"))
+                .labelsHidden()
+                .textFieldStyle(.roundedBorder)
+                .font(.system(size: 12, design: .monospaced))
+                .frame(width: 76)
+                .focused($focused)
+                .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color.red, lineWidth: isValid ? 0 : 1.5))
+                .accessibilityLabel("\(title) hex code")
+                .onSubmit(commit)
+                .onChange(of: focused) { _, isFocused in if !isFocused { commit() } }
+                .onChange(of: text) { _, newValue in
+                    // Apply a full six-digit code as it's typed, so the preview follows along.
+                    // Three-digit codes wait for Return, since they're a prefix of six-digit ones.
+                    let digits = newValue.trimmingCharacters(in: .whitespaces).trimmingPrefix("#")
+                    if digits.count == 6, let hex = HexColor.parse(newValue), hex != color.hex {
+                        color = ThemeColor(hex: hex)
+                    }
+                }
+            ColorPicker(title, selection: Binding { color.color } set: { color = ThemeColor($0) }, supportsOpacity: false)
+                .labelsHidden()
+                .controlSize(.small)
+        }
+        .onAppear { text = color.hexString }
+        .onChange(of: color) { _, newValue in
+            // Leave the field alone while it's being typed into and already says this color.
+            if !(focused && HexColor.parse(text) == newValue.hex) { text = newValue.hexString }
+        }
+    }
+
+    /// Return or leaving the field: apply a valid code in canonical form, or put back the current one.
+    private func commit() {
+        if let hex = HexColor.parse(text) { color = ThemeColor(hex: hex) }
+        text = color.hexString
     }
 }
