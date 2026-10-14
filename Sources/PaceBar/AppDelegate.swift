@@ -6,12 +6,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var store = UsageStore(settings: settings)
     private var statusItem: StatusItemController?
     private var settingsWindow: SettingsWindowController?
+    private var notifier: Notifier?
     private var workspaceObservers: [NSObjectProtocol] = []
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.mainMenu = makeMainMenu()
         statusItem = StatusItemController(store: store, settings: settings) { [weak self] in
             self?.showSettings()
+        }
+        notifier = Notifier(store: store, settings: settings) { [weak self] in
+            self?.statusItem?.showPopover()
         }
         store.start()
 
@@ -29,6 +33,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         store.stop()
+        notifier?.removeReminders()
         workspaceObservers.forEach(NSWorkspace.shared.notificationCenter.removeObserver)
     }
 
@@ -67,7 +72,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func showSettings() {
         if settingsWindow == nil {
-            settingsWindow = SettingsWindowController(store: store, settings: settings)
+            guard let notifier else { return }
+            settingsWindow = SettingsWindowController(store: store, settings: settings, notifier: notifier)
         }
         settingsWindow?.show()
     }

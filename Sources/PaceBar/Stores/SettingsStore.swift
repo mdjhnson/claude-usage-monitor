@@ -50,9 +50,16 @@ final class SettingsStore {
         static let usageGraph = "pacebar.popover.usageGraph"
         static let warningThreshold = "pacebar.threshold.warning"
         static let criticalThreshold = "pacebar.threshold.critical"
+        static let notifyUsage = "pacebar.notify.usage"
+        static let notifyPace = "pacebar.notify.pace"
+        static let sessionReminder = "pacebar.notify.sessionReminderMinutes"
+        static let weeklyReminder = "pacebar.notify.weeklyReminderMinutes"
     }
 
     static let refreshRange: ClosedRange<Double> = 60...600
+    /// Reminder lead times in minutes; 0 is off.
+    static let sessionReminderChoices = [0, 5, 10, 15, 30, 60]
+    static let weeklyReminderChoices = [0, 30, 60, 120, 180, 360]
     static let defaultRefresh: Double = 180
 
     @ObservationIgnored private let defaults: UserDefaults
@@ -74,6 +81,10 @@ final class SettingsStore {
     var showUsageGraph: Bool { didSet { defaults.set(showUsageGraph, forKey: Key.usageGraph) } }
     var warningThreshold: Double { didSet { defaults.set(warningThreshold, forKey: Key.warningThreshold) } }
     var criticalThreshold: Double { didSet { defaults.set(criticalThreshold, forKey: Key.criticalThreshold) } }
+    var notifyUsage: Bool { didSet { defaults.set(notifyUsage, forKey: Key.notifyUsage) } }
+    var notifyPace: Bool { didSet { defaults.set(notifyPace, forKey: Key.notifyPace) } }
+    var sessionReminderMinutes: Int { didSet { defaults.set(sessionReminderMinutes, forKey: Key.sessionReminder) } }
+    var weeklyReminderMinutes: Int { didSet { defaults.set(weeklyReminderMinutes, forKey: Key.weeklyReminder) } }
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -111,6 +122,28 @@ final class SettingsStore {
         showUsageGraph = bool(Key.usageGraph, true)
         warningThreshold = double(Key.warningThreshold, 60, 5...95)
         criticalThreshold = double(Key.criticalThreshold, 85, 10...100)
+        notifyUsage = bool(Key.notifyUsage, false)
+        notifyPace = bool(Key.notifyPace, false)
+        func choice(_ key: String, _ choices: [Int]) -> Int {
+            let v = defaults.object(forKey: key) as? Int ?? 0
+            return choices.contains(v) ? v : 0
+        }
+        sessionReminderMinutes = choice(Key.sessionReminder, Self.sessionReminderChoices)
+        weeklyReminderMinutes = choice(Key.weeklyReminder, Self.weeklyReminderChoices)
+    }
+
+    var anyNotificationsOn: Bool {
+        notifyUsage || notifyPace || sessionReminderMinutes > 0 || weeklyReminderMinutes > 0
+    }
+
+    /// How long before a reset to remind. Only the session and the all-models weekly limit get
+    /// reminders, so per-model limits don't double them up.
+    func reminderLead(for kind: WindowKind) -> TimeInterval? {
+        switch kind {
+        case .session: sessionReminderMinutes > 0 ? TimeInterval(sessionReminderMinutes * 60) : nil
+        case .weekly: weeklyReminderMinutes > 0 ? TimeInterval(weeklyReminderMinutes * 60) : nil
+        case .weeklyModel: nil
+        }
     }
 
     var schedule: WorkSchedule {

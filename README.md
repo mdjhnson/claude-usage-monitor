@@ -10,6 +10,7 @@ A small macOS menu bar app that shows your Claude usage limits and whether you a
   - when you're past the on-track band (Watch out or Hot), roughly when you'll be back on pace
   - a usage graph: this cycle's readings against the steady-pace line, so a slow start and a late ramp show their real shape
 - **Workweek pacing (optional):** weekly limits pace over your active days and hours only. Weekends and evenings don't count against you.
+- **Notifications (optional, off by default):** usage alerts at your thresholds, running hot and back on pace, and reminders before a reset.
 
 ## How pacing works
 
@@ -103,7 +104,7 @@ People who install it still go through **First launch** step 2. The Keychain pro
 
 ## Settings
 
-Open Settings from the gear in the popover. Settings are split into five tabs: Pacing, Menu Bar, Appearance, General and About. About shows the version, build number and source commit (written in by `build.sh`), the author, a link to this repository, and credits.
+Open Settings from the gear in the popover. Settings are split into six tabs: Pacing, Menu Bar, Appearance, Notifications, General and About. About shows the version, build number and source commit (written in by `build.sh`), the author, a link to this repository, and credits.
 
 | Setting | Default | Notes |
 |---|---|---|
@@ -117,9 +118,21 @@ Open Settings from the gear in the popover. Settings are split into five tabs: P
 | Usage graph on each card | On | Plots readings since launch against the pace line. Kept in memory only, so it starts fresh when PaceBar launches; the stretch from the window's start to the first reading is dashed. |
 | Theme | Default | Default, Monochrome, Neon, Pastel. These are TokenEater's presets. |
 | Warning / Critical at | 60% / 85% | Used for threshold coloring. |
+| Usage alerts | Off | Notifies once per reset cycle when a limit passes the Warning and then the Critical threshold, with when it resets. |
+| Running hot and back on pace | Off | Notifies when a limit enters the Hot zone, with roughly when you'd be back on pace if you ease off. Notifies again when it's back on track or under pace. |
+| Before the session resets / weekly reset | Off | A reminder 5–60 min before the 5-hour session resets, or 30 min–6 hours before the weekly reset. |
 | Refresh every | 3 min | 60–600 s. Opening the popover also refreshes, at most once per 30 s. |
 | Launch at login | Off | Uses `SMAppService.mainApp`. macOS may ask you to approve it in Login Items. |
 | Copy diagnostic | — | Copies a redacted report (see below). |
+
+### Notifications
+
+Notifications are local, through `UserNotifications`, and are evaluated after each refresh. The first time you turn one on, macOS asks for permission. Clicking a notification opens the popover.
+- **No repeats:** the state behind them is kept in memory only. After a launch, PaceBar first records where each limit stands without notifying, so restarting never repeats an alert.
+- **New cycles:** a new cycle starts only when a limit's reset time actually moves. Usage easing off as time passes never counts as a reset.
+- **No flapping:** Hot notifies once, then re-arms only after the limit is back on track or under pace. That gap is a whole margin wide, so a limit sitting at a zone boundary can't flap.
+- **Which limits:** only limits shown in the popover notify. Reminders cover the 5-hour session and the all-models weekly limit.
+- **On quit:** pending reminders are removed when PaceBar quits.
 
 ## Threat model and security design
 
@@ -232,7 +245,7 @@ A window without a reset time shows its percentage but no pacing.
 3. Remove its preferences: `defaults delete io.github.mdjhnson.pacebar`.
 4. Optional: in Keychain Access, open "Claude Code-credentials" › Access Control and remove `security` if you don't want other tools to keep prompt-free access.
 
-PaceBar writes nothing else to disk.
+PaceBar writes nothing else to disk. If you turned on notifications, macOS keeps a PaceBar entry in System Settings › Notifications; deleting the app is enough, or remove it there.
 
 ## Not implemented
 
@@ -241,7 +254,6 @@ These are out of scope for v1. The code has clean seams for them, but none are b
 - usage history or session-log parsing
 - agent watchers
 - desktop widgets (WidgetKit)
-- notifications (if added, they must use `UserNotifications` only)
 - extra-credits (`extra_usage`) display
 
 Also not done:

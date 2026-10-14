@@ -162,6 +162,7 @@ A preferences-style window (`NSTabViewController`, toolbar tabs, `.preference` t
 - **Pacing:** Pacing
 - **Menu Bar:** Windows, Menu bar
 - **Appearance:** Appearance
+- **Notifications:** Notifications
 - **General:** General, Diagnostics
 
 Sections:
@@ -181,10 +182,19 @@ Sections:
 4. **Appearance:**
    - Theme preset picker, showing four colored dots per preset.
    - Warning and critical threshold steppers.
-5. **General:**
+5. **Notifications:**
+   - Toggles: Usage alerts; Running hot and back on pace.
+   - Pickers: Before the session resets (Off, 5, 10, 15, 30, 60 min); Before the weekly reset (Off, 30 min, 1, 2, 3, 6 hours).
+   - When macOS has notifications off for PaceBar and any are on, an orange callout says where to turn them on.
+   - **Copy:**
+     - Usage: title "Weekly at 72%". Body "Past 60%, so pace yourself. Resets Tue 3:00 PM." At critical, the body starts "Close to the limit."
+     - Hot: title "Running hot: Weekly". Body "+18% ahead of a steady pace. Back on pace around Tue 3:00 PM if you ease off."
+     - Back on pace: title "Back on pace: Weekly". Body "You're within ±10% of a steady pace again." When under pace: "You're under pace now, so there's room to ramp up."
+     - Reminder: title "5-Hour Session resets in 15 min". Body "At 3:45 PM."
+6. **General:**
    - Refresh interval stepper, 60–600 s, step 30.
    - Launch at login toggle. Shows "Approve in System Settings › Login Items" when the status is `.requiresApproval`.
-6. **Diagnostics:**
+7. **Diagnostics:**
    - "Copy diagnostic" button, with a short caption saying what is included.
 
 ## Fonts summary
