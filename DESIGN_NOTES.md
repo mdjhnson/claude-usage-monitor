@@ -239,15 +239,17 @@ Medium and large share a display name. They're separate widgets because a widget
   - Weekly graphs here get day lines but never names, which don't fit at this width.
   - A choice missing from the snapshot falls back to the session, then the first shown window.
   - The graph column is dropped when the usage graph setting is off.
-- **Large:** up to three windows, 14pt apart (10pt with three). Each has:
-  - Title, zone pill and percentage on one row, then the pacing bar.
-  - The graph, with no countdown line because the graph's axis already ends at the reset. The countdown line appears only when there's no graph.
-  - The cooling line (10 medium at text 0.4) in Watch out and Hot, with two or fewer windows.
-  - With three windows, graphs shrink to 34pt and "Lines and day names" shows lines only.
+- **Large:** up to three windows. They split the height evenly, 18pt apart (12pt with three). Each section:
+  - **Header row:** on the left, the title, with a 10 medium detail line under it at text 0.4: "resets in 4h 51m · +1% vs pace", or "Reset time not reported". On the right, the zone pill, then the percentage (24 black rounded, tint).
+  - **Pacing bar.**
+  - **Cooling line:** with two or fewer windows, in Watch out and Hot, "Back on pace around 6:30 PM" in 10 medium, zone color at 0.8.
+  - **Graph:** flexible height, at least 28pt, filling the rest of the section. With three windows, "Lines and day names" shows lines only.
+  - **Without graphs:** each section is centered in its share of the height.
+  - **Footer:** "Updated 4:59 PM" (fetch time, 10 medium at text 0.3), with ↻ at the trailing edge. When stale, it gets `clock.arrow.circlepath` and text 0.5.
 - **Refresh button:** `arrow.clockwise`, 10 semibold at text 0.4, in a 16pt hit area, as an App Intent button (`RefreshIntent`).
   - Small: trailing the title row.
   - Medium: trailing the first graph's title, or the top-right corner when there's no graph column.
-  - Large: bottom right, after the stale line when there is one.
+  - Large: in the status footer, at the trailing edge.
 - **Stale** (a failed refresh, or data older than the larger of 2× the refresh interval and 45 minutes, which outlasts the 30-minute redraw): values at 0.45 opacity and a bottom line "Updated 12 min ago" with `clock.arrow.circlepath`, 10pt at text 0.45. In the small widget it replaces the countdown.
 - **Empty:** a 22pt `gauge.with.needle` over 11 medium text at text 0.6, centered: "Open PaceBar to start." when there's no snapshot, or "No limits to show. Choose some in PaceBar's Settings › Windows." when every limit is hidden.
 - **Gallery:** sample data (session 52%, weekly 38%) in the Default theme until there's a real snapshot.

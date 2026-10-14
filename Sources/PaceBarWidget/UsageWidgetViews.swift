@@ -181,41 +181,112 @@ struct MediumUsageView: View {
     }
 }
 
-/// Up to three windows, each with its bar, zone and graph.
+/// Up to three windows. Each section reads top to bottom: what it is and when it resets, then
+/// the pacing bar, then the graph. Graphs share whatever height is left, so fewer windows get
+/// taller graphs. A status footer says when the data is from and holds the refresh button.
 struct LargeUsageView: View {
     let model: WidgetModel
 
     var body: some View {
         let windows = Array(model.snapshot.windows.prefix(3))
-        // Three windows only fit with shorter graphs and no day names or cooling lines.
+        // Three windows only fit without day names or cooling lines.
         let crowded = windows.count >= 3
         let dayMarkers: WeeklyDayMarkers = crowded && model.dayMarkers == .linesAndNames ? .lines : model.dayMarkers
+        let graphs = model.snapshot.display.usageGraph
 
-        VStack(alignment: .leading, spacing: crowded ? 10 : 14) {
-            ForEach(windows, id: \.kind) { window in
-                let graph = model.graph(window)
-                VStack(alignment: .leading, spacing: 4) {
-                    // A graph's axis already ends at the reset time.
-                    BarRow(window: window, model: model, showsCountdown: graph == nil, showsZone: true)
-                    if !crowded, let pacing = model.pacing(window), let cooling = pacing.coolingDate,
-                       pacing.zone == .warning || pacing.zone == .hot {
-                        Text(Format.cooling(cooling, now: model.now))
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(model.text.opacity(0.4))
-                    }
-                    if let graph {
-                        Graph(window: window, graph: graph, model: model, dayMarkers: dayMarkers,
-                              height: crowded ? 34 : UsageGraph.height)
-                    }
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: crowded ? 12 : 18) {
+                ForEach(windows, id: \.kind) { window in
+                    LargeSection(window: window, model: model, dayMarkers: dayMarkers, showsCooling: !crowded)
+                        // Sections split the height evenly. Graphs grow to fill theirs; without
+                        // graphs, each section sits centered in its share.
+                        .frame(maxHeight: .infinity, alignment: graphs ? .top : .center)
                 }
             }
-            Spacer(minLength: 0)
-            HStack {
-                if model.stale { StaleLine(model: model) }
-                Spacer(minLength: 0)
-                RefreshButton(model: model)
+            StatusFooter(model: model)
+                .padding(.top, 12)
+        }
+    }
+}
+
+struct LargeSection: View {
+    let window: WidgetSnapshot.Window
+    let model: WidgetModel
+    let dayMarkers: WeeklyDayMarkers
+    let showsCooling: Bool
+
+    var body: some View {
+        let pacing = model.pacing(window)
+        let tint = model.tint(window, pacing)
+
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .center, spacing: 8) {
+                VStack(alignment: .leading, spacing: 3) {
+                    WindowTitle(kind: window.kind, model: model)
+                    Text(detail(pacing))
+                        .font(.system(size: 10, weight: .medium))
+                        .monospacedDigit()
+                        .foregroundStyle(model.text.opacity(0.4))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+                }
+                Spacer(minLength: 4)
+                if let pacing {
+                    ZonePill(title: pacing.zone.title, color: model.theme.zone(pacing.zone).color)
+                }
+                Text(Format.percent(window.utilization))
+                    .font(.system(size: 24, weight: .black, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(tint.color)
+            }
+            .opacity(model.dim)
+
+            if let pacing {
+                PacingBar(
+                    actual: pacing.actualUsage, markerFraction: pacing.markerFraction,
+                    zoneColor: model.theme.zone(pacing.zone), offTimeRanges: pacing.offTimeRanges,
+                    isOffTime: pacing.isOffTime, animated: false
+                )
+                .opacity(model.dim)
+                if showsCooling, let cooling = pacing.coolingDate, pacing.zone == .warning || pacing.zone == .hot {
+                    Text(Format.cooling(cooling, now: model.now))
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(model.theme.zone(pacing.zone).color.opacity(0.8))
+                }
+            }
+
+            if let graph = model.graph(window) {
+                Graph(window: window, graph: graph, model: model, dayMarkers: dayMarkers, height: nil)
+                    .padding(.top, 2)
             }
         }
+    }
+
+    /// "resets in 4h 51m · +1% vs pace".
+    private func detail(_ pacing: PacingResult?) -> String {
+        var parts: [String] = []
+        if let resetsAt = window.resetsAt {
+            parts.append(Format.resetCountdown(kind: window.kind, resetsAt: resetsAt, now: model.now))
+        }
+        if let pacing { parts.append(Format.signedPercent(pacing.delta) + " vs pace") }
+        return parts.isEmpty ? "Reset time not reported" : parts.joined(separator: " · ")
+    }
+}
+
+/// When the data is from, and the refresh button beside it. Brighter, with a clock, once stale.
+struct StatusFooter: View {
+    let model: WidgetModel
+
+    var body: some View {
+        HStack(spacing: 4) {
+            if model.stale { Image(systemName: "clock.arrow.circlepath") }
+            Text("Updated \(Format.time(model.snapshot.fetchedAt))")
+            Spacer(minLength: 0)
+            RefreshButton(model: model)
+        }
+        .font(.system(size: 10, weight: .medium))
+        .foregroundStyle(model.text.opacity(model.stale ? 0.5 : 0.3))
+        .lineLimit(1)
     }
 }
 
@@ -300,7 +371,7 @@ struct Graph: View {
     let graph: (resetsAt: Date, pace: [GraphPoint])
     let model: WidgetModel
     let dayMarkers: WeeklyDayMarkers
-    var height = UsageGraph.height
+    var height: CGFloat? = UsageGraph.height
 
     var body: some View {
         let pacing = model.pacing(window)
