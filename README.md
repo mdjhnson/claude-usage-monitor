@@ -50,7 +50,7 @@ The pure logic lives in `Sources/PaceBarCore` and is covered by unit tests.
 open build/PaceBar.app
 ```
 
-To sign with your development identity instead of ad hoc: `SIGN_ID="Apple Development: Your Name (TEAMID)" ./build.sh`.
+To sign with your development identity instead of ad hoc: `SIGN_ID="Apple Development: Your Name (TEAMID)" ./build.sh`. Add `UNIVERSAL=1` to build for both Apple silicon and Intel.
 
 There is no `Package.resolved`. SwiftPM only writes one when a package has dependencies, and PaceBar has none. `audit.sh` fails if any appear.
 
@@ -66,6 +66,25 @@ There is no `Package.resolved`. SwiftPM only writes one when a package has depen
 The item is drawn lazily. Its label color follows the menu bar when macOS switches between light and dark menu bar text, for example with a rotating wallpaper. Theme colors stay fixed. If they're hard to read on your wallpaper, try the Pill style or Monochrome.
 
 To move the app, copy `build/PaceBar.app` to `/Applications`. Launch at login works from anywhere, but `/Applications` is the conventional place.
+
+## Distributing to others
+
+`./release.sh` builds a universal app signed with a Developer ID, notarizes and staples it, and packages it as `dist/PaceBar-<version>.dmg`. Anyone can open that DMG without Gatekeeper warnings. Bump `CFBundleShortVersionString` and `CFBundleVersion` in `Resources/Info.plist` before each release.
+
+One-time setup:
+
+1. **Developer ID Application certificate.** In the Apple Developer account, open Certificates, Identifiers & Profiles › Certificates › **+** › **Developer ID Application**. Only the Account Holder can create one, or an Admin the Account Holder has given access. Upload a CSR from Keychain Access (Certificate Assistant › Request a Certificate From a Certificate Authority › Saved to disk), download the certificate and double-click it. `security find-identity -v -p codesigning` should now list `Developer ID Application: <Team> (<TEAMID>)`. A team can hold only a few of these certificates, so export it with its private key (a `.p12`) and keep it somewhere safe rather than making another one for each Mac.
+2. **Notary credentials.** Create an app-specific password at account.apple.com › Sign-In and Security › App-Specific Passwords, using an Apple Account on the same team. Then store it in the keychain:
+
+   ```sh
+   xcrun notarytool store-credentials pacebar --apple-id you@example.org --team-id TEAMID
+   ```
+
+   An App Store Connect API key works too (`--key`, `--key-id`, `--issuer`). Use `NOTARY_PROFILE=name` if you saved the profile under another name.
+
+Then run `./release.sh`. If the keychain holds more than one Developer ID Application identity, pick one with `SIGN_ID="Developer ID Application: …"`. Notarization usually takes a few minutes per submission, and there are two: the app, then the DMG.
+
+People who install it still go through **First launch** step 2. The Keychain prompt is about `/usr/bin/security`, not PaceBar, so signing doesn't change it.
 
 ## Settings
 
@@ -139,7 +158,7 @@ On any error, the last good data stays on screen, dimmed, with "Last updated N m
 ### Auditing
 
 `./scripts/audit.sh` lists every line in `Sources/` containing `http://`, `https://`, `Process`, `URLSession`, `UserDefaults`, `print(` or `NSLog(`. It then fails if any rule is broken:
-- the only literal host is `api.anthropic.com`, and a URL whose host is built at runtime also fails
+- the only literal host is `api.anthropic.com`, and a URL whose host is built at runtime also fails.
 - networking APIs (`URLSession`, `URLRequest`, `URLComponents`, host assignment) appear only in `UsageClient.swift`
 - `Process` appears only once, in `KeychainTokenReader.swift`
 - no forbidden constructs:
@@ -205,8 +224,7 @@ These are out of scope for v1. The code has clean seams for them, but none are b
 
 Also not done:
 - **User-Agent version detection.** The app sends `claude-code/0.0.0`. If the endpoint starts rejecting that, add version detection from file metadata, with no shell.
-- **Universal binary.** `build.sh` builds for the host architecture only.
-- **Notarization.** The app is ad hoc or development signed, for personal use.
+- **Updates.** There's no auto-update. Distribute a new DMG for each release.
 - **Localization.** English only.
 
 ## License
