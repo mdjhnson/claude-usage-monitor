@@ -1,12 +1,17 @@
 import AppKit
 import SwiftUI
 
-/// The About tab in Settings: version and build, author, source repository and credits.
-/// The repository link is the app's only link; scripts/audit.sh pins it to this one address.
+/// The About tab in Settings: version and build, update check, author, source repository and credits.
+/// Its two links, the repository and its latest release, are fixed addresses that scripts/audit.sh
+/// pins. The release link never comes from GitHub's response.
 struct AboutPane: View {
     static let repository = "github.com/mdjhnson/claude-usage-monitor"
     static let repositoryURL = URL(string: "https://github.com/mdjhnson/claude-usage-monitor")!
+    static let releasesURL = URL(string: "https://github.com/mdjhnson/claude-usage-monitor/releases/latest")!
     static let author = "Matt (mdjhnson)"
+
+    @Bindable var settings: SettingsStore
+    let updates: UpdateChecker
 
     private var info: [String: Any] { Bundle.main.infoDictionary ?? [:] }
     private var version: String { info["CFBundleShortVersionString"] as? String ?? "dev" }
@@ -44,6 +49,8 @@ struct AboutPane: View {
             }
         }
 
+        updatesSection
+
         Section {
             LabeledContent("Made by", value: Self.author)
             LabeledContent("Source") {
@@ -55,6 +62,58 @@ struct AboutPane: View {
         } footer: {
             Text("Pacing model, quips, theme presets and visual design follow TokenEater by AThevon (MIT).")
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    private var updatesSection: some View {
+        Section {
+            LabeledContent {
+                Button("Check for Updates") { updates.check() }
+                    .disabled(updates.state == .checking)
+            } label: {
+                updateStatus
+            }
+            if let version = updates.updateAvailable {
+                LabeledContent("PaceBar \(version.description)") {
+                    Link("Download", destination: Self.releasesURL)
+                }
+            }
+            Toggle("Check automatically once a week", isOn: $settings.autoCheckUpdates)
+                .onChange(of: settings.autoCheckUpdates) { updates.checkIfDue() }
+        } header: {
+            Text("Updates")
+        } footer: {
+            Text("Checking asks api.github.com for the latest release's version number. It sends no account data or token. PaceBar never downloads or installs updates itself.")
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private var updateStatus: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            switch updates.state {
+            case .idle:
+                Text("PaceBar \(version)")
+            case .checking:
+                HStack(spacing: 6) {
+                    ProgressView().controlSize(.small)
+                    Text("Checking…")
+                }
+            case .upToDate:
+                Text("PaceBar \(version) is up to date")
+            case .available(let latest):
+                Text("PaceBar \(latest.description) is available")
+                    .foregroundStyle(.orange)
+            case .failed(let message):
+                Text(message)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if let last = settings.lastUpdateCheck {
+                Text("Last checked \(Format.age(since: last, now: Date()))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 }

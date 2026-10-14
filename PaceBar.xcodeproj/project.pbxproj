@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		04D32D8684C063FC40E06899 /* ResetCycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8558C61F20A72F8EF9B12D4B /* ResetCycle.swift */; };
 		060983C9D3002E18542D6188 /* RefreshIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6134898BC439BF2FB976CBEF /* RefreshIntent.swift */; };
+		060D934B4DB40994A0288EBB /* AppVersion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E5B3B3D98A3130E98256352 /* AppVersion.swift */; };
 		17814983E4F7DD6727899489 /* UsageGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0A07A191C13D5251B86F33 /* UsageGraph.swift */; };
 		1C031134740EBEF2DD81417A /* Notifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 714321F97820E192390FDCB2 /* Notifier.swift */; };
 		3D00E96FDD67C545A9EC51CD /* UsageModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5548113E2B17156552C56D9 /* UsageModels.swift */; };
@@ -35,6 +36,7 @@
 		A8F472579D48DF600552BBBE /* UsageClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A6715D2D68F867579FEB36 /* UsageClient.swift */; };
 		B51513D59936F94ED8B5F294 /* UsageHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0005B0C281DB00A3B886AAE4 /* UsageHistory.swift */; };
 		B57ADF513E28A2B3CD399D0E /* PaceBarWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DDB5CA570372BB0A622C87DF /* PaceBarWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		BF70670075D485E9089A7854 /* UpdateClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 885332B2D971A25827F58637 /* UpdateClient.swift */; };
 		C22F423393C1172C15A5F027 /* Provider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CECBE5740D844735A15A77EC /* Provider.swift */; };
 		C701694D06BDE7FDB01B6F80 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FD5B28E75CE7E8F00E60A69 /* AppDelegate.swift */; };
 		C7B5C19816442B8674049FBB /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E90EA4A312368A8596118CE2 /* AppIntents.framework */; };
@@ -51,6 +53,7 @@
 		E760BA5DC385BBCA3164A6CB /* DisplayOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ED8071EF824E8A7C5AD007E /* DisplayOptions.swift */; };
 		EA3962E51B1BA7FC23800356 /* PacingBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F759645F76618CFCD4B7D71 /* PacingBar.swift */; };
 		EF6C155055F6ED03435C0DA5 /* Formatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FEEE1CE08307437A4306906 /* Formatting.swift */; };
+		EFE5B7760FB0577DE15A25C4 /* UpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E518BC1514F3D507359ED24 /* UpdateChecker.swift */; };
 		F6192559406FFB8B7A20735C /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4722B57576C9FFF541DB83C /* main.swift */; };
 		F99B0084F14D317CF227E5CC /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DF7CB3223E8889CCD574AAA /* AboutView.swift */; };
 		FA059FBF11CDB9900877D22F /* libPaceBarCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D929652656B3C47B7BAC51F6 /* libPaceBarCore.a */; };
@@ -102,6 +105,7 @@
 		0DF7CB3223E8889CCD574AAA /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		1170C1D2E62E30C31C792AE3 /* MenuBarRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarRenderer.swift; sourceTree = "<group>"; };
 		190F21674E87BDB717CD0408 /* WidgetPublisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetPublisher.swift; sourceTree = "<group>"; };
+		1E518BC1514F3D507359ED24 /* UpdateChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateChecker.swift; sourceTree = "<group>"; };
 		2A2798B69A699BC3A438D555 /* CredentialParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialParser.swift; sourceTree = "<group>"; };
 		2A79B16A35CE8D21B7A0F0CE /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		2F759645F76618CFCD4B7D71 /* PacingBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PacingBar.swift; sourceTree = "<group>"; };
@@ -117,6 +121,8 @@
 		714321F97820E192390FDCB2 /* Notifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notifier.swift; sourceTree = "<group>"; };
 		75A801DA324A6F62BB25AF92 /* PaceBar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PaceBar.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8558C61F20A72F8EF9B12D4B /* ResetCycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetCycle.swift; sourceTree = "<group>"; };
+		885332B2D971A25827F58637 /* UpdateClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateClient.swift; sourceTree = "<group>"; };
+		8E5B3B3D98A3130E98256352 /* AppVersion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppVersion.swift; sourceTree = "<group>"; };
 		925F8CD478E572786A8899FE /* LimitIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LimitIntent.swift; sourceTree = "<group>"; };
 		9A2F64B484D3C36DC179FD69 /* Diagnostic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Diagnostic.swift; sourceTree = "<group>"; };
 		9C37BBB41BBDBD805580588B /* PaceBarWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaceBarWidgetBundle.swift; sourceTree = "<group>"; };
@@ -213,6 +219,7 @@
 			isa = PBXGroup;
 			children = (
 				AF38408E7D17CC23141D64E1 /* AlertTracker.swift */,
+				8E5B3B3D98A3130E98256352 /* AppVersion.swift */,
 				DD32BF3A10423B126352AB8A /* Backoff.swift */,
 				2A2798B69A699BC3A438D555 /* CredentialParser.swift */,
 				9A2F64B484D3C36DC179FD69 /* Diagnostic.swift */,
@@ -221,6 +228,7 @@
 				4A74C21096DD2B381A960619 /* PacingCalculator.swift */,
 				4E6304B08ACF51654358C1FF /* PacingModels.swift */,
 				8558C61F20A72F8EF9B12D4B /* ResetCycle.swift */,
+				885332B2D971A25827F58637 /* UpdateClient.swift */,
 				C5A6715D2D68F867579FEB36 /* UsageClient.swift */,
 				0005B0C281DB00A3B886AAE4 /* UsageHistory.swift */,
 				E5548113E2B17156552C56D9 /* UsageModels.swift */,
@@ -234,6 +242,7 @@
 			isa = PBXGroup;
 			children = (
 				62C4B4303371B5E559362BC4 /* SettingsStore.swift */,
+				1E518BC1514F3D507359ED24 /* UpdateChecker.swift */,
 				D8BE6407DB93C6A020DE3737 /* UsageStore.swift */,
 			);
 			path = Stores;
@@ -497,6 +506,7 @@
 				724DABA36F4D05125B4210E7 /* SetupGuideView.swift in Sources */,
 				D21DD27960B067C3B1A93E31 /* StatusItemController.swift in Sources */,
 				660AF7165F410FF57795B53A /* Theme.swift in Sources */,
+				EFE5B7760FB0577DE15A25C4 /* UpdateChecker.swift in Sources */,
 				17814983E4F7DD6727899489 /* UsageGraph.swift in Sources */,
 				D298307E51A5DA0A60E28814 /* UsageStore.swift in Sources */,
 				77C1F95D3A795786E3BD7D6A /* WidgetPublisher.swift in Sources */,
@@ -510,6 +520,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C9D63E3623A8FED145989CF1 /* AlertTracker.swift in Sources */,
+				060D934B4DB40994A0288EBB /* AppVersion.swift in Sources */,
 				406BF5FF7BDFBDB001B89086 /* Backoff.swift in Sources */,
 				4756B74870066EF7352296AC /* CredentialParser.swift in Sources */,
 				6FBD3D418E72BA081BF98F48 /* Diagnostic.swift in Sources */,
@@ -518,6 +529,7 @@
 				49B08F5DB0D15F76318FBF9C /* PacingCalculator.swift in Sources */,
 				765DDE367E7DFC942748030C /* PacingModels.swift in Sources */,
 				04D32D8684C063FC40E06899 /* ResetCycle.swift in Sources */,
+				BF70670075D485E9089A7854 /* UpdateClient.swift in Sources */,
 				A8F472579D48DF600552BBBE /* UsageClient.swift in Sources */,
 				B51513D59936F94ED8B5F294 /* UsageHistory.swift in Sources */,
 				3D00E96FDD67C545A9EC51CD /* UsageModels.swift in Sources */,

@@ -4,6 +4,7 @@ import AppKit
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let settings = SettingsStore()
     private lazy var store = UsageStore(settings: settings)
+    private lazy var updates = UpdateChecker(settings: settings)
     private var statusItem: StatusItemController?
     private var settingsWindow: SettingsWindowController?
     private var notifier: Notifier?
@@ -12,14 +13,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.mainMenu = makeMainMenu()
-        statusItem = StatusItemController(store: store, settings: settings) { [weak self] in
-            self?.showSettings()
+        statusItem = StatusItemController(store: store, settings: settings, updates: updates) { [weak self] pane in
+            self?.showSettings(pane: pane)
         }
         notifier = Notifier(store: store, settings: settings) { [weak self] in
             self?.statusItem?.showPopover()
         }
         widgetPublisher = WidgetPublisher(store: store, settings: settings)
         store.start()
+        updates.start()
 
         // Pause polling while asleep; refresh on wake.
         let center = NSWorkspace.shared.notificationCenter
@@ -28,7 +30,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 MainActor.assumeIsolated { self?.store.handleSleep() }
             },
             center.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
-                MainActor.assumeIsolated { self?.store.handleWake() }
+                MainActor.assumeIsolated {
+                    self?.store.handleWake()
+                    self?.updates.checkIfDue()
+                }
             },
         ]
     }
@@ -41,6 +46,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         store.stop()
+        updates.stop()
         notifier?.removeReminders()
         workspaceObservers.forEach(NSWorkspace.shared.notificationCenter.removeObserver)
     }
@@ -78,11 +84,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         showSettings()
     }
 
-    private func showSettings() {
+    /// - Parameter pane: the tab to show, or nil to keep the one last selected.
+    private func showSettings(pane: SettingsView.Pane? = nil) {
         if settingsWindow == nil {
             guard let notifier else { return }
-            settingsWindow = SettingsWindowController(store: store, settings: settings, notifier: notifier)
+            settingsWindow = SettingsWindowController(store: store, settings: settings, notifier: notifier, updates: updates)
         }
-        settingsWindow?.show()
+        settingsWindow?.show(pane: pane)
     }
 }

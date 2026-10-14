@@ -2,6 +2,8 @@
 # Builds a universal PaceBar.app, has Xcode sign it with the team's cloud-managed Developer ID
 # certificate and notarize it, then packages the stapled app as dist/PaceBar-<version>.dmg.
 #   TEAM_ID=ABCDE12345 ./release.sh
+#   PUBLISH=1 TEAM_ID=… ./release.sh   also publish it as GitHub Release v<version>, which is what
+#                                      Settings › About › Check for Updates reads
 # Needs Xcode signed in (Settings › Accounts) to an account on that team with
 # "Access to Cloud Managed Developer ID Certificate". No local certificate or notary password.
 # One-time setup is in README.md under "Distributing to others".
@@ -19,9 +21,23 @@ DMG="dist/PaceBar-$VERSION.dmg"
 # How long to wait for Apple's notary service before giving up.
 NOTARY_TIMEOUT_SECONDS=1800
 
+TAG="v$VERSION"
+
 if [[ -z "${TEAM_ID:-}" ]]; then
     echo "Set TEAM_ID to your Apple Developer team ID, e.g. TEAM_ID=ABCDE12345 ./release.sh" >&2
     exit 1
+fi
+
+# Checked before the build, so a publish that can't succeed fails in seconds, not after notarizing.
+if [[ -n "${PUBLISH:-}" ]]; then
+    if ! gh auth status >/dev/null 2>&1; then
+        echo "PUBLISH=1 needs the GitHub CLI signed in: run gh auth login." >&2
+        exit 1
+    fi
+    if gh release view "$TAG" >/dev/null 2>&1; then
+        echo "GitHub Release $TAG already exists. Bump CFBundleShortVersionString in $PLIST first." >&2
+        exit 1
+    fi
 fi
 
 # Ad hoc here; exporting re-signs the app and its widget with the Developer ID certificate.
@@ -138,3 +154,14 @@ codesign -dvv "$NOTARIZED/Contents/PlugIns/PaceBarWidget.appex" 2>&1 \
 spctl --assess --type execute --verbose=2 "$NOTARIZED" 2>&1 | grep '^source=' | sed 's/^/  /'
 echo "  architectures: $(lipo -archs "$NOTARIZED/Contents/MacOS/PaceBar")"
 echo "Built $DMG"
+
+PUBLISH_CMD=(gh release create "$TAG" "$DMG" --title "PaceBar $VERSION" --generate-notes)
+if [[ -n "${PUBLISH:-}" ]]; then
+    echo
+    echo "Publishing GitHub Release $TAG…"
+    "${PUBLISH_CMD[@]}"
+else
+    echo
+    echo "To publish it, so Check for Updates sees $VERSION:"
+    echo "  ${(q)PUBLISH_CMD[@]}"
+fi

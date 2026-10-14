@@ -1,13 +1,16 @@
 #!/bin/bash
 # Lists every security-relevant line in the app source so it can be reviewed in one sitting,
 # then enforces the rules. Exits non-zero on any violation:
-#   - the only host is api.anthropic.com, and networking lives only in UsageClient.swift
+#   - the hosts are api.anthropic.com and api.github.com, and networking lives only in UsageClient.swift
+#     and UpdateClient.swift. api.github.com is one fixed URL in UpdateClient.swift, which has no
+#     token, credential or Keychain code
 #   - the only subprocess is the one Process in KeychainTokenReader.swift
 #   - no shells, exec/spawn, AppleScript, listeners, URL opening, or Keychain data/write APIs
 #   - notifications use UserNotifications only (no deprecated NSUserNotification)
 #   - the only app launch is Terminal.app, from the setup guide
 #   - the only other URLs are Claude Code's installer, shown and copied by the setup guide, never fetched,
-#     and the source repository, the one link in the app (About tab), opened in the default browser
+#     and the source repository and its latest release, the About tab's two links, opened in the
+#     default browser
 #   - the only other URL opened is PaceBar's page in System Settings › Notifications (a fixed
 #     x-apple.systempreferences: URL, from the Notifications tab), which opens locally
 #   - Sources/ holds Swift only; Package.swift and project.yml have no dependencies, binaries,
@@ -26,6 +29,8 @@ SRC="Sources"
 TESTS="Tests"
 RESOURCES="Resources"
 CLIENT="Sources/PaceBarCore/UsageClient.swift"
+UPDATER="Sources/PaceBarCore/UpdateClient.swift"
+GITHUB_API_URL="https://api.github.com/repos/mdjhnson/claude-usage-monitor/releases/latest"
 READER="Sources/PaceBarCore/KeychainTokenReader.swift"
 GUIDE="Sources/PaceBar/UI/SetupGuideView.swift"
 TERMINAL_URL='URL(fileURLWithPath: "/System/Applications/Utilities/Terminal.app")'
@@ -33,6 +38,8 @@ INSTALL_URL="https://claude.ai/install.sh"
 ABOUT="Sources/PaceBar/UI/AboutView.swift"
 REPO_URL="https://github.com/mdjhnson/claude-usage-monitor"
 REPO_LINK='Link(Self.repository, destination: Self.repositoryURL)'
+RELEASES_URL="https://github.com/mdjhnson/claude-usage-monitor/releases/latest"
+RELEASES_LINK='Link("Download", destination: Self.releasesURL)'
 NOTIFIER="Sources/PaceBar/Notifier.swift"
 WIDGET="Sources/PaceBarWidget"
 SNAPSHOT="Sources/PaceBarCore/WidgetSnapshot.swift"
@@ -57,8 +64,11 @@ strip_url() {
     awk -v f="$1:" -v u="$2" \
         'index($0, f) == 1 { while ((i = index($0, u)) > 0) $0 = substr($0, 1, i - 1) substr($0, i + length(u)) } { print }'
 }
-# The installer URL in the setup guide and the repository URL in the About tab.
-strip_allowed_urls() { strip_url "$GUIDE" "$INSTALL_URL" | strip_url "$ABOUT" "$REPO_URL"; }
+# The installer URL in the setup guide and the repository and release URLs in the About tab.
+# The release URL goes first: it starts with the repository URL.
+strip_allowed_urls() {
+    strip_url "$GUIDE" "$INSTALL_URL" | strip_url "$ABOUT" "$RELEASES_URL" | strip_url "$ABOUT" "$REPO_URL"
+}
 
 echo "PaceBar source audit ($(date '+%Y-%m-%d %H:%M'))"
 
@@ -76,6 +86,7 @@ forbidden=$(rhits \
 'NSAppleEventManager|handleGetURLEvent|WKWebView|openURL|(^|[^.A-Za-z0-9_])Link\(|NSWorkspace[^(]*\.open\(|'\
 'FileManager.*\.claude|NSPasteboard.*[Tt]oken' "$SRC" | code_only \
     | awk -v f="$ABOUT:" -v l="$REPO_LINK" '!(index($0, f) == 1 && index($0, l) > 0)' \
+    | awk -v f="$ABOUT:" -v l="$RELEASES_LINK" '!(index($0, f) == 1 && index($0, l) > 0)' \
     | awk -v f="$NOTIFIER:" -v l="$SETTINGS_LINK" '!(index($0, f) == 1 && index($0, l) > 0)')
 if [ -n "$forbidden" ]; then echo "$forbidden"; fail "forbidden construct(s) above"; else echo "(none)"; fi
 
@@ -95,13 +106,16 @@ links=$(rhits '(^|[^.A-Za-z0-9_])Link\(|openURL|NSWorkspace[^(]*\.open\(' "$SRC"
 echo "${links:-(none)}"
 stray_links=$(printf '%s\n' "$links" | grep . | outside "$ABOUT" | outside "$NOTIFIER")
 [ -n "$stray_links" ] && fail "link opened outside AboutView.swift and Notifier.swift"
-[ "$(printf '%s\n' "$links" | grep -c .)" -gt 2 ] && fail "more than two links"
+[ "$(printf '%s\n' "$links" | grep -c .)" -gt 3 ] && fail "more than three links"
 about_links=$(printf '%s\n' "$links" | grep -F "$ABOUT:")
 if [ -n "$about_links" ]; then
-    [ "$(printf '%s\n' "$about_links" | grep -c .)" -gt 1 ] && fail "more than one link in AboutView.swift"
-    printf '%s\n' "$about_links" | grep -qF "$REPO_LINK" || fail "the About link must be $REPO_LINK"
+    [ "$(printf '%s\n' "$about_links" | grep -c .)" -gt 2 ] && fail "more than two links in AboutView.swift"
+    [ -n "$(printf '%s\n' "$about_links" | grep -vF "$REPO_LINK" | grep -vF "$RELEASES_LINK")" ] \
+        && fail "the About links must be $REPO_LINK and $RELEASES_LINK"
     [ "$(grep -cF "static let repositoryURL = URL(string: \"$REPO_URL\")!" "$ABOUT")" -eq 1 ] \
         || fail "repositoryURL must be the fixed repository address"
+    [ "$(grep -cF "static let releasesURL = URL(string: \"$RELEASES_URL\")!" "$ABOUT")" -eq 1 ] \
+        || fail "releasesURL must be the fixed latest-release address"
 fi
 notifier_links=$(printf '%s\n' "$links" | grep -F "$NOTIFIER:")
 if [ -n "$notifier_links" ]; then
@@ -111,9 +125,23 @@ if [ -n "$notifier_links" ]; then
         || fail "notificationSettingsURL must be the fixed System Settings address"
 fi
 
-section "Networking outside $CLIENT"
-net=$(rhits 'URLSession|URLRequest\(|URLComponents|\.host *=' "$SRC" | code_only | outside "$CLIENT")
-if [ -n "$net" ]; then echo "$net"; fail "networking APIs used outside UsageClient.swift"; else echo "(none)"; fi
+section "Networking outside $CLIENT and $UPDATER"
+net=$(rhits 'URLSession|URLRequest\(|URLComponents|\.host *=' "$SRC" | code_only | outside "$CLIENT" | outside "$UPDATER")
+if [ -n "$net" ]; then echo "$net"; fail "networking APIs used outside UsageClient.swift and UpdateClient.swift"; else echo "(none)"; fi
+
+section "Update check  [$UPDATER]"
+github=$(rhits 'https?://api\.github\.com' "$SRC" | code_only)
+echo "${github:-(none)}"
+[ -n "$(printf '%s' "$github" | grep . | outside "$UPDATER")" ] && fail "api.github.com URL outside UpdateClient.swift"
+[ "$(grep -cF "static let latestURL = URL(string: \"$GITHUB_API_URL\")!" "$UPDATER")" -eq 1 ] \
+    || fail "latestURL must be the fixed latest-release API address"
+[ "$(grep -nH 'https://' "$UPDATER" | code_only | grep -c .)" -eq 1 ] || fail "UpdateClient.swift may hold only the one latestURL"
+updater_secrets=$(grep -nHE 'Authorization|OAuthCredential|accessToken|KeychainTokenReader|SecItem|UserDefaults' "$UPDATER" | code_only)
+if [ -n "$updater_secrets" ]; then
+    echo "$updater_secrets"; fail "UpdateClient.swift must not touch credentials, the Keychain or settings"
+else
+    echo "no credentials, Keychain or settings in the update client"
+fi
 
 section "Subprocess call sites"
 procs=$(rhits '\bProcess\b' "$SRC" | code_only)
@@ -140,7 +168,7 @@ printf '%s' "$darwin" | grep -F "$REFRESH_INTENT:" | grep -q 'AddObserver' && fa
     && fail "the refresh notification name is built outside WidgetSnapshot.swift"
 
 section "Widget extension  [$WIDGET]"
-widget_forbidden=$(rhits 'URLSession|URLRequest|\bProcess\b|SecItem|SecKeychain|UsageClient|KeychainTokenReader|UNUserNotification|NSWorkspace|openURL|Link\(' "$WIDGET" | code_only)
+widget_forbidden=$(rhits 'URLSession|URLRequest|\bProcess\b|SecItem|SecKeychain|UsageClient|UpdateClient|KeychainTokenReader|UNUserNotification|NSWorkspace|openURL|Link\(' "$WIDGET" | code_only)
 if [ -n "$widget_forbidden" ]; then
     echo "$widget_forbidden"; fail "networking, subprocess, Keychain, notification or URL code in the widget"
 else
@@ -205,8 +233,10 @@ echo "network hosts (${host_count}): $(echo $hosts)"
 echo "Process call sites: ${process_count}"
 echo "plain http:// hits: ${http_count}"
 
-# Every literal URL must be exactly api.anthropic.com (an empty host means it is built at runtime).
-if [ -n "$hosts" ] && [ "$hosts" != "api.anthropic.com" ]; then fail "unexpected network host(s)"; fi
+# Every literal URL must be api.anthropic.com or api.github.com (an empty host means it is built
+# at runtime).
+stray_hosts=$(printf '%s\n' "$hosts" | grep . | grep -vxF 'api.anthropic.com' | grep -vxF 'api.github.com')
+[ -n "$stray_hosts" ] && fail "unexpected network host(s): $(echo $stray_hosts)"
 [ "$http_count" -gt 0 ] && fail "plain http:// in source"
 if grep -qE '\.package\(|binaryTarget|\.plugin\(|unsafeFlags|linkedLibrary|linkedFramework' Package.swift; then
     fail "Package.swift declares dependencies, binaries, plugins or unsafe/linker settings"

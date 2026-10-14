@@ -8,12 +8,14 @@ import PaceBarCore
 @MainActor
 final class SettingsWindowController {
     private let window: NSWindow
+    private let tabs = NSTabViewController()
 
-    init(store: UsageStore, settings: SettingsStore, notifier: Notifier) {
-        let tabs = NSTabViewController()
+    init(store: UsageStore, settings: SettingsStore, notifier: Notifier, updates: UpdateChecker) {
         tabs.tabStyle = .toolbar
         for pane in SettingsView.Pane.allCases {
-            let hosting = NSHostingController(rootView: SettingsView(pane: pane, store: store, settings: settings, notifier: notifier))
+            let hosting = NSHostingController(rootView: SettingsView(
+                pane: pane, store: store, settings: settings, notifier: notifier, updates: updates
+            ))
             hosting.sizingOptions = [.preferredContentSize]
             hosting.title = pane.title
             let item = NSTabViewItem(viewController: hosting)
@@ -28,7 +30,10 @@ final class SettingsWindowController {
         window.center()
     }
 
-    func show() {
+    func show(pane: SettingsView.Pane? = nil) {
+        if let pane, let index = SettingsView.Pane.allCases.firstIndex(of: pane) {
+            tabs.selectedTabViewItemIndex = index
+        }
         NSApp.activate()
         window.makeKeyAndOrderFront(nil)
     }
@@ -65,6 +70,7 @@ struct SettingsView: View {
     let store: UsageStore
     @Bindable var settings: SettingsStore
     let notifier: Notifier
+    let updates: UpdateChecker
 
     @State private var launchAtLogin = [.enabled, .requiresApproval].contains(SMAppService.mainApp.status)
     @State private var launchStatus = SMAppService.mainApp.status
@@ -90,7 +96,7 @@ struct SettingsView: View {
                 generalSection
                 diagnosticsSection
             case .about:
-                AboutPane()
+                AboutPane(settings: settings, updates: updates)
             }
         }
         .formStyle(.grouped)

@@ -106,7 +106,7 @@ For each release:
 
 1. `git checkout main && git pull`, so the build includes everything merged on GitHub.
 2. Bump `CFBundleShortVersionString` (and `CFBundleVersion`) in `Resources/Info.plist` and commit it. Settings › About shows the commit a build came from, marked `-dirty` if the tree had uncommitted changes, so release from a clean tree.
-3. `TEAM_ID=<your team ID> ./release.sh`, then share `dist/PaceBar-<version>.dmg`.
+3. `PUBLISH=1 TEAM_ID=<your team ID> ./release.sh`. With `PUBLISH=1`, the script finishes by publishing the DMG as GitHub Release `v<version>` (`gh release create … --generate-notes`), which is what **Check for Updates** reads. It checks that `gh` is signed in and the tag is new before it builds. Without `PUBLISH=1`, it prints the `gh` command to run later.
 
 The export signs the app and the widget extension. The first release after the widget was added may take a little longer while Xcode registers the widget's bundle ID (`io.github.mdjhnson.pacebar.widget`) for the team.
 
@@ -127,7 +127,7 @@ People who install it still go through **First launch** step 2. The Keychain pro
 
 ## Settings
 
-Open Settings from the gear in the popover. Settings are split into six tabs: Pacing, Menu Bar, Appearance, Notifications, General and About. About shows the version, build number and source commit (written in at build time), the author, a link to this repository, and credits.
+Open Settings from the gear in the popover. Settings are split into six tabs: Pacing, Menu Bar, Appearance, Notifications, General and About. About shows the version, build number and source commit (written in at build time), the update check, the author, a link to this repository, and credits.
 
 | Setting | Default | Notes |
 |---|---|---|
@@ -149,6 +149,8 @@ Open Settings from the gear in the popover. Settings are split into six tabs: Pa
 | Refresh every | 3 min | 60–600 s. Opening the popover also refreshes, at most once per 30 s. |
 | Launch at login | Off | Uses `SMAppService.mainApp`. macOS may ask you to approve it in Login Items. |
 | Copy diagnostic | — | Copies a redacted report (see below). |
+| Check for Updates | — | In About. Asks GitHub for the latest release's version and compares it with this build. If it's newer, About shows a Download link to the release page and the popover shows "PaceBar x.y.z is available". It never downloads or installs anything. See **Network**. |
+| Check automatically once a week | Off | In About. While on, PaceBar runs the same check at launch, on wake and every 6 hours, but only once a week has passed since the last answer. |
 
 ### Notifications
 
@@ -203,10 +205,13 @@ PaceBar holds a **full-scope Claude Code OAuth token** in memory while a request
 
 ### Network
 
-- **One host:** `https://api.anthropic.com/api/oauth/usage`. There is no analytics, telemetry, update check or crash reporting.
-- The request URL is checked right before sending: https only, exact host `api.anthropic.com`, default port, no user info. The response URL is checked again.
+- **Two hosts, each with one fixed URL:**
+  - `https://api.anthropic.com/api/oauth/usage`, the usage request, from `UsageClient.swift`. It's the only request that carries the token.
+  - `https://api.github.com/repos/mdjhnson/claude-usage-monitor/releases/latest`, the update check, from `UpdateClient.swift`. It runs only when you click **Check for Updates**, or weekly if you turn that on (off by default). It sends no token, cookie or account data, just `User-Agent: PaceBar` (GitHub requires one), so GitHub sees your IP address and that PaceBar asked. Only the `tag_name` field is read. The Download link opens a fixed release-page address, never a URL from the response.
+- There is no analytics, telemetry, crash reporting or auto-update.
+- Each request URL is checked right before sending: https only, the exact host for that client, default port, no user info. The response URL is checked again.
 - **Every redirect is refused,** including same-host redirects.
-- The session is ephemeral, with no cookie store, URL cache or credential storage. TLS 1.2 is the minimum.
+- Both sessions are ephemeral, with no cookie store, URL cache or credential storage. TLS 1.2 is the minimum.
 - `os.Logger` records status codes and error kinds only. Headers and bodies are never logged.
 
 ### Subprocess and Keychain
@@ -231,8 +236,8 @@ PaceBar holds a **full-scope Claude Code OAuth token** in memory while a request
 - **One file on disk:** the widget snapshot (see **Widgets**), written only by `WidgetSnapshot.swift`. It holds usage percentages, reset times, recent readings and display settings, never the token.
 - There are no listening sockets, no URL scheme handlers, no AppleScript, and no files written into `~/.claude`.
 - The only app PaceBar launches is `/System/Applications/Utilities/Terminal.app`, at a fixed path, from the setup guide.
-- It opens exactly two fixed URLs: this repository's GitHub page, from the link in Settings › About, in your default browser; and PaceBar's page in System Settings › Notifications (`x-apple.systempreferences:…?id=io.github.mdjhnson.pacebar`), from the Notifications tab, which opens locally.
-- **No auto-update.** You update by pulling and rebuilding, or by installing a newer DMG.
+- It opens exactly three fixed URLs: this repository's GitHub page and its latest release page, from the links in Settings › About, in your default browser; and PaceBar's page in System Settings › Notifications (`x-apple.systempreferences:…?id=io.github.mdjhnson.pacebar`), from the Notifications tab, which opens locally.
+- **No auto-update.** The optional update check only tells you a newer version exists. You update by pulling and rebuilding, or by installing a newer DMG.
 
 ### Failure behavior
 
@@ -250,15 +255,16 @@ On any error, the last good data stays on screen, dimmed, with "Last updated N m
 ### Auditing
 
 `./scripts/audit.sh` lists every line in `Sources/` containing `http://`, `https://`, `Process`, `URLSession`, `UserDefaults`, `print(` or `NSLog(`. It then fails if any rule is broken:
-- the only literal host is `api.anthropic.com`, and a URL whose host is built at runtime also fails. The one exception is `https://claude.ai/install.sh` in `SetupGuideView.swift`, which is copied to the clipboard and never fetched. The other is `https://github.com/mdjhnson/claude-usage-monitor` in `AboutView.swift`, the About tab's link.
-- URLs are opened in exactly two places: one `Link(Self.repository, destination: Self.repositoryURL)` in `AboutView.swift`, with `repositoryURL` fixed to the repository address, and one `NSWorkspace.shared.open(Self.notificationSettingsURL)` in `Notifier.swift`, with `notificationSettingsURL` fixed to PaceBar's System Settings page. Any other `Link(`, `openURL` or `NSWorkspace.open(` fails.
+- the only literal hosts are `api.anthropic.com` and `api.github.com`, and a URL whose host is built at runtime also fails. The exceptions are `https://claude.ai/install.sh` in `SetupGuideView.swift`, which is copied to the clipboard and never fetched, and the About tab's two links in `AboutView.swift`, `https://github.com/mdjhnson/claude-usage-monitor` and its `/releases/latest` page.
+- `api.github.com` appears only in `UpdateClient.swift`, as the one fixed `latestURL`, and that file holds no other URL. It has no `Authorization`, `OAuthCredential`, `accessToken`, `KeychainTokenReader`, `SecItem` or `UserDefaults`, so the token can't reach GitHub.
+- URLs are opened in exactly three places: `Link(Self.repository, destination: Self.repositoryURL)` and `Link("Download", destination: Self.releasesURL)` in `AboutView.swift`, with both URLs fixed, and one `NSWorkspace.shared.open(Self.notificationSettingsURL)` in `Notifier.swift`, with `notificationSettingsURL` fixed to PaceBar's System Settings page. Any other `Link(`, `openURL` or `NSWorkspace.open(` fails.
 - the only app launch is one `openApplication` call in `SetupGuideView.swift`, opening the fixed Terminal.app path
-- networking APIs (`URLSession`, `URLRequest`, `URLComponents`, host assignment) appear only in `UsageClient.swift`
+- networking APIs (`URLSession`, `URLRequest`, `URLComponents`, host assignment) appear only in `UsageClient.swift` and `UpdateClient.swift`
 - `Process` appears only once, in `KeychainTokenReader.swift`
 - no forbidden constructs:
   - Keychain data or write APIs
   - shells, exec/spawn/popen, AppleScript
-  - sockets and listeners, web views, URL opening (other than the two links above)
+  - sockets and listeners, web views, URL opening (other than the three links above)
 - `Sources/` contains only Swift files
 - `Package.swift` declares no dependencies, binary targets, plugins or unsafe/linker flags; `project.yml` declares no packages, prebuilt frameworks or extra flags, and `PaceBar.xcodeproj` references no remote package
 - the app's entitlements are exactly `com.apple.security.network.client` and `com.apple.security.application-groups`; the widget's are exactly `com.apple.security.app-sandbox` (true) and `com.apple.security.application-groups`; the only App Group in either is `$(TeamIdentifierPrefix)io.github.mdjhnson.pacebar`; Release builds don't inject `get-task-allow`; and Info.plist declares no URL schemes
@@ -320,7 +326,7 @@ These are out of scope for v1. The code has clean seams for them, but none are b
 
 Also not done:
 - **User-Agent version detection.** The app sends `claude-code/0.0.0`. If the endpoint starts rejecting that, add version detection from file metadata, with no shell.
-- **Updates.** There's no auto-update. Distribute a new DMG for each release.
+- **Auto-update.** Check for Updates only links to the release page. Installing is still dragging the new DMG's app into Applications.
 - **Localization.** English only.
 
 ## License

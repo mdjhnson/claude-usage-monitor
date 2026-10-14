@@ -50,6 +50,8 @@ final class SettingsStore {
         static let notifyPace = "pacebar.notify.pace"
         static let sessionReminder = "pacebar.notify.sessionReminderMinutes"
         static let weeklyReminder = "pacebar.notify.weeklyReminderMinutes"
+        static let autoCheckUpdates = "pacebar.update.auto"
+        static let lastUpdateCheck = "pacebar.update.lastChecked"
     }
 
     static let refreshRange: ClosedRange<Double> = 60...600
@@ -89,6 +91,10 @@ final class SettingsStore {
     var notifyPace: Bool { didSet { defaults.set(notifyPace, forKey: Key.notifyPace) } }
     var sessionReminderMinutes: Int { didSet { defaults.set(sessionReminderMinutes, forKey: Key.sessionReminder) } }
     var weeklyReminderMinutes: Int { didSet { defaults.set(weeklyReminderMinutes, forKey: Key.weeklyReminder) } }
+    /// Off by default: with it off, PaceBar only contacts GitHub when Check for Updates is clicked.
+    var autoCheckUpdates: Bool { didSet { defaults.set(autoCheckUpdates, forKey: Key.autoCheckUpdates) } }
+    /// The last update check that got an answer from GitHub.
+    var lastUpdateCheck: Date? { didSet { defaults.set(lastUpdateCheck, forKey: Key.lastUpdateCheck) } }
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -141,6 +147,8 @@ final class SettingsStore {
         }
         sessionReminderMinutes = choice(Key.sessionReminder, Self.sessionReminderChoices)
         weeklyReminderMinutes = choice(Key.weeklyReminder, Self.weeklyReminderChoices)
+        autoCheckUpdates = bool(Key.autoCheckUpdates, false)
+        lastUpdateCheck = defaults.object(forKey: Key.lastUpdateCheck) as? Date
     }
 
     /// The theme in use, including the person's own colors when Custom is chosen.
