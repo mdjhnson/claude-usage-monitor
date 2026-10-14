@@ -244,6 +244,10 @@ Medium and large share a display name. They're separate widgets because a widget
   - The graph, with no countdown line because the graph's axis already ends at the reset. The countdown line appears only when there's no graph.
   - The cooling line (10 medium at text 0.4) in Watch out and Hot, with two or fewer windows.
   - With three windows, graphs shrink to 34pt and "Lines and day names" shows lines only.
+- **Refresh button:** `arrow.clockwise`, 10 semibold at text 0.4, in a 16pt hit area, as an App Intent button (`RefreshIntent`).
+  - Small: trailing the title row.
+  - Medium: trailing the first graph's title, or the top-right corner when there's no graph column.
+  - Large: bottom right, after the stale line when there is one.
 - **Stale** (a failed refresh, or data older than the larger of 2× the refresh interval and 10 minutes): values at 0.45 opacity and a bottom line "Updated 12 min ago" with `clock.arrow.circlepath`, 10pt at text 0.45. In the small widget it replaces the countdown.
 - **Empty:** a 22pt `gauge.with.needle` over 11 medium text at text 0.6, centered: "Open PaceBar to start." when there's no snapshot, or "No limits to show. Choose some in PaceBar's Settings › Windows." when every limit is hidden.
 - **Gallery:** sample data (session 52%, weekly 38%) in the Default theme until there's a real snapshot.

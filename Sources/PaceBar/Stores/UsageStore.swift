@@ -216,6 +216,12 @@ final class UsageStore {
         Task { await refresh(userInitiated: false) }
     }
 
+    /// A widget's refresh button. Limited like opening the popover, so it can't cause a burst
+    /// of requests however often it's clicked.
+    func widgetRefreshRequested() {
+        popoverOpened()
+    }
+
     /// The Retry and refresh buttons. Uses the long Keychain timeout so a prompt can be answered.
     func retry() {
         keychainPaused = false

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		04D32D8684C063FC40E06899 /* ResetCycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8558C61F20A72F8EF9B12D4B /* ResetCycle.swift */; };
+		060983C9D3002E18542D6188 /* RefreshIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6134898BC439BF2FB976CBEF /* RefreshIntent.swift */; };
 		17814983E4F7DD6727899489 /* UsageGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0A07A191C13D5251B86F33 /* UsageGraph.swift */; };
 		1C031134740EBEF2DD81417A /* Notifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 714321F97820E192390FDCB2 /* Notifier.swift */; };
 		3D00E96FDD67C545A9EC51CD /* UsageModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5548113E2B17156552C56D9 /* UsageModels.swift */; };
@@ -109,6 +110,7 @@
 		4C9BBCA54B4119979A5699D5 /* KeychainTokenReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainTokenReader.swift; sourceTree = "<group>"; };
 		4E6304B08ACF51654358C1FF /* PacingModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PacingModels.swift; sourceTree = "<group>"; };
 		51E6A3260E67E3EE897B3FFF /* WidgetSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshot.swift; sourceTree = "<group>"; };
+		6134898BC439BF2FB976CBEF /* RefreshIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefreshIntent.swift; sourceTree = "<group>"; };
 		62C4B4303371B5E559362BC4 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
 		6E0A07A191C13D5251B86F33 /* UsageGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageGraph.swift; sourceTree = "<group>"; };
 		6ED8071EF824E8A7C5AD007E /* DisplayOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayOptions.swift; sourceTree = "<group>"; };
@@ -188,6 +190,7 @@
 				925F8CD478E572786A8899FE /* LimitIntent.swift */,
 				9C37BBB41BBDBD805580588B /* PaceBarWidgetBundle.swift */,
 				CECBE5740D844735A15A77EC /* Provider.swift */,
+				6134898BC439BF2FB976CBEF /* RefreshIntent.swift */,
 				BF4816AFCE94908A145968A4 /* UsageWidgetViews.swift */,
 			);
 			path = PaceBarWidget;
@@ -469,6 +472,7 @@
 				8492FB767B7A9F6FA331D89F /* PaceBarWidgetBundle.swift in Sources */,
 				505BCA0D6381125ABA378DDD /* PacingBar.swift in Sources */,
 				C22F423393C1172C15A5F027 /* Provider.swift in Sources */,
+				060983C9D3002E18542D6188 /* RefreshIntent.swift in Sources */,
 				FB7BACBCE1942F6AE0E66984 /* Theme.swift in Sources */,
 				CCA966A0FAFA836A03746553 /* UsageGraph.swift in Sources */,
 				4F85DE2B3502E3DE669AEB3A /* UsageWidgetViews.swift in Sources */,

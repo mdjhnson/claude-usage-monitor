@@ -86,7 +86,11 @@ struct SmallUsageView: View {
         let tint = model.tint(window, pacing)
 
         VStack(alignment: .leading, spacing: 6) {
-            WindowTitle(kind: window.kind, model: model)
+            HStack(spacing: 4) {
+                WindowTitle(kind: window.kind, model: model)
+                Spacer(minLength: 0)
+                RefreshButton(model: model)
+            }
 
             ZStack {
                 Circle()
@@ -154,7 +158,11 @@ struct MediumUsageView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         ForEach(graphs, id: \.0.kind) { window, graph in
                             VStack(alignment: .leading, spacing: graphs.count > 1 ? 2 : 4) {
-                                WindowTitle(kind: window.kind, model: model)
+                                HStack(spacing: 4) {
+                                    WindowTitle(kind: window.kind, model: model)
+                                    Spacer(minLength: 0)
+                                    if window.kind == graphs[0].0.kind { RefreshButton(model: model) }
+                                }
                                 Graph(window: window, graph: graph, model: model, dayMarkers: dayMarkers,
                                       height: graphs.count > 1 ? 24 : UsageGraph.height)
                             }
@@ -165,6 +173,10 @@ struct MediumUsageView: View {
             }
             Spacer(minLength: 0)
             if model.stale { StaleLine(model: model) }
+        }
+        // Without a graph column, the button takes the corner.
+        .overlay(alignment: .topTrailing) {
+            if graphs.isEmpty { RefreshButton(model: model).offset(y: -14) }
         }
     }
 }
@@ -198,12 +210,34 @@ struct LargeUsageView: View {
                 }
             }
             Spacer(minLength: 0)
-            if model.stale { StaleLine(model: model) }
+            HStack {
+                if model.stale { StaleLine(model: model) }
+                Spacer(minLength: 0)
+                RefreshButton(model: model)
+            }
         }
     }
 }
 
 // MARK: Pieces
+
+/// Asks PaceBar to fetch now. The widget can't fetch itself (no network or Keychain), so this
+/// only posts the request; the app refreshes and redraws the widgets.
+struct RefreshButton: View {
+    let model: WidgetModel
+
+    var body: some View {
+        Button(intent: RefreshIntent()) {
+            Image(systemName: "arrow.clockwise")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(model.text.opacity(0.4))
+                .frame(width: 16, height: 16)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Refresh")
+    }
+}
 
 struct WindowTitle: View {
     let kind: WindowKind

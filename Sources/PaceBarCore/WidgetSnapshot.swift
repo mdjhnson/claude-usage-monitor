@@ -111,11 +111,22 @@ public struct WidgetSnapshotStore: Sendable {
 
     /// The shared container's file, or nil when the bundle has no usable App Group.
     public init?(bundle: Bundle = .main) {
-        guard let group = bundle.object(forInfoDictionaryKey: Self.groupKey) as? String,
-              !group.isEmpty, !group.hasPrefix("."),
+        guard let group = Self.group(bundle: bundle),
               let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: group)
         else { return nil }
         self.init(fileURL: container.appendingPathComponent(Self.fileName))
+    }
+
+    /// The Darwin notification a widget's refresh button posts and the app listens for. It
+    /// carries no data; the app treats it like opening the popover.
+    public static func refreshNotificationName(bundle: Bundle = .main) -> String? {
+        group(bundle: bundle).map { $0 + ".refresh" }
+    }
+
+    private static func group(bundle: Bundle) -> String? {
+        guard let group = bundle.object(forInfoDictionaryKey: groupKey) as? String,
+              !group.isEmpty, !group.hasPrefix(".") else { return nil }
+        return group
     }
 
     public func write(_ snapshot: WidgetSnapshot) throws {

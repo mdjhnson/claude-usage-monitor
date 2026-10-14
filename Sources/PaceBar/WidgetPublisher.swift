@@ -12,6 +12,9 @@ final class WidgetPublisher {
     static let minReloadGap: TimeInterval = 5 * 60
     /// New readings reach the widget graphs at least this often.
     static let maxReloadGap: TimeInterval = 30 * 60
+    /// After a widget's refresh button, every publish reloads for this long, so the fetch it
+    /// started reaches the widgets without waiting out `minReloadGap`.
+    static let requestedReloadWindow: TimeInterval = 20
 
     /// What a widget visibly shows, to tell a real change from a refresh with the same numbers.
     private struct Visible: Equatable {
@@ -31,11 +34,38 @@ final class WidgetPublisher {
     private var lastVisible: Visible?
     private var lastResets: [WindowKind: Date?] = [:]
     private var lastReload: Date?
+    private var forceReloadUntil: Date?
 
     init(store: UsageStore, settings: SettingsStore) {
         self.store = store
         self.settings = settings
         observe()
+        listenForRefreshRequests()
+    }
+
+    // MARK: Refresh button
+
+    /// The widgets' refresh button posts a Darwin notification, since the sandboxed extension
+    /// can't fetch. The publisher lives as long as the app, so the observer is never removed.
+    private func listenForRefreshRequests() {
+        guard let name = WidgetSnapshotStore.refreshNotificationName() else { return }
+        CFNotificationCenterAddObserver(
+            CFNotificationCenterGetDarwinNotifyCenter(),
+            Unmanaged.passUnretained(self).toOpaque(),
+            { _, observer, _, _, _ in
+                guard let observer else { return }
+                let publisher = Unmanaged<WidgetPublisher>.fromOpaque(observer).takeUnretainedValue()
+                Task { @MainActor in publisher.refreshRequested() }
+            },
+            name as CFString, nil, .deliverImmediately
+        )
+    }
+
+    /// Shows what the app already has straight away, then fetches if the data is over 30 s old.
+    private func refreshRequested() {
+        forceReloadUntil = Date().addingTimeInterval(Self.requestedReloadWindow)
+        publish()
+        store.widgetRefreshRequested()
     }
 
     // MARK: Observation
@@ -108,7 +138,7 @@ final class WidgetPublisher {
         let resets = Dictionary(snapshot.windows.map { ($0.kind, $0.resetsAt) }, uniquingKeysWith: { first, _ in first })
         // Compared with what the widget last reloaded with, so a change held back by the gap
         // still goes out with a later refresh.
-        let reload = needsReload(visible, resets: resets, now: now)
+        let reload = (forceReloadUntil.map { now < $0 } ?? false) || needsReload(visible, resets: resets, now: now)
         if reload {
             lastVisible = visible
             lastResets = resets

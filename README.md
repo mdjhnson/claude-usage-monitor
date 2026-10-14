@@ -170,6 +170,11 @@ Add them like any other widget: click the date in the menu bar and choose **Edit
 
 Widgets follow your settings: theme (including Custom colors), color mode, thresholds, workweek pacing, which limits the popover shows, and the usage graph and day options. Clicking a widget opens the popover.
 
+**Refresh button** (↻, top right; bottom right on the large widget):
+- It asks PaceBar to bring the widgets up to date. PaceBar redraws them with what it already has, then fetches, with the same limit as opening the popover: not if the data is under 30 seconds old.
+- For about 20 seconds after a click, every update reaches the widgets immediately.
+- The widget can't fetch on its own, so this does nothing while PaceBar isn't running.
+
 **How they get data.** A widget runs in its own sandboxed process with no network access, so it can't read the Keychain. After each refresh PaceBar writes `snapshot.json` to a folder it shares with the widget, `~/Library/Group Containers/<TEAM_ID>.io.github.mdjhnson.pacebar/`. The file holds:
 - each shown limit's percentage and reset time
 - up to 120 of this cycle's readings per limit, for the graph
@@ -178,7 +183,7 @@ Widgets follow your settings: theme (including Custom colors), color mode, thres
 
 It never holds the token, any response body, or anything else from the Keychain. PaceBar replaces the file on each refresh.
 
-**Updates.** Widgets recompute pacing every 15 minutes from the last snapshot, so zones keep moving even with no new data. PaceBar also asks macOS to redraw them as soon as a setting changes, an error starts or ends, or a limit resets. Other changes reach them at most every 5 minutes, and new graph readings at least every 30 minutes, which keeps PaceBar inside macOS's daily widget update budget.
+**Updates.** Widgets recompute pacing every 15 minutes from the last snapshot, so zones keep moving even with no new data. PaceBar also asks macOS to redraw them as soon as a setting changes, an error starts or ends, or a limit resets. Other changes reach them at most every 5 minutes, and new graph readings at least every 30 minutes, which keeps PaceBar inside macOS's daily widget update budget. In between, a widget can be a point behind the menu bar; the refresh button catches it up.
 
 **When PaceBar isn't running,** widgets keep showing the last snapshot. After a failed refresh, or once the data is older than twice the refresh interval (and at least 10 minutes), they dim it and show "Updated N min ago". Before PaceBar has ever run, they show "Open PaceBar to start."
 
@@ -220,6 +225,7 @@ PaceBar holds a **full-scope Claude Code OAuth token** in memory while a request
 - **Not sandboxed.** An App Sandbox would prevent running `/usr/bin/security` to read another app's Keychain item, which is the only way PaceBar gets the token.
 - **Hardened runtime is on.** The app's entitlements are `com.apple.security.network.client` and one App Group, `<TEAM_ID>.io.github.mdjhnson.pacebar`. There are no library-validation or JIT exceptions. Release builds carry no `get-task-allow`, so a debugger can't attach.
 - **The widget extension is sandboxed** (`com.apple.security.app-sandbox`), with no network entitlement. Its only other entitlement is the same App Group. Its code reads `snapshot.json` and draws it. It has no networking, subprocess, Keychain, notification or URL-opening code, and can't reach Claude Code's login.
+- **The refresh button** posts a Darwin notification named `<TEAM_ID>.io.github.mdjhnson.pacebar.refresh`. It carries no data, and PaceBar treats it exactly like opening the popover. Any local process can post one, but the most it can do is ask for a refresh, which is limited to one every 30 seconds and still subject to the rate-limit backoff.
 - **One file on disk:** the widget snapshot (see **Widgets**), written only by `WidgetSnapshot.swift`. It holds usage percentages, reset times, recent readings and display settings, never the token.
 - There are no listening sockets, no URL scheme handlers, no AppleScript, and no files written into `~/.claude`.
 - The only app PaceBar launches is `/System/Applications/Utilities/Terminal.app`, at a fixed path, from the setup guide.
@@ -256,6 +262,7 @@ On any error, the last good data stays on screen, dimmed, with "Last updated N m
 - the app's entitlements are exactly `com.apple.security.network.client` and `com.apple.security.application-groups`; the widget's are exactly `com.apple.security.app-sandbox` (true) and `com.apple.security.application-groups`; the only App Group in either is `$(TeamIdentifierPrefix)io.github.mdjhnson.pacebar`; Release builds don't inject `get-task-allow`; and Info.plist declares no URL schemes
 - files are written, and the App Group container opened, only in `WidgetSnapshot.swift`
 - `Sources/PaceBarWidget` contains no networking, `Process`, Keychain, notification, `NSWorkspace` or link code
+- the only Darwin notification is the refresh request: posted only in `RefreshIntent.swift`, observed only in `WidgetPublisher.swift`, with its name built only in `WidgetSnapshot.swift`. No distributed notifications.
 
 ## Copy diagnostic
 

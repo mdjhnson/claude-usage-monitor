@@ -17,6 +17,8 @@
 #   - the only file written is the widget snapshot, from WidgetSnapshot.swift, the only code that
 #     opens the App Group container
 #   - the widget extension has no networking, subprocess, Keychain, notification or URL-opening code
+#   - the only Darwin notification is the widgets' refresh request: posted only by RefreshIntent.swift,
+#     observed only by WidgetPublisher.swift, named only by WidgetSnapshot.swift
 set -u
 cd "$(dirname "$0")/.." || exit 2
 
@@ -34,6 +36,8 @@ REPO_LINK='Link(Self.repository, destination: Self.repositoryURL)'
 NOTIFIER="Sources/PaceBar/Notifier.swift"
 WIDGET="Sources/PaceBarWidget"
 SNAPSHOT="Sources/PaceBarCore/WidgetSnapshot.swift"
+PUBLISHER="Sources/PaceBar/WidgetPublisher.swift"
+REFRESH_INTENT="Sources/PaceBarWidget/RefreshIntent.swift"
 APP_GROUP='$(TeamIdentifierPrefix)io.github.mdjhnson.pacebar'
 SETTINGS_URL="x-apple.systempreferences:com.apple.Notifications-Settings.extension?id=io.github.mdjhnson.pacebar"
 SETTINGS_LINK='NSWorkspace.shared.open(Self.notificationSettingsURL)'
@@ -124,6 +128,16 @@ writes=$(rhits '\.write\(to:|createFile\(|FileHandle\(forWriting|fopen\(|contain
 echo "${writes:-(none)}"
 stray_writes=$(printf '%s' "$writes" | grep . | outside "$SNAPSHOT")
 [ -n "$stray_writes" ] && fail "file written or App Group container opened outside WidgetSnapshot.swift"
+
+section "Darwin notifications (the widgets' refresh request)"
+darwin=$(rhits 'CFNotificationCenter|notify_post|notify_register|DistributedNotificationCenter' "$SRC" | code_only)
+echo "${darwin:-(none)}"
+[ -n "$(printf '%s' "$darwin" | grep . | outside "$PUBLISHER" | outside "$REFRESH_INTENT")" ] \
+    && fail "Darwin or distributed notifications outside WidgetPublisher.swift and RefreshIntent.swift"
+printf '%s' "$darwin" | grep -F "$PUBLISHER:" | grep -q 'Post' && fail "the app must only observe the refresh request"
+printf '%s' "$darwin" | grep -F "$REFRESH_INTENT:" | grep -q 'AddObserver' && fail "the widget must only post the refresh request"
+[ -n "$(rhits 'refreshNotificationName\(' "$SRC" | code_only | grep -v 'refreshNotificationName()' | outside "$SNAPSHOT")" ] \
+    && fail "the refresh notification name is built outside WidgetSnapshot.swift"
 
 section "Widget extension  [$WIDGET]"
 widget_forbidden=$(rhits 'URLSession|URLRequest|\bProcess\b|SecItem|SecKeychain|UsageClient|KeychainTokenReader|UNUserNotification|NSWorkspace|openURL|Link\(' "$WIDGET" | code_only)
