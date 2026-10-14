@@ -3,6 +3,7 @@
 #   ./build.sh                      signed with your Apple Development certificate, for its team
 #   TEAM_ID=… ./build.sh            the same, for a team you pick
 #   TEAM_ID=… SIGN_ID=- ./build.sh  ad hoc signature (release.sh uses this; exporting re-signs it)
+#   BUILD_NUMBER=… ./build.sh       override CFBundleVersion for the app and widget (deploy.sh does)
 # The app and the widget share an App Group named after the team, and macOS only lets them use
 # it when they're signed by that team, so every build needs one. Builds are universal.
 set -euo pipefail
@@ -44,14 +45,14 @@ APP="build/PaceBar.app"
 WIDGET="$APP/Contents/PlugIns/PaceBarWidget.appex"
 DERIVED="build/DerivedData"
 
-ARCH_SETTINGS=()
-[[ -n "${UNIVERSAL:-}" ]] && ARCH_SETTINGS=("ARCHS=arm64 x86_64" ONLY_ACTIVE_ARCH=NO)
+EXTRA_SETTINGS=()
+[[ -n "${BUILD_NUMBER:-}" ]] && EXTRA_SETTINGS=("PACEBAR_BUILD_NUMBER=$BUILD_NUMBER")
 
 # Scripts in the project stamp the commit, draw the icon and match the widget's version.
 xcodebuild -project PaceBar.xcodeproj -scheme PaceBar -configuration Release \
     -destination "generic/platform=macOS" -derivedDataPath "$DERIVED" -quiet \
     DEVELOPMENT_TEAM="$TEAM_ID" CODE_SIGN_IDENTITY="${SIGN_ID:-Apple Development}" \
-    "${ARCH_SETTINGS[@]}" build
+    "${EXTRA_SETTINGS[@]}" build
 
 rm -rf "$APP"
 ditto "$DERIVED/Build/Products/Release/PaceBar.app" "$APP"
@@ -66,4 +67,5 @@ for bundle in "$APP" "$WIDGET"; do
     codesign -dv "$bundle" 2>&1 | grep -E '^(Identifier|TeamIdentifier|Authority=Developer ID Application|Timestamp)' | sed 's/^/  /'
 done
 echo "  app group: $(/usr/libexec/PlistBuddy -c 'Print :PaceBarAppGroup' "$APP/Contents/Info.plist")"
+echo "  version: $(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist") ($(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP/Contents/Info.plist"))"
 echo "  architectures: $(lipo -archs "$APP/Contents/MacOS/PaceBar")"

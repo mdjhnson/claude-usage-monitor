@@ -402,7 +402,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# The commit for Settings › About, marked \"-dirty\" if there were uncommitted changes.\nPLIST=\"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\n/usr/libexec/PlistBuddy -c \"Delete :PaceBarCommit\" \"$PLIST\" 2>/dev/null || true\nif COMMIT=\"$(git -C \"$SRCROOT\" rev-parse --short HEAD 2>/dev/null)\"; then\n    [ -n \"$(git -C \"$SRCROOT\" status --porcelain 2>/dev/null)\" ] && COMMIT=\"$COMMIT-dirty\"\n    /usr/libexec/PlistBuddy -c \"Add :PaceBarCommit string $COMMIT\" \"$PLIST\"\nfi\n";
+			shellScript = "# The commit for Settings › About, marked \"-dirty\" if there were uncommitted changes.\nPLIST=\"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\n# deploy.sh passes a unique build number so macOS re-reads the widget list each time.\n[ -n \"${PACEBAR_BUILD_NUMBER:-}\" ] && /usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $PACEBAR_BUILD_NUMBER\" \"$PLIST\"\n/usr/libexec/PlistBuddy -c \"Delete :PaceBarCommit\" \"$PLIST\" 2>/dev/null || true\nif COMMIT=\"$(git -C \"$SRCROOT\" rev-parse --short HEAD 2>/dev/null)\"; then\n    [ -n \"$(git -C \"$SRCROOT\" status --porcelain 2>/dev/null)\" ] && COMMIT=\"$COMMIT-dirty\"\n    /usr/libexec/PlistBuddy -c \"Add :PaceBarCommit string $COMMIT\" \"$PLIST\"\nfi\n";
 		};
 		9BC819E914B5FA90BBC9D25A /* Match app version */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -422,7 +422,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Info.plist is the one place the version is set; the extension must match it.\nPLIST=\"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\nfor key in CFBundleShortVersionString CFBundleVersion; do\n    value=\"$(/usr/libexec/PlistBuddy -c \"Print :$key\" \"$SRCROOT/Resources/Info.plist\")\"\n    /usr/libexec/PlistBuddy -c \"Set :$key $value\" \"$PLIST\"\ndone\n";
+			shellScript = "# Info.plist is the one place the version is set; the extension must match the app.\nPLIST=\"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\nSOURCE=\"$SRCROOT/Resources/Info.plist\"\n/usr/libexec/PlistBuddy -c \"Set :CFBundleShortVersionString $(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' \"$SOURCE\")\" \"$PLIST\"\nBUILD=\"${PACEBAR_BUILD_NUMBER:-$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' \"$SOURCE\")}\"\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $BUILD\" \"$PLIST\"\n";
 		};
 		A506B3FE622616E224EA74CD /* Draw app icon */ = {
 			isa = PBXShellScriptBuildPhase;

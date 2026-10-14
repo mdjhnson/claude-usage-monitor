@@ -8,6 +8,11 @@ cd "${0:A:h}"
 SRC="build/PaceBar.app"
 DEST="/Applications/PaceBar.app"
 
+# macOS caches each app's widget list and only re-reads it when the build number changes, so
+# every local install gets its own: Info.plist's number plus a timestamp, e.g. 1.2610141705.
+BASE_BUILD="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' Resources/Info.plist)"
+export BUILD_NUMBER="${BUILD_NUMBER:-$BASE_BUILD.$(date +%y%m%d%H%M)}"
+
 # Build first, so a failed build leaves the installed copy running.
 ./build.sh
 

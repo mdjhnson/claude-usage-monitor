@@ -61,6 +61,8 @@ open build/PaceBar.app
 
 Builds are universal (Apple silicon and Intel).
 
+**Build numbers.** macOS caches each app's list of widgets and re-reads it only when the build number changes. Without a new number, a changed widget shows up blank or out of date in the gallery. So `deploy.sh` gives every local install its own `CFBundleVersion`: Info.plist's number plus a timestamp, for example `1.2610141708`. It also restarts the widget extension, which macOS would otherwise keep running with the old code. Releases use Info.plist's number unchanged.
+
 **Project layout.** `PaceBar.xcodeproj` builds the app, the widget extension and `PaceBarCore`. It's generated from `project.yml` with [XcodeGen](https://github.com/yonaskolb/XcodeGen) and committed, so building doesn't need XcodeGen. After changing `project.yml`, run `xcodegen` and commit both. `Package.swift` builds the same `PaceBarCore` sources for `swift test`.
 
 There is no `Package.resolved`. SwiftPM only writes one when a package has dependencies, and PaceBar has none. `audit.sh` fails if any appear, in `Package.swift` or `project.yml`.
@@ -166,7 +168,7 @@ Add them like any other widget: click the date in the menu bar and choose **Edit
   - If the chosen limit is hidden in the popover, the widget falls back to the 5-hour session, then to the first limit shown.
 - **Claude Usage, medium:** the first two limits as pacing bars, beside a usage graph.
   - Right-click › **Edit Widget** › Graph chooses the graph. The choices are the 5-hour session (the default), Weekly, a per-model weekly limit, or **5-Hour Session and Weekly**, which stacks two shorter graphs.
-- **Claude Usage, large:** up to three limits, each with its zone, pacing bar and usage graph. With two or fewer, it also shows weekday names on weekly graphs and when you'd be back on pace.
+- **Claude Usage, large:** up to three limits. Each shows its zone, percentage, reset time, how far it is from a steady pace, its pacing bar, and a usage graph that grows to fill the space. With two or fewer limits, it also shows weekday names on weekly graphs and, when you're running hot, when you'd be back on pace. A footer shows when the data was fetched, next to the refresh button.
 
 Widgets follow your settings: theme (including Custom colors), color mode, thresholds, workweek pacing, which limits the popover shows, and the usage graph and day options. Clicking a widget opens the popover.
 

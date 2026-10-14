@@ -26,7 +26,7 @@ fi
 
 # Ad hoc here; exporting re-signs the app and its widget with the Developer ID certificate.
 # TEAM_ID still names the App Group, so it matches the team that signs the export.
-SIGN_ID=- UNIVERSAL=1 ./build.sh
+SIGN_ID=- ./build.sh
 
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT

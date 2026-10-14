@@ -58,6 +58,8 @@ targets:
         script: |
           # The commit for Settings › About, marked "-dirty" if there were uncommitted changes.
           PLIST="$TARGET_BUILD_DIR/$INFOPLIST_PATH"
+          # deploy.sh passes a unique build number so macOS re-reads the widget list each time.
+          [ -n "${PACEBAR_BUILD_NUMBER:-}" ] && /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $PACEBAR_BUILD_NUMBER" "$PLIST"
           /usr/libexec/PlistBuddy -c "Delete :PaceBarCommit" "$PLIST" 2>/dev/null || true
           if COMMIT="$(git -C "$SRCROOT" rev-parse --short HEAD 2>/dev/null)"; then
               [ -n "$(git -C "$SRCROOT" status --porcelain 2>/dev/null)" ] && COMMIT="$COMMIT-dirty"
@@ -108,12 +110,12 @@ targets:
         inputFiles:
           - $(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)
         script: |
-          # Info.plist is the one place the version is set; the extension must match it.
+          # Info.plist is the one place the version is set; the extension must match the app.
           PLIST="$TARGET_BUILD_DIR/$INFOPLIST_PATH"
-          for key in CFBundleShortVersionString CFBundleVersion; do
-              value="$(/usr/libexec/PlistBuddy -c "Print :$key" "$SRCROOT/Resources/Info.plist")"
-              /usr/libexec/PlistBuddy -c "Set :$key $value" "$PLIST"
-          done
+          SOURCE="$SRCROOT/Resources/Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$SOURCE")" "$PLIST"
+          BUILD="${PACEBAR_BUILD_NUMBER:-$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$SOURCE")}"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD" "$PLIST"
 
 schemes:
   PaceBar:
