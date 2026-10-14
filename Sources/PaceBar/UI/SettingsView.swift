@@ -217,6 +217,7 @@ struct SettingsView: View {
 
     private var appearanceSection: some View {
         Section {
+            Toggle("Usage graph on each card", isOn: $settings.showUsageGraph)
             Picker("Theme", selection: $settings.themePreset) {
                 ForEach(ThemePreset.allCases) { preset in
                     HStack(spacing: 6) {
@@ -235,7 +236,7 @@ struct SettingsView: View {
         } header: {
             Text("Appearance")
         } footer: {
-            Text("Thresholds color percentages when “Color by” is Usage threshold, or when a window has no reset time.")
+            Text("The usage graph plots this cycle's readings against the steady pace. It starts when PaceBar launches; before the first reading the line from the window's start is dashed. Thresholds color percentages when “Color by” is Usage threshold, or when a window has no reset time.")
                 .foregroundStyle(.secondary)
         }
     }

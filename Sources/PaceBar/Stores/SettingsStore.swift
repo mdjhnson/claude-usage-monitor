@@ -47,6 +47,7 @@ final class SettingsStore {
         static let monochrome = "pacebar.menuBar.monochrome"
         static let menuBarExtra = "pacebar.menuBar.extra"
         static let theme = "pacebar.theme"
+        static let usageGraph = "pacebar.popover.usageGraph"
         static let warningThreshold = "pacebar.threshold.warning"
         static let criticalThreshold = "pacebar.threshold.critical"
     }
@@ -70,6 +71,7 @@ final class SettingsStore {
     var monochromeMenuBar: Bool { didSet { defaults.set(monochromeMenuBar, forKey: Key.monochrome) } }
     var menuBarExtra: MenuBarExtra { didSet { defaults.set(menuBarExtra.rawValue, forKey: Key.menuBarExtra) } }
     var themePreset: ThemePreset { didSet { defaults.set(themePreset.rawValue, forKey: Key.theme) } }
+    var showUsageGraph: Bool { didSet { defaults.set(showUsageGraph, forKey: Key.usageGraph) } }
     var warningThreshold: Double { didSet { defaults.set(warningThreshold, forKey: Key.warningThreshold) } }
     var criticalThreshold: Double { didSet { defaults.set(criticalThreshold, forKey: Key.criticalThreshold) } }
 
@@ -106,6 +108,7 @@ final class SettingsStore {
         monochromeMenuBar = bool(Key.monochrome, false)
         menuBarExtra = MenuBarExtra(rawValue: defaults.string(forKey: Key.menuBarExtra) ?? "") ?? .none
         themePreset = ThemePreset(rawValue: defaults.string(forKey: Key.theme) ?? "") ?? .default
+        showUsageGraph = bool(Key.usageGraph, true)
         warningThreshold = double(Key.warningThreshold, 60, 5...95)
         criticalThreshold = double(Key.criticalThreshold, 85, 10...100)
     }
@@ -115,6 +118,12 @@ final class SettingsStore {
             enabled: scheduleEnabled, activeDays: scheduleDays,
             hoursEnabled: hoursEnabled, startHour: startHour, endHour: endHour
         )
+    }
+
+    /// The steady-pace line for a window's graph, or nil when the API gave no reset time.
+    func paceCurve(for window: UsageWindow) -> [GraphPoint]? {
+        guard let resetsAt = window.bucket.resetsAt else { return nil }
+        return PacingCalculator.paceCurve(resetsAt: resetsAt, kind: window.kind, schedule: schedule, calendar: .current)
     }
 
     /// Pacing for one window at `now`, or nil when the API gave no reset time.
