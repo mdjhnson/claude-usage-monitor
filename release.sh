@@ -24,14 +24,16 @@ if [[ -z "${TEAM_ID:-}" ]]; then
     exit 1
 fi
 
-UNIVERSAL=1 ./build.sh
+# Ad hoc here; exporting re-signs the app and its widget with the Developer ID certificate.
+# TEAM_ID still names the App Group, so it matches the team that signs the export.
+SIGN_ID=- UNIVERSAL=1 ./build.sh
 
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 ARCHIVE="$WORK/PaceBar.xcarchive"
 
-# SwiftPM can't archive an app, so wrap the ad hoc signed build in the archive layout
-# xcodebuild expects. Exporting it re-signs the app with the Developer ID certificate.
+# Wrap the ad hoc signed build in the archive layout xcodebuild expects. Exporting it re-signs
+# the app and the embedded widget with the Developer ID certificate.
 mkdir -p "$ARCHIVE/Products/Applications"
 ditto "$APP" "$ARCHIVE/Products/Applications/PaceBar.app"
 cat >"$ARCHIVE/Info.plist" <<EOF
@@ -115,6 +117,7 @@ done
 
 xcrun stapler validate "$NOTARIZED" >/dev/null
 spctl --assess --type execute "$NOTARIZED"
+codesign --verify --strict --deep "$NOTARIZED"
 
 # The DMG itself stays unsigned: the cloud certificate only signs through Xcode. Gatekeeper
 # checks the stapled app inside when it's opened, so this doesn't cause a warning.
@@ -130,6 +133,8 @@ fi
 
 echo
 codesign -dvv "$NOTARIZED" 2>&1 | grep -E '^Authority=Developer ID Application' | sed 's/^/  /'
+codesign -dvv "$NOTARIZED/Contents/PlugIns/PaceBarWidget.appex" 2>&1 \
+    | grep -E '^Authority=Developer ID Application' | sed 's/^/  widget: /'
 spctl --assess --type execute --verbose=2 "$NOTARIZED" 2>&1 | grep '^source=' | sed 's/^/  /'
 echo "  architectures: $(lipo -archs "$NOTARIZED/Contents/MacOS/PaceBar")"
 echo "Built $DMG"

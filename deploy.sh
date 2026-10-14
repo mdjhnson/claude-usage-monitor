@@ -1,7 +1,7 @@
 #!/bin/zsh
 # Builds PaceBar, quits the running copy, installs it to /Applications and relaunches it.
 #   ./deploy.sh                skip the relaunch with NO_LAUNCH=1
-# Build options such as SIGN_ID pass through to build.sh.
+# Build options such as TEAM_ID and SIGN_ID pass through to build.sh.
 set -euo pipefail
 cd "${0:A:h}"
 

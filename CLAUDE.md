@@ -1,14 +1,14 @@
 # CLAUDE.md
 
-PaceBar is a macOS menu bar app (SwiftPM, no Xcode project) that shows Claude usage limits and pacing. README.md is the source of truth for behavior, settings and the security design. BRIEF.md is the original spec, kept as history. DESIGN_NOTES.md is the visual spec.
+PaceBar is a macOS menu bar app, with desktop and Notification Center widgets, that shows Claude usage limits and pacing. `PaceBar.xcodeproj` (generated from `project.yml` by XcodeGen; edit the YAML, run `xcodegen`, commit both) builds the app, the widget extension and PaceBarCore. `Package.swift` builds PaceBarCore for `swift test` only. README.md is the source of truth for behavior, settings and the security design. BRIEF.md is the original spec, kept as history. DESIGN_NOTES.md is the visual spec.
 
 ## Commands
 
 ```sh
-./test.sh             # unit tests (PaceBarCore)
-./scripts/audit.sh    # security rules; must pass before every commit
-./build.sh            # build/PaceBar.app, ad hoc signed; UNIVERSAL=1 for arm64 + x86_64
-./deploy.sh           # build, install to /Applications, relaunch
+./test.sh                   # unit tests (PaceBarCore)
+./scripts/audit.sh          # security rules; must pass before every commit
+./build.sh                  # build/PaceBar.app + widget, signed with the Apple Development cert's team (TEAM_ID=… to pick)
+./deploy.sh                 # build, install to /Applications, relaunch
 TEAM_ID=… ./release.sh  # notarized universal DMG in dist/
 ```
 
@@ -16,8 +16,8 @@ Scripts use Xcode via `DEVELOPER_DIR`; `xcode-select` points at the Command Line
 
 ## Rules
 
-- The app holds a full-scope Claude Code OAuth token. `scripts/audit.sh` enforces the security design: one network host (`api.anthropic.com`), one subprocess, one app launch (Terminal.app), and exactly two opened URLs (the About tab's repo link and the Notifications tab's System Settings link). Adding a URL, link, subprocess, app launch or entitlement means changing the audit rule narrowly and updating README's "Threat model and security design" and "Auditing" sections in the same change.
-- Never log, persist or copy the token. Keep pure logic in `Sources/PaceBarCore` with tests.
+- The app holds a full-scope Claude Code OAuth token. `scripts/audit.sh` enforces the security design: one network host (`api.anthropic.com`), one subprocess, one app launch (Terminal.app), exactly two opened URLs (the About tab's repo link and the Notifications tab's System Settings link), one written file (the widget snapshot, from `WidgetSnapshot.swift`), and a sandboxed widget with no network, Keychain or subprocess code. Adding a URL, link, subprocess, app launch, file write or entitlement means changing the audit rule narrowly and updating README's "Threat model and security design" and "Auditing" sections in the same change.
+- Never log, persist or copy the token, and never put it (or anything from the Keychain) in `WidgetSnapshot`. Keep pure logic in `Sources/PaceBarCore` with tests.
 - When a setting or tab changes, update the README Settings table.
 
 ## Workflow

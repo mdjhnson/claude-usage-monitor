@@ -2,12 +2,6 @@ import Foundation
 import Observation
 import PaceBarCore
 
-enum ColorMode: String, CaseIterable, Identifiable {
-    case pacing, threshold
-    var id: String { rawValue }
-    var title: String { self == .pacing ? "Pacing zone" : "Usage threshold" }
-}
-
 enum MenuBarStyle: String, CaseIterable, Identifiable {
     case classic, pill
     var id: String { rawValue }
@@ -24,19 +18,6 @@ enum MenuBarExtra: String, CaseIterable, Identifiable {
         case .countdown: "Reset countdown"
         case .arrows: "Pace arrows"
         case .fireAndIce: "Fire & ice"
-        }
-    }
-}
-
-/// How weekly graphs mark the days.
-enum WeeklyDayMarkers: String, CaseIterable, Identifiable {
-    case off, lines, linesAndNames
-    var id: String { rawValue }
-    var title: String {
-        switch self {
-        case .off: "Off"
-        case .lines: "Lines"
-        case .linesAndNames: "Lines and day names"
         }
     }
 }

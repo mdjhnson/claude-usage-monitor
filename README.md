@@ -1,6 +1,6 @@
 # PaceBar
 
-A small macOS menu bar app that shows your Claude usage limits and whether you are spending them faster or slower than a steady pace. Its look follows [TokenEater](https://github.com/AThevon/TokenEater), with a code base small enough to audit in one sitting: about 4,200 lines of Swift (plus about 1,400 lines of tests), with no dependencies.
+A small macOS menu bar app that shows your Claude usage limits and whether you are spending them faster or slower than a steady pace. Its look follows [TokenEater](https://github.com/AThevon/TokenEater), with a code base small enough to audit in one sitting: about 4,900 lines of Swift (plus about 1,500 lines of tests), with no dependencies.
 
 - **Menu bar:** live percentages for the windows you choose (default: 5-hour session and weekly), colored by pacing zone or by usage thresholds.
 - **Popover:** one card per window, each showing:
@@ -11,6 +11,7 @@ A small macOS menu bar app that shows your Claude usage limits and whether you a
   - a usage graph: this cycle's readings against the steady-pace line, so a slow start and a late ramp show their real shape. Hover it to see any reading's time and usage, and where the pace line was then.
 - **Workweek pacing (optional):** weekly limits pace over your active days and hours only. Weekends and evenings don't count against you.
 - **Notifications (optional, off by default):** usage alerts at your thresholds, running hot and back on pace, and reminders before a reset.
+- **Widgets:** small, medium and large widgets for the desktop and Notification Center, with the same colors, pacing and graphs as the popover (see **Widgets** below).
 
 ## How pacing works
 
@@ -48,14 +49,21 @@ The pure logic lives in `Sources/PaceBarCore` and is covered by unit tests.
 ```sh
 ./test.sh                 # all unit tests
 ./scripts/audit.sh        # security review listing; exits non-zero on a violation
-./build.sh                # Release build → build/PaceBar.app (ad hoc signed, hardened runtime)
+./build.sh                # Release build → build/PaceBar.app (Apple Development signed, hardened runtime)
 open build/PaceBar.app
 ./deploy.sh               # build, quit the running copy, install to /Applications and relaunch
 ```
 
-To sign with your development identity instead of ad hoc: `SIGN_ID="Apple Development: Your Name (TEAMID)" ./build.sh`. Add `UNIVERSAL=1` to build for both Apple silicon and Intel.
+**Signing needs an Apple Development certificate.** The app and its widget share an App Group named after your team (`<team ID>.io.github.mdjhnson.pacebar`), and macOS only lets them use it when both are signed by that team, so an ad hoc build can't run the widget.
+- Any team works for a local build, including the free Personal Team you get by signing in to Xcode › Settings › Accounts. To create the certificate, choose Manage Certificates › + › Apple Development.
+- `build.sh` uses your certificate's team. If you have certificates for more than one team, pick one with `TEAM_ID=… ./build.sh`. If you name a team you have no certificate for, it says which teams you do have.
+- You don't need a development certificate for the team you release with. `release.sh` builds ad hoc (`SIGN_ID=-`) for that team, and Xcode re-signs the build with the team's cloud-managed Developer ID.
 
-There is no `Package.resolved`. SwiftPM only writes one when a package has dependencies, and PaceBar has none. `audit.sh` fails if any appear.
+Builds are universal (Apple silicon and Intel).
+
+**Project layout.** `PaceBar.xcodeproj` builds the app, the widget extension and `PaceBarCore`. It's generated from `project.yml` with [XcodeGen](https://github.com/yonaskolb/XcodeGen) and committed, so building doesn't need XcodeGen. After changing `project.yml`, run `xcodegen` and commit both. `Package.swift` builds the same `PaceBarCore` sources for `swift test`.
+
+There is no `Package.resolved`. SwiftPM only writes one when a package has dependencies, and PaceBar has none. `audit.sh` fails if any appear, in `Package.swift` or `project.yml`.
 
 ### First launch
 
@@ -98,6 +106,8 @@ For each release:
 2. Bump `CFBundleShortVersionString` (and `CFBundleVersion`) in `Resources/Info.plist` and commit it. Settings › About shows the commit a build came from, marked `-dirty` if the tree had uncommitted changes, so release from a clean tree.
 3. `TEAM_ID=<your team ID> ./release.sh`, then share `dist/PaceBar-<version>.dmg`.
 
+The export signs the app and the widget extension. The first release after the widget was added may take a little longer while Xcode registers the widget's bundle ID (`io.github.mdjhnson.pacebar.widget`) for the team.
+
 `DEPLOYMENT_COMMANDS.md` is gitignored, so you can keep your filled-in release command there.
 
 One-time setup:
@@ -115,18 +125,18 @@ People who install it still go through **First launch** step 2. The Keychain pro
 
 ## Settings
 
-Open Settings from the gear in the popover. Settings are split into six tabs: Pacing, Menu Bar, Appearance, Notifications, General and About. About shows the version, build number and source commit (written in by `build.sh`), the author, a link to this repository, and credits.
+Open Settings from the gear in the popover. Settings are split into six tabs: Pacing, Menu Bar, Appearance, Notifications, General and About. About shows the version, build number and source commit (written in at build time), the author, a link to this repository, and credits.
 
 | Setting | Default | Notes |
 |---|---|---|
 | Margin | ±10% | 5–20. The width of the "On track" band. |
 | Workweek pacing | Off | Active days (default Mon–Fri) and optional active hours (default 9 AM–6 PM, local time). Applies to weekly limits only. |
-| Windows | Menu bar: 5-hour, Weekly. Popover: all | For each limit, choose whether it appears in the menu bar and in the popover. Per-model weekly limits (for example Fable) appear here once the API reports them. |
+| Windows | Menu bar: 5-hour, Weekly. Popover: all | For each limit, choose whether it appears in the menu bar and in the popover. Widgets show the popover's limits. Per-model weekly limits (for example Fable) appear here once the API reports them. |
 | Menu bar style | Classic | Classic (label plus colored value) or Pill. |
 | Color by | Pacing zone | Or Usage threshold. Windows without a reset time always use thresholds. |
 | After each value | Nothing | **Reset countdown** (`1h25m`, `3d 4h`), **Pace arrows** (˅ under pace, ˄ ahead, double ˄ when Hot), or **Fire & ice** (❄ running cold, a flame outline for Watch out, a filled flame when Hot). Nothing shows while on track. |
 | Monochrome menu bar | Off | Draws in the system label color. |
-| Usage graph on each card | On | Plots readings since launch against the pace line. Kept in memory only, so it starts fresh when PaceBar launches; the stretch from the window's start to the first reading is dashed. |
+| Usage graph on each card | On | Plots readings since launch against the pace line. Kept in memory, so it starts fresh when PaceBar launches; the stretch from the window's start to the first reading is dashed. A copy of up to 120 readings per limit goes to the widget (see **Widgets**). Also controls the widget graphs. |
 | Days on weekly graphs | Lines and day names | Off, Lines, or Lines and day names. Faint lines at each local midnight split weekly graphs into days; names sit underneath, with today's brighter. |
 | Theme | Default | Default, Monochrome, Neon, Pastel (TokenEater's presets), or Custom. |
 | Custom colors | The theme you switched from | Shown when Theme is Custom. Set any of the nine colors (four pacing zones, three usage thresholds, popover background and text) with a hex code (`#0A84FF` or `#08F`) or the system color picker. "Start from" copies a preset. A warning appears when text contrast drops below 4.5:1. |
@@ -147,6 +157,27 @@ Notifications are local, through `UserNotifications`, and are evaluated after ea
 - **No flapping:** Hot notifies once, then re-arms only after the limit is back on track or under pace. That gap is a whole margin wide, so a limit sitting at a zone boundary can't flap.
 - **Which limits:** only limits shown in the popover notify. Reminders cover the 5-hour session and the all-models weekly limit.
 - **On quit:** pending reminders are removed when PaceBar quits.
+
+## Widgets
+
+Add them like any other widget: click the date in the menu bar and choose **Edit Widgets**, or right-click the desktop and choose **Edit Widgets**, then search for PaceBar.
+- **Small:** the 5-hour session as a ring, with its zone and reset time. If the session is hidden in the popover, the first limit shown there.
+- **Medium:** the first two limits as pacing bars, with the first one's usage graph.
+- **Large:** up to three limits, each with its zone, pacing bar and usage graph. With two or fewer, it also shows weekday names on weekly graphs and when you'd be back on pace.
+
+Widgets follow your settings: theme (including Custom colors), color mode, thresholds, workweek pacing, which limits the popover shows, and the usage graph and day options. Clicking a widget opens the popover.
+
+**How they get data.** A widget runs in its own sandboxed process with no network access, so it can't read the Keychain. After each refresh PaceBar writes `snapshot.json` to a folder it shares with the widget, `~/Library/Group Containers/<TEAM_ID>.io.github.mdjhnson.pacebar/`. The file holds:
+- each shown limit's percentage and reset time
+- up to 120 of this cycle's readings per limit, for the graph
+- the display settings above, with the theme already resolved to colors
+- when the data was fetched, the refresh interval, and whether the last refresh failed
+
+It never holds the token, any response body, or anything else from the Keychain. PaceBar replaces the file on each refresh.
+
+**Updates.** Widgets recompute pacing every 15 minutes from the last snapshot, so zones keep moving even with no new data. PaceBar also asks macOS to redraw them as soon as a setting changes, an error starts or ends, or a limit resets. Other changes reach them at most every 5 minutes, and new graph readings at least every 30 minutes, which keeps PaceBar inside macOS's daily widget update budget.
+
+**When PaceBar isn't running,** widgets keep showing the last snapshot. After a failed refresh, or once the data is older than twice the refresh interval (and at least 10 minutes), they dim it and show "Updated N min ago". Before PaceBar has ever run, they show "Open PaceBar to start."
 
 ## Threat model and security design
 
@@ -184,7 +215,9 @@ PaceBar holds a **full-scope Claude Code OAuth token** in memory while a request
 ### Process hardening
 
 - **Not sandboxed.** An App Sandbox would prevent running `/usr/bin/security` to read another app's Keychain item, which is the only way PaceBar gets the token.
-- **Hardened runtime is on.** The only entitlement is `com.apple.security.network.client`. There are no library-validation or JIT exceptions.
+- **Hardened runtime is on.** The app's entitlements are `com.apple.security.network.client` and one App Group, `<TEAM_ID>.io.github.mdjhnson.pacebar`. There are no library-validation or JIT exceptions. Release builds carry no `get-task-allow`, so a debugger can't attach.
+- **The widget extension is sandboxed** (`com.apple.security.app-sandbox`), with no network entitlement. Its only other entitlement is the same App Group. Its code reads `snapshot.json` and draws it. It has no networking, subprocess, Keychain, notification or URL-opening code, and can't reach Claude Code's login.
+- **One file on disk:** the widget snapshot (see **Widgets**), written only by `WidgetSnapshot.swift`. It holds usage percentages, reset times, recent readings and display settings, never the token.
 - There are no listening sockets, no URL scheme handlers, no AppleScript, and no files written into `~/.claude`.
 - The only app PaceBar launches is `/System/Applications/Utilities/Terminal.app`, at a fixed path, from the setup guide.
 - It opens exactly two fixed URLs: this repository's GitHub page, from the link in Settings › About, in your default browser; and PaceBar's page in System Settings › Notifications (`x-apple.systempreferences:…?id=io.github.mdjhnson.pacebar`), from the Notifications tab, which opens locally.
@@ -216,8 +249,10 @@ On any error, the last good data stays on screen, dimmed, with "Last updated N m
   - shells, exec/spawn/popen, AppleScript
   - sockets and listeners, web views, URL opening (other than the two links above)
 - `Sources/` contains only Swift files
-- `Package.swift` declares no dependencies, binary targets, plugins or unsafe/linker flags
-- the entitlements are exactly `com.apple.security.network.client`, and Info.plist declares no URL schemes
+- `Package.swift` declares no dependencies, binary targets, plugins or unsafe/linker flags; `project.yml` declares no packages, prebuilt frameworks or extra flags, and `PaceBar.xcodeproj` references no remote package
+- the app's entitlements are exactly `com.apple.security.network.client` and `com.apple.security.application-groups`; the widget's are exactly `com.apple.security.app-sandbox` (true) and `com.apple.security.application-groups`; the only App Group in either is `$(TeamIdentifierPrefix)io.github.mdjhnson.pacebar`; Release builds don't inject `get-task-allow`; and Info.plist declares no URL schemes
+- files are written, and the App Group container opened, only in `WidgetSnapshot.swift`
+- `Sources/PaceBarWidget` contains no networking, `Process`, Keychain, notification, `NSWorkspace` or link code
 
 ## Copy diagnostic
 
@@ -258,7 +293,8 @@ A window without a reset time shows its percentage but no pacing.
 1. If you turned on Launch at login, turn it off in Settings first, or remove PaceBar later in System Settings › General › Login Items.
 2. Quit PaceBar (popover › Quit), then delete `PaceBar.app`.
 3. Remove its preferences: `defaults delete io.github.mdjhnson.pacebar`.
-4. Optional: in Keychain Access, open "Claude Code-credentials" › Access Control and remove `security` if you don't want other tools to keep prompt-free access.
+4. Remove the widget snapshot: `rm -rf ~/Library/Group\ Containers/*.io.github.mdjhnson.pacebar`. Remove any PaceBar widgets first, or they'll show "Open PaceBar to start."
+5. Optional: in Keychain Access, open "Claude Code-credentials" › Access Control and remove `security` if you don't want other tools to keep prompt-free access.
 
 PaceBar writes nothing else to disk. If you turned on notifications, macOS keeps a PaceBar entry in System Settings › Notifications; deleting the app is enough, or remove it there.
 
@@ -268,7 +304,6 @@ These are out of scope for v1. The code has clean seams for them, but none are b
 - Codex or other provider tracking
 - usage history or session-log parsing
 - agent watchers
-- desktop widgets (WidgetKit)
 - extra-credits (`extra_usage`) display
 
 Also not done:

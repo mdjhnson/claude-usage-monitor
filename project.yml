@@ -1,0 +1,117 @@
+# XcodeGen spec for PaceBar.xcodeproj. Edit this, then run `xcodegen` and commit both.
+# Package.swift still builds PaceBarCore for `swift test`; this project builds the app.
+name: PaceBar
+options:
+  bundleIdPrefix: io.github.mdjhnson
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    ENABLE_HARDENED_RUNTIME: YES
+    # build.sh passes the identity and DEVELOPMENT_TEAM; the team also fills in the App Group ID.
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    # The script phases write into the built bundle.
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+    DEAD_CODE_STRIPPING: YES
+    GENERATE_INFOPLIST_FILE: NO
+  configs:
+    # No get-task-allow: a debugger must never attach to a process that holds the token.
+    Release:
+      CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
+targets:
+  # Pure logic and the two I/O services. Foundation + Security only, no AppKit.
+  PaceBarCore:
+    type: library.static
+    platform: macOS
+    sources:
+      - Sources/PaceBarCore
+    settings:
+      base:
+        PRODUCT_NAME: PaceBarCore
+        SKIP_INSTALL: YES
+
+  # The menu bar app: AppKit + SwiftUI.
+  PaceBar:
+    type: application
+    platform: macOS
+    sources:
+      - Sources/PaceBar
+    settings:
+      base:
+        PRODUCT_NAME: PaceBar
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.mdjhnson.pacebar
+        INFOPLIST_FILE: Resources/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Resources/PaceBar.entitlements
+    dependencies:
+      - target: PaceBarCore
+      - target: PaceBarWidget
+    postBuildScripts:
+      - name: Record source commit
+        basedOnDependencyAnalysis: false
+        script: |
+          # The commit for Settings › About, marked "-dirty" if there were uncommitted changes.
+          PLIST="$TARGET_BUILD_DIR/$INFOPLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Delete :PaceBarCommit" "$PLIST" 2>/dev/null || true
+          if COMMIT="$(git -C "$SRCROOT" rev-parse --short HEAD 2>/dev/null)"; then
+              [ -n "$(git -C "$SRCROOT" status --porcelain 2>/dev/null)" ] && COMMIT="$COMMIT-dirty"
+              /usr/libexec/PlistBuddy -c "Add :PaceBarCommit string $COMMIT" "$PLIST"
+          fi
+      - name: Draw app icon
+        basedOnDependencyAnalysis: false
+        script: |
+          # Generated at build time, which keeps binary assets out of the repo.
+          set -e
+          ICONSET="$DERIVED_FILE_DIR/AppIcon.iconset"
+          rm -rf "$ICONSET"
+          env -i PATH="/usr/bin:/bin" HOME="$HOME" DEVELOPER_DIR="$DEVELOPER_DIR" \
+              xcrun swift "$SRCROOT/scripts/make-icon.swift" "$ICONSET"
+          RESOURCES="$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH"
+          mkdir -p "$RESOURCES"
+          iconutil --convert icns --output "$RESOURCES/AppIcon.icns" "$ICONSET"
+
+  # Desktop and Notification Center widgets. Sandboxed; reads the snapshot the app writes.
+  PaceBarWidget:
+    type: app-extension
+    platform: macOS
+    sources:
+      - Sources/PaceBarWidget
+      # Shared with the app so the widget draws exactly what the popover draws.
+      - Sources/PaceBar/UI/DisplayOptions.swift
+      - Sources/PaceBar/UI/Formatting.swift
+      - Sources/PaceBar/UI/PacingBar.swift
+      - Sources/PaceBar/UI/Theme.swift
+      - Sources/PaceBar/UI/UsageGraph.swift
+      - Sources/PaceBar/UI/WindowCard.swift
+    settings:
+      base:
+        PRODUCT_NAME: PaceBarWidget
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.mdjhnson.pacebar.widget
+        INFOPLIST_FILE: Resources/PaceBarWidget-Info.plist
+        CODE_SIGN_ENTITLEMENTS: Resources/PaceBarWidget.entitlements
+        SKIP_INSTALL: YES
+    dependencies:
+      - target: PaceBarCore
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
+    postBuildScripts:
+      - name: Match app version
+        basedOnDependencyAnalysis: false
+        script: |
+          # Info.plist is the one place the version is set; the extension must match it.
+          PLIST="$TARGET_BUILD_DIR/$INFOPLIST_PATH"
+          for key in CFBundleShortVersionString CFBundleVersion; do
+              value="$(/usr/libexec/PlistBuddy -c "Print :$key" "$SRCROOT/Resources/Info.plist")"
+              /usr/libexec/PlistBuddy -c "Set :$key $value" "$PLIST"
+          done
+
+schemes:
+  PaceBar:
+    build:
+      targets:
+        PaceBar: all
+    archive:
+      config: Release

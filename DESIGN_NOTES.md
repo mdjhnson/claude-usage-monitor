@@ -216,6 +216,26 @@ Sections:
 7. **Diagnostics:**
    - "Copy diagnostic" button, with a short caption saying what is included.
 
+## Widgets
+
+One WidgetKit widget, kind `PaceBarUsage`, in three sizes. It draws with the app's own `Theme`, `PacingBar`, `UsageGraph` and `ZonePill` (the extension compiles those files too), so it matches the popover.
+- **Background:** the popover background, already resolved by the app (`popoverBackgroundColor`) and sent as the snapshot's `background` token. Text uses the `text` token.
+- **Colors:** percentages use the same `Theme.tint` as the cards (pacing zone or usage threshold, per Color by). Rings, bars and graph lines use the zone color.
+- **Windows:** the popover's visible limits, in the popover's order.
+- **Pacing bar:** `PacingBar` with `animated: false`, since widgets render one frame and never run `onAppear`. No pulse.
+- **Small:** title row (9 semibold caps at text 0.45), then a ring: 8pt stroke, white 0.08 track, zone-tinted round-capped arc from 12 o'clock to usage. Inside: the percentage (22 black rounded, tint) and the zone title (9 semibold, zone color). Bottom: the reset countdown (10 medium at text 0.45).
+- **Medium:** two columns, 14pt apart.
+  - Left: up to two rows. Each has the title, then the percentage (15 black rounded, tint), the pacing bar and the reset countdown (10 medium at text 0.35).
+  - Right: the first window's title and its graph, at 44pt, without day markers. It's dropped when the usage graph setting is off.
+- **Large:** up to three windows, 14pt apart (10pt with three). Each has:
+  - Title, zone pill and percentage on one row, then the pacing bar.
+  - The graph, with no countdown line because the graph's axis already ends at the reset. The countdown line appears only when there's no graph.
+  - The cooling line (10 medium at text 0.4) in Watch out and Hot, with two or fewer windows.
+  - With three windows, graphs shrink to 34pt and "Lines and day names" shows lines only.
+- **Stale** (a failed refresh, or data older than the larger of 2× the refresh interval and 10 minutes): values at 0.45 opacity and a bottom line "Updated 12 min ago" with `clock.arrow.circlepath`, 10pt at text 0.45. In the small widget it replaces the countdown.
+- **Empty:** a 22pt `gauge.with.needle` over 11 medium text at text 0.6, centered: "Open PaceBar to start." when there's no snapshot, or "No limits to show. Choose some in PaceBar's Settings › Windows." when every limit is hidden.
+- **Gallery:** sample data (session 52%, weekly 38%) in the Default theme until there's a real snapshot.
+
 ## Fonts summary
 
 All text uses SF (`.system`). Percentages and deltas use `.rounded`. Axis labels use `.monospaced`. Menu bar values use monospaced digits so widths don't jitter.
