@@ -38,7 +38,23 @@ if [[ -n "${PUBLISH:-}" ]]; then
         echo "GitHub Release $TAG already exists. Bump CFBundleShortVersionString in $PLIST first." >&2
         exit 1
     fi
+    # The release must be tagged at exactly the commit being built, so the tag, its notes and
+    # the source archive match the DMG. A leftover tag would point somewhere else.
+    if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null || git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+        echo "Tag $TAG already exists. Delete it or bump CFBundleShortVersionString in $PLIST first." >&2
+        exit 1
+    fi
+    if [[ -n "$(git status --porcelain)" ]]; then
+        echo "PUBLISH=1 needs a clean tree, so the release matches a commit. Commit or stash first." >&2
+        exit 1
+    fi
+    git fetch -q origin
+    if [[ -z "$(git branch -r --contains HEAD)" ]]; then
+        echo "Push $(git rev-parse --short HEAD) to GitHub first; the tag is created on that commit." >&2
+        exit 1
+    fi
 fi
+COMMIT="$(git rev-parse HEAD)"
 
 # Ad hoc here; exporting re-signs the app and its widget with the Developer ID certificate.
 # TEAM_ID still names the App Group, so it matches the team that signs the export.
@@ -155,7 +171,7 @@ spctl --assess --type execute --verbose=2 "$NOTARIZED" 2>&1 | grep '^source=' | 
 echo "  architectures: $(lipo -archs "$NOTARIZED/Contents/MacOS/PaceBar")"
 echo "Built $DMG"
 
-PUBLISH_CMD=(gh release create "$TAG" "$DMG" --title "PaceBar $VERSION" --generate-notes)
+PUBLISH_CMD=(gh release create "$TAG" "$DMG" --target "$COMMIT" --title "PaceBar $VERSION" --generate-notes)
 if [[ -n "${PUBLISH:-}" ]]; then
     echo
     echo "Publishing GitHub Release $TAG…"

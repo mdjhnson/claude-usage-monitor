@@ -6,18 +6,19 @@ import PaceBarCore
 /// is clicked, and once a week only if the person turned that on. It never downloads anything.
 @MainActor @Observable
 final class UpdateChecker {
-    enum State: Equatable {
+    enum Activity: Equatable {
         case idle
         case checking
-        case upToDate
-        case available(AppVersion)
+        /// Only a check someone clicked reports a failure; automatic ones retry quietly.
         case failed(String)
     }
 
     /// How often a due automatic check is looked for. The check itself runs at most weekly.
     static let pollInterval: TimeInterval = 6 * 3600
+    /// Wi-Fi usually takes a few seconds to come back after wake.
+    static let wakeDelay: Duration = .seconds(30)
 
-    private(set) var state = State.idle
+    private(set) var activity = Activity.idle
     /// This build's version, or nil in an unbundled build without one.
     let current = (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String).flatMap(AppVersion.init)
 
@@ -29,15 +30,26 @@ final class UpdateChecker {
         self.settings = settings
     }
 
-    /// Set after any check that found a newer release, including an automatic one.
+    /// The newest release GitHub reported, kept across launches so a found update stays shown
+    /// until this build catches up, even when a later check fails.
+    var latest: AppVersion? { settings.latestRelease.flatMap(AppVersion.init) }
+
     var updateAvailable: AppVersion? {
-        if case .available(let version) = state { version } else { nil }
+        guard let latest, let current, latest > current else { return nil }
+        return latest
     }
 
+    /// Starts or stops automatic checks to match the setting. Called at launch and when it changes.
     func start() {
-        checkIfDue()
-        timer = Timer.scheduledTimer(withTimeInterval: Self.pollInterval, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.checkIfDue() }
+        if settings.autoCheckUpdates {
+            if timer == nil {
+                timer = Timer.scheduledTimer(withTimeInterval: Self.pollInterval, repeats: true) { [weak self] _ in
+                    Task { @MainActor in self?.checkIfDue() }
+                }
+            }
+            checkIfDue()
+        } else {
+            stop()
         }
     }
 
@@ -46,29 +58,40 @@ final class UpdateChecker {
         timer = nil
     }
 
-    /// Runs an automatic check when they're on and a week has passed. Also called on wake and
-    /// when the setting is turned on.
-    func checkIfDue() {
-        guard settings.autoCheckUpdates, UpdateCheck.isDue(lastChecked: settings.lastUpdateCheck, now: Date()) else { return }
-        check()
+    func handleWake() {
+        guard settings.autoCheckUpdates else { return }
+        Task {
+            try? await Task.sleep(for: Self.wakeDelay)
+            checkIfDue()
+        }
     }
 
-    func check() {
-        guard state != .checking else { return }
-        guard let current else {
-            state = .failed("This build has no version number to compare.")
+    /// Runs an automatic check when they're on and a week has passed since GitHub last answered.
+    private func checkIfDue() {
+        guard settings.autoCheckUpdates, UpdateCheck.isDue(lastChecked: settings.lastUpdateCheck, now: Date()) else { return }
+        check(userInitiated: false)
+    }
+
+    func check(userInitiated: Bool = true) {
+        guard activity != .checking else { return }
+        guard current != nil else {
+            if userInitiated { activity = .failed("This build has no version number to compare.") }
             return
         }
-        state = .checking
+        activity = .checking
         Task {
             do throws(UpdateClientError) {
-                let latest = try await client.latestVersion()
+                let version = try await client.latestVersion()
+                settings.latestRelease = version.description
                 settings.lastUpdateCheck = Date()
-                state = latest > current ? .available(latest) : .upToDate
+                activity = .idle
             } catch {
                 // GitHub answered; there's just nothing to compare against yet.
-                if error == .noReleases { settings.lastUpdateCheck = Date() }
-                state = .failed(Self.message(for: error))
+                if error == .noReleases {
+                    settings.latestRelease = nil
+                    settings.lastUpdateCheck = Date()
+                }
+                activity = userInitiated ? .failed(Self.message(for: error)) : .idle
             }
         }
     }

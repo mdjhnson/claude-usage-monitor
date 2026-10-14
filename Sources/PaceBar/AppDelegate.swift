@@ -32,7 +32,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             center.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
                 MainActor.assumeIsolated {
                     self?.store.handleWake()
-                    self?.updates.checkIfDue()
+                    self?.updates.handleWake()
                 }
             },
         ]

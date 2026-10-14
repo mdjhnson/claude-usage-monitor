@@ -106,7 +106,7 @@ For each release:
 
 1. `git checkout main && git pull`, so the build includes everything merged on GitHub.
 2. Bump `CFBundleShortVersionString` (and `CFBundleVersion`) in `Resources/Info.plist` and commit it. Settings › About shows the commit a build came from, marked `-dirty` if the tree had uncommitted changes, so release from a clean tree.
-3. `PUBLISH=1 TEAM_ID=<your team ID> ./release.sh`. With `PUBLISH=1`, the script finishes by publishing the DMG as GitHub Release `v<version>` (`gh release create … --generate-notes`), which is what **Check for Updates** reads. It checks that `gh` is signed in and the tag is new before it builds. Without `PUBLISH=1`, it prints the `gh` command to run later.
+3. `PUBLISH=1 TEAM_ID=<your team ID> ./release.sh`. With `PUBLISH=1`, the script finishes by publishing the DMG as GitHub Release `v<version>` (`gh release create … --generate-notes`), which is what **Check for Updates** reads. Before it builds, it checks that `gh` is signed in, the tree is clean, the commit is pushed and the tag is new, then tags exactly that commit. Without `PUBLISH=1`, it prints the `gh` command to run later.
 
 The export signs the app and the widget extension. The first release after the widget was added may take a little longer while Xcode registers the widget's bundle ID (`io.github.mdjhnson.pacebar.widget`) for the team.
 
@@ -150,7 +150,7 @@ Open Settings from the gear in the popover. Settings are split into six tabs: Pa
 | Launch at login | Off | Uses `SMAppService.mainApp`. macOS may ask you to approve it in Login Items. |
 | Copy diagnostic | — | Copies a redacted report (see below). |
 | Check for Updates | — | In About. Asks GitHub for the latest release's version and compares it with this build. If it's newer, About shows a Download link to the release page and the popover shows "PaceBar x.y.z is available". It never downloads or installs anything. See **Network**. |
-| Check automatically once a week | Off | In About. While on, PaceBar runs the same check at launch, on wake and every 6 hours, but only once a week has passed since the last answer. |
+| Check automatically once a week | Off | In About. While on, PaceBar runs the same check at launch, shortly after wake and every 6 hours, but only once a week has passed since the last answer. Automatic checks that fail retry quietly. A found update stays shown, across relaunches, until you install it. |
 
 ### Notifications
 

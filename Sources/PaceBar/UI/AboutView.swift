@@ -69,7 +69,7 @@ struct AboutPane: View {
         Section {
             LabeledContent {
                 Button("Check for Updates") { updates.check() }
-                    .disabled(updates.state == .checking)
+                    .disabled(updates.activity == .checking)
             } label: {
                 updateStatus
             }
@@ -79,7 +79,7 @@ struct AboutPane: View {
                 }
             }
             Toggle("Check automatically once a week", isOn: $settings.autoCheckUpdates)
-                .onChange(of: settings.autoCheckUpdates) { updates.checkIfDue() }
+                .onChange(of: settings.autoCheckUpdates) { updates.start() }
         } header: {
             Text("Updates")
         } footer: {
@@ -88,31 +88,38 @@ struct AboutPane: View {
         }
     }
 
-    @ViewBuilder
+    /// The version as the update check compares it, so the two never disagree.
+    private var comparedVersion: String { updates.current?.description ?? version }
+
     private var updateStatus: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            switch updates.state {
-            case .idle:
-                Text("PaceBar \(version)")
-            case .checking:
-                HStack(spacing: 6) {
-                    ProgressView().controlSize(.small)
-                    Text("Checking…")
+        // Redrawn each minute so "Last checked" keeps up while Settings stays open.
+        TimelineView(.periodic(from: .now, by: 60)) { context in
+            VStack(alignment: .leading, spacing: 2) {
+                switch updates.activity {
+                case .checking:
+                    HStack(spacing: 6) {
+                        ProgressView().controlSize(.small)
+                        Text("Checking…")
+                    }
+                case .failed(let message):
+                    Text(message)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                case .idle:
+                    if let latest = updates.updateAvailable {
+                        Text("PaceBar \(latest.description) is available")
+                            .foregroundStyle(.orange)
+                    } else if updates.latest != nil {
+                        Text("PaceBar \(comparedVersion) is up to date")
+                    } else {
+                        Text("PaceBar \(comparedVersion)")
+                    }
                 }
-            case .upToDate:
-                Text("PaceBar \(version) is up to date")
-            case .available(let latest):
-                Text("PaceBar \(latest.description) is available")
-                    .foregroundStyle(.orange)
-            case .failed(let message):
-                Text(message)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            if let last = settings.lastUpdateCheck {
-                Text("Last checked \(Format.age(since: last, now: Date()))")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                if let last = settings.lastUpdateCheck {
+                    Text("Last checked \(Format.age(since: last, now: context.date))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
     }

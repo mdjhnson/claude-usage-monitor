@@ -48,8 +48,8 @@ final class UpdateClientTests: XCTestCase {
         client = UpdateClient(configuration: config)
     }
 
-    private func respond(_ status: Int, body: String = "{}") {
-        StubProtocol.state.reply = .response(status: status, headers: [:], body: Data(body.utf8))
+    private func respond(_ status: Int, headers: [String: String] = [:], body: String = "{}") {
+        StubProtocol.state.reply = .response(status: status, headers: headers, body: Data(body.utf8))
     }
 
     private func fetchError() async -> UpdateClientError? {
@@ -82,13 +82,22 @@ final class UpdateClientTests: XCTestCase {
         XCTAssertEqual(error, .noReleases)
     }
 
-    func test403And429AreRateLimited() async {
-        respond(403)
-        let forbidden = await fetchError()
-        XCTAssertEqual(forbidden, .rateLimited)
+    func testRateLimitIs429OrExhausted403() async {
+        respond(403, headers: ["X-RateLimit-Remaining": "0"])
+        let exhausted = await fetchError()
+        XCTAssertEqual(exhausted, .rateLimited)
         respond(429)
         let tooMany = await fetchError()
         XCTAssertEqual(tooMany, .rateLimited)
+    }
+
+    func testOther403IsNotRateLimited() async {
+        respond(403, headers: ["X-RateLimit-Remaining": "42"])
+        let forbidden = await fetchError()
+        XCTAssertEqual(forbidden, .http(status: 403))
+        respond(403)
+        let bare = await fetchError()
+        XCTAssertEqual(bare, .http(status: 403))
     }
 
     func testOtherStatus() async {

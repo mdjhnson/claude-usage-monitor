@@ -4,7 +4,8 @@ import os
 public enum UpdateClientError: Error, Equatable, Sendable {
     /// 404: the repository has no published release yet.
     case noReleases
-    /// 403 or 429: GitHub's unauthenticated rate limit (60 requests an hour per IP).
+    /// 429, or 403 with `X-RateLimit-Remaining: 0`: GitHub's unauthenticated rate limit
+    /// (60 requests an hour per IP).
     case rateLimited
     /// Any other non-2xx status.
     case http(status: Int)
@@ -86,7 +87,9 @@ public final class UpdateClient: Sendable {
             return version
         case 404:
             throw .noReleases
-        case 403, 429:
+        case 429:
+            throw .rateLimited
+        case 403 where http.value(forHTTPHeaderField: "X-RateLimit-Remaining") == "0":
             throw .rateLimited
         case 300...399:
             throw .redirectRefused(status: http.statusCode)
