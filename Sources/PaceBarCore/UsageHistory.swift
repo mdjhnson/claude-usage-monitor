@@ -84,3 +84,21 @@ extension PacingCalculator {
         return points
     }
 }
+
+/// Lookups for hovering a graph.
+public enum GraphMath {
+    /// The index of the point whose `x` is closest to `x`. Ties go to the earlier point.
+    public static func nearestIndex(in points: [GraphPoint], toX x: Double) -> Int? {
+        points.indices.min { abs(points[$0].x - x) < abs(points[$1].x - x) }
+    }
+
+    /// The polyline's value at `x`, by linear interpolation. Clamped to the first and last points.
+    public static func value(of curve: [GraphPoint], at x: Double) -> Double? {
+        guard let first = curve.first, let last = curve.last else { return nil }
+        if x <= first.x { return first.y }
+        for (a, b) in zip(curve, curve.dropFirst()) where a.x <= x && x <= b.x {
+            return b.x == a.x ? b.y : a.y + (b.y - a.y) * (x - a.x) / (b.x - a.x)
+        }
+        return last.y
+    }
+}

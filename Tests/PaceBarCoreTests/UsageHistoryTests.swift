@@ -83,11 +83,26 @@ final class UsageHistoryTests: XCTestCase {
         XCTAssertEqual(value(curve, at: mondayX), expected, accuracy: 0.01)
     }
 
-    /// Linear interpolation along the polyline.
     private func value(_ curve: [GraphPoint], at x: Double) -> Double {
-        for (a, b) in zip(curve, curve.dropFirst()) where a.x <= x && x <= b.x {
-            return b.x == a.x ? b.y : a.y + (b.y - a.y) * (x - a.x) / (b.x - a.x)
-        }
-        return curve.last?.y ?? 0
+        GraphMath.value(of: curve, at: x) ?? .nan
+    }
+
+    func testNearestIndex() {
+        let points = [GraphPoint(x: 0.1, y: 1), GraphPoint(x: 0.4, y: 2), GraphPoint(x: 0.5, y: 3)]
+        XCTAssertEqual(GraphMath.nearestIndex(in: points, toX: 0), 0)
+        XCTAssertEqual(GraphMath.nearestIndex(in: points, toX: 0.3), 1)
+        XCTAssertEqual(GraphMath.nearestIndex(in: points, toX: 0.45), 1) // tie: earlier
+        XCTAssertEqual(GraphMath.nearestIndex(in: points, toX: 0.46), 2)
+        XCTAssertEqual(GraphMath.nearestIndex(in: points, toX: 1), 2)
+        XCTAssertNil(GraphMath.nearestIndex(in: [], toX: 0.5))
+    }
+
+    func testInterpolation() {
+        let curve = [GraphPoint(x: 0, y: 0), GraphPoint(x: 0.5, y: 50), GraphPoint(x: 0.5, y: 60), GraphPoint(x: 1, y: 100)]
+        XCTAssertEqual(GraphMath.value(of: curve, at: 0.25), 25)
+        XCTAssertEqual(GraphMath.value(of: curve, at: 0.75), 80)
+        XCTAssertEqual(GraphMath.value(of: curve, at: -1), 0)
+        XCTAssertEqual(GraphMath.value(of: curve, at: 2), 100)
+        XCTAssertNil(GraphMath.value(of: [], at: 0.5))
     }
 }

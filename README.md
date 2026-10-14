@@ -8,7 +8,7 @@ A small macOS menu bar app that shows your Claude usage limits and whether you a
   - a pacing bar (fill = actual usage, triangle = expected pace)
   - a zone pill with the signed delta ("On track +7%") and a one-line quip
   - when you're past the on-track band (Watch out or Hot), roughly when you'll be back on pace
-  - a usage graph: this cycle's readings against the steady-pace line, so a slow start and a late ramp show their real shape
+  - a usage graph: this cycle's readings against the steady-pace line, so a slow start and a late ramp show their real shape. Hover it to see any reading's time and usage, and where the pace line was then.
 - **Workweek pacing (optional):** weekly limits pace over your active days and hours only. Weekends and evenings don't count against you.
 - **Notifications (optional, off by default):** usage alerts at your thresholds, running hot and back on pace, and reminders before a reset.
 

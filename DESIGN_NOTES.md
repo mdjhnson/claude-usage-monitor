@@ -106,6 +106,9 @@ Note 1: the brief says "gradient fill from the theme's low color to the theme's 
 - The window's start (0%) to the first reading: 1.25pt dashed (2, 3) in the zone color at 0.55, because nothing was measured there.
 - Latest reading: 5pt white dot.
 - Under it: start and reset labels, 9 monospaced at text 0.3. Session shows times ("11:39 AM"); weekly adds the weekday ("Sat 4 AM").
+- **Hover:**
+  - Snaps to the nearest reading. Draws a 0.5pt guide at `white 0.3` and a 7pt dot in the zone color with a 1.25pt white ring.
+  - The label row switches to "2:14 PM · 42% · pace 38%" (weekly: "Wed 3:30 PM · …") at text 0.75. It's aligned leading, center or trailing by which third of the graph the reading is in, so it never covers the line or runs off the edge.
 - Readings are kept in memory per window and cleared when the reset time moves. Past 2,000, every other one is dropped.
 
 **Card variants:**
