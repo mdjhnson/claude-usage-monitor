@@ -185,7 +185,7 @@ It never holds the token, any response body, or anything else from the Keychain.
 
 **Updates.** Widgets recompute pacing every 15 minutes from the last snapshot, so zones keep moving even with no new data. PaceBar also asks macOS to redraw them as soon as a setting changes, an error starts or ends, or a limit resets. Other changes reach them at most every 5 minutes, and new graph readings at least every 30 minutes, which keeps PaceBar inside macOS's daily widget update budget. In between, a widget can be a point behind the menu bar; the refresh button catches it up.
 
-**When PaceBar isn't running,** widgets keep showing the last snapshot. After a failed refresh, or once the data is older than twice the refresh interval (and at least 10 minutes), they dim it and show "Updated N min ago". Before PaceBar has ever run, they show "Open PaceBar to start."
+**When PaceBar isn't running,** widgets keep showing the last snapshot. After a failed refresh, or once the data is more than 45 minutes old (or twice the refresh interval, if that's longer), they dim it and show "Updated N min ago". The allowance is long because a running PaceBar with unchanged numbers only redraws widgets every 30 minutes, and a widget learns how fresh the data is only when it's redrawn. Before PaceBar has ever run, they show "Open PaceBar to start."
 
 ## Threat model and security design
 

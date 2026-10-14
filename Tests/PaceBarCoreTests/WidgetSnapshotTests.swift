@@ -84,10 +84,12 @@ final class WidgetSnapshotTests: XCTestCase {
     func testStaleness() {
         let fetched = reset.addingTimeInterval(-hour)
         XCTAssertFalse(snapshot(fetchedAt: fetched).isStale(now: fetched.addingTimeInterval(5 * 60)))
-        // Never under 10 minutes, even at a 3 minute refresh.
-        XCTAssertFalse(snapshot(fetchedAt: fetched).isStale(now: fetched.addingTimeInterval(9 * 60)))
-        XCTAssertTrue(snapshot(fetchedAt: fetched).isStale(now: fetched.addingTimeInterval(11 * 60)))
-        XCTAssertFalse(snapshot(fetchedAt: fetched, refresh: 600).isStale(now: fetched.addingTimeInterval(19 * 60)))
+        // A running app with unchanged numbers redraws the widgets only every 30 minutes, so
+        // that must never read as stale.
+        XCTAssertGreaterThan(WidgetSnapshot.staleAge, WidgetSnapshot.maxReloadGap)
+        XCTAssertFalse(snapshot(fetchedAt: fetched).isStale(now: fetched.addingTimeInterval(WidgetSnapshot.maxReloadGap + 60)))
+        XCTAssertFalse(snapshot(fetchedAt: fetched).isStale(now: fetched.addingTimeInterval(44 * 60)))
+        XCTAssertTrue(snapshot(fetchedAt: fetched).isStale(now: fetched.addingTimeInterval(46 * 60)))
         XCTAssertTrue(snapshot(fetchedAt: fetched, hasError: true).isStale(now: fetched))
     }
 

@@ -29,6 +29,10 @@ ditto "$SRC" "$DEST"
 codesign --verify --strict "$DEST"
 echo "Installed $DEST"
 
+# macOS keeps a running widget extension alive across an app update, so widgets would keep
+# drawing with the old code. Quitting it makes WidgetKit start the new one.
+pkill -x PaceBarWidget 2>/dev/null && echo "Restarted the widget extension" || true
+
 if [[ -z "${NO_LAUNCH:-}" ]]; then
     open "$DEST"
     echo "Launched PaceBar"
