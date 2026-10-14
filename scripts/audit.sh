@@ -8,6 +8,8 @@
 #   - the only app launch is Terminal.app, from the setup guide
 #   - the only other URLs are Claude Code's installer, shown and copied by the setup guide, never fetched,
 #     and the source repository, the one link in the app (About tab), opened in the default browser
+#   - the only other URL opened is PaceBar's page in System Settings › Notifications (a fixed
+#     x-apple.systempreferences: URL, from the Notifications tab), which opens locally
 #   - Sources/ holds Swift only; Package.swift has no dependencies, binaries, plugins or flags
 #   - the entitlements file grants exactly com.apple.security.network.client
 set -u
@@ -24,6 +26,9 @@ INSTALL_URL="https://claude.ai/install.sh"
 ABOUT="Sources/PaceBar/UI/AboutView.swift"
 REPO_URL="https://github.com/mdjhnson/claude-usage-monitor"
 REPO_LINK='Link(Self.repository, destination: Self.repositoryURL)'
+NOTIFIER="Sources/PaceBar/Notifier.swift"
+SETTINGS_URL="x-apple.systempreferences:com.apple.Notifications-Settings.extension?id=io.github.mdjhnson.pacebar"
+SETTINGS_LINK='NSWorkspace.shared.open(Self.notificationSettingsURL)'
 status=0
 
 section() { printf '\n== %s ==\n' "$1"; }
@@ -58,7 +63,8 @@ forbidden=$(rhits \
 'NWListener|NWConnection|CFStream|NSUserNotification|'\
 'NSAppleEventManager|handleGetURLEvent|WKWebView|openURL|(^|[^.A-Za-z0-9_])Link\(|NSWorkspace[^(]*\.open\(|'\
 'FileManager.*\.claude|NSPasteboard.*[Tt]oken' "$SRC" | code_only \
-    | awk -v f="$ABOUT:" -v l="$REPO_LINK" '!(index($0, f) == 1 && index($0, l) > 0)')
+    | awk -v f="$ABOUT:" -v l="$REPO_LINK" '!(index($0, f) == 1 && index($0, l) > 0)' \
+    | awk -v f="$NOTIFIER:" -v l="$SETTINGS_LINK" '!(index($0, f) == 1 && index($0, l) > 0)')
 if [ -n "$forbidden" ]; then echo "$forbidden"; fail "forbidden construct(s) above"; else echo "(none)"; fi
 
 section "App launches"
@@ -75,13 +81,22 @@ fi
 section "Links"
 links=$(rhits '(^|[^.A-Za-z0-9_])Link\(|openURL|NSWorkspace[^(]*\.open\(' "$SRC" | code_only)
 echo "${links:-(none)}"
-stray_links=$(printf '%s\n' "$links" | grep . | outside "$ABOUT")
-[ -n "$stray_links" ] && fail "link opened outside AboutView.swift"
-[ "$(printf '%s\n' "$links" | grep -c .)" -gt 1 ] && fail "more than one link"
-if [ -n "$links" ]; then
-    printf '%s\n' "$links" | grep -qF "$REPO_LINK" || fail "the link must be $REPO_LINK"
+stray_links=$(printf '%s\n' "$links" | grep . | outside "$ABOUT" | outside "$NOTIFIER")
+[ -n "$stray_links" ] && fail "link opened outside AboutView.swift and Notifier.swift"
+[ "$(printf '%s\n' "$links" | grep -c .)" -gt 2 ] && fail "more than two links"
+about_links=$(printf '%s\n' "$links" | grep -F "$ABOUT:")
+if [ -n "$about_links" ]; then
+    [ "$(printf '%s\n' "$about_links" | grep -c .)" -gt 1 ] && fail "more than one link in AboutView.swift"
+    printf '%s\n' "$about_links" | grep -qF "$REPO_LINK" || fail "the About link must be $REPO_LINK"
     [ "$(grep -cF "static let repositoryURL = URL(string: \"$REPO_URL\")!" "$ABOUT")" -eq 1 ] \
         || fail "repositoryURL must be the fixed repository address"
+fi
+notifier_links=$(printf '%s\n' "$links" | grep -F "$NOTIFIER:")
+if [ -n "$notifier_links" ]; then
+    [ "$(printf '%s\n' "$notifier_links" | grep -c .)" -gt 1 ] && fail "more than one link in Notifier.swift"
+    printf '%s\n' "$notifier_links" | grep -qF "$SETTINGS_LINK" || fail "the Notifier link must be $SETTINGS_LINK"
+    [ "$(grep -cF "static let notificationSettingsURL = URL(string: \"$SETTINGS_URL\")!" "$NOTIFIER")" -eq 1 ] \
+        || fail "notificationSettingsURL must be the fixed System Settings address"
 fi
 
 section "Networking outside $CLIENT"

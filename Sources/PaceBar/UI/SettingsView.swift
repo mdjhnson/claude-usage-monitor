@@ -354,10 +354,8 @@ struct SettingsView: View {
             Picker("Before the weekly reset", selection: notificationBinding(\.weeklyReminderMinutes)) {
                 ForEach(SettingsStore.weeklyReminderChoices, id: \.self) { Text(reminderTitle($0)).tag($0) }
             }
-            if notifier.isDenied && settings.anyNotificationsOn {
-                Text("Notifications are turned off for PaceBar. Turn them on in System Settings › Notifications › PaceBar.")
-                    .font(.callout)
-                    .foregroundStyle(.orange)
+            if settings.anyNotificationsOn {
+                permissionRow
             }
         } header: {
             Text("Notifications")
@@ -366,6 +364,35 @@ struct SettingsView: View {
                 .foregroundStyle(.secondary)
         }
         .task { await notifier.refreshAuthorization() }
+        // Coming back from System Settings makes PaceBar active again; pick up the new answer.
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            Task { await notifier.refreshAuthorization() }
+        }
+    }
+
+    /// What's needed before notifications can show, with the one button that gets it.
+    @ViewBuilder
+    private var permissionRow: some View {
+        switch notifier.permission {
+        case .denied:
+            HStack(alignment: .firstTextBaseline) {
+                Text("Notifications are turned off for PaceBar in System Settings.")
+                    .foregroundStyle(.orange)
+                Spacer()
+                Button("Open Notification Settings", action: notifier.openNotificationSettings)
+            }
+            .font(.callout)
+        case .notDetermined:
+            HStack(alignment: .firstTextBaseline) {
+                Text("PaceBar needs permission to show notifications.")
+                    .foregroundStyle(.orange)
+                Spacer()
+                Button("Allow Notifications…", action: notifier.requestAuthorization)
+            }
+            .font(.callout)
+        case .allowed, .unknown:
+            EmptyView()
+        }
     }
 
     /// Turning any notification on asks macOS for permission the first time.
