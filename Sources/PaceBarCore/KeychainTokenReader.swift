@@ -71,8 +71,12 @@ public struct KeychainTokenReader: Sendable {
         var errors: [KeychainReadError] = []
         for account in targets {
             switch runSecurity(service: service, account: account, timeout: timeout) {
-            case .success(let data):
-                if let credential = CredentialParser.parse(data) {
+            case .success(var data):
+                // The payload also holds the refresh token. Free the parser's temporary strings
+                // now rather than at the queue's next drain, and zero the raw bytes once parsed.
+                let parsed = autoreleasepool { CredentialParser.parse(data) }
+                data.resetBytes(in: 0..<data.count)
+                if let credential = parsed {
                     credentials.append(credential)
                 } else {
                     errors.append(.unusablePayload)
