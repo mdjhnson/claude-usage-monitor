@@ -24,7 +24,8 @@ public struct UsageFetchResult: Sendable {
     public let shape: String
 }
 
-/// The app's only network client. One host, no redirects, no cookies, no cache.
+/// The Claude usage client. One host, no redirects, no cookies, no cache. The only other
+/// network client is `UpdateClient`, which never sees the token.
 public final class UsageClient: Sendable {
     public static let allowedHost = "api.anthropic.com"
     static let usageURL = URL(string: "https://api.anthropic.com/api/oauth/usage")!
@@ -63,9 +64,14 @@ public final class UsageClient: Sendable {
 
     /// Exact host lock: https, host `api.anthropic.com`, default port, no user info.
     static func isAllowed(_ url: URL?) -> Bool {
+        isAllowed(url, host: allowedHost)
+    }
+
+    /// The same lock for any one host. `UpdateClient` uses it for `api.github.com`.
+    static func isAllowed(_ url: URL?, host: String) -> Bool {
         guard let url, let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return false }
         return components.scheme?.lowercased() == "https"
-            && components.host?.lowercased() == allowedHost
+            && components.host?.lowercased() == host
             && (components.port == nil || components.port == 443)
             && components.user == nil && components.password == nil
     }
@@ -117,7 +123,8 @@ public final class UsageClient: Sendable {
 }
 
 /// Refuses every redirect. The 3xx response is delivered as-is and mapped to an error.
-private final class RedirectRefuser: NSObject, URLSessionTaskDelegate, Sendable {
+/// Shared by both clients.
+final class RedirectRefuser: NSObject, URLSessionTaskDelegate, Sendable {
     func urlSession(
         _ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
         newRequest request: URLRequest, completionHandler: @escaping @Sendable (URLRequest?) -> Void

@@ -13,17 +13,18 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     private var appearanceObservation: NSKeyValueObservation?
     private var ticker: Timer?
 
-    init(store: UsageStore, settings: SettingsStore, openSettings: @escaping () -> Void) {
+    /// - Parameter openSettings: opens Settings at a tab, or at the last one shown when nil.
+    init(store: UsageStore, settings: SettingsStore, updates: UpdateChecker, openSettings: @escaping (SettingsView.Pane?) -> Void) {
         self.store = store
         self.settings = settings
         super.init()
         // A stable identity lets macOS and menu bar managers (Bartender, Ice) remember placement.
         statusItem.autosaveName = "io.github.mdjhnson.pacebar.status"
 
-        let hosting = NSHostingController(rootView: PopoverView(store: store, settings: settings, openSettings: { [weak self] in
+        let hosting = NSHostingController(rootView: PopoverView(store: store, settings: settings, updates: updates) { [weak self] pane in
             self?.popover.performClose(nil)
-            openSettings()
-        }))
+            openSettings(pane)
+        })
         hosting.sizingOptions = [.preferredContentSize]
         popover.contentViewController = hosting
         popover.behavior = .transient

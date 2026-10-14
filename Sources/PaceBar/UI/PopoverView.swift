@@ -6,7 +6,9 @@ import PaceBarCore
 struct PopoverView: View {
     let store: UsageStore
     let settings: SettingsStore
-    let openSettings: () -> Void
+    let updates: UpdateChecker
+    /// Opens Settings at a tab, or at the last one shown when nil.
+    let openSettings: (SettingsView.Pane?) -> Void
 
     var body: some View {
         let theme = settings.theme
@@ -116,6 +118,17 @@ struct PopoverView: View {
     private func footer(text: Color, now: Date) -> some View {
         VStack(spacing: 8) {
             Rectangle().fill(Color.white.opacity(0.06)).frame(height: 0.5)
+            if let version = updates.updateAvailable {
+                Button { openSettings(.about) } label: {
+                    Label("PaceBar \(version.description) is available", systemImage: "arrow.down.circle")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(text.opacity(0.6))
+                .help("Open Settings › About to download it")
+            }
             HStack(spacing: 12) {
                 if let snapshot = store.snapshot {
                     Text("Updated \(Format.age(since: snapshot.fetchedAt, now: now))")
@@ -123,7 +136,7 @@ struct PopoverView: View {
                         .foregroundStyle(text.opacity(0.3))
                 }
                 Spacer()
-                Button(action: openSettings) {
+                Button { openSettings(nil) } label: {
                     Image(systemName: "gearshape")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(text.opacity(0.45))

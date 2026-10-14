@@ -141,6 +141,7 @@ Note 1: the brief says "gradient fill from the theme's low color to the theme's 
 - "Updated 2 min ago" at 10, `white 0.3`.
 - Then a gear icon that opens Settings, and "Quit" at 10 medium, `white 0.4`.
 - 8pt above the footer is a hairline divider, `white 0.06`.
+- When an update check found a newer release, a row sits between the divider and the footer items: `arrow.down.circle` plus "PaceBar 1.1.4 is available", 10 medium, `white 0.6`, full width. Clicking it opens Settings at the About tab.
 
 ## Menu bar item
 
@@ -215,6 +216,11 @@ Sections:
    - Launch at login toggle. Shows "Approve in System Settings › Login Items" when the status is `.requiresApproval`.
 7. **Diagnostics:**
    - "Copy diagnostic" button, with a short caption saying what is included.
+8. **Updates** (About tab, between Build and About):
+   - Status on the left ("PaceBar 1.1.3", "…is up to date", "PaceBar 1.1.4 is available" in orange, or a short error in secondary), with "Last checked 3 days ago" in caption secondary under it. "Check for Updates" on the right, disabled while a check runs, with a small spinner and "Checking…" in place of the status.
+   - When newer: a "PaceBar 1.1.4" row with a Download link.
+   - "Check automatically once a week" toggle.
+   - Footer: what the check sends (nothing but a version request to api.github.com) and that PaceBar never downloads or installs updates.
 
 ## Widgets
 
