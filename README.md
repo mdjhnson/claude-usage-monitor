@@ -39,7 +39,7 @@ The pure logic lives in `Sources/PaceBarCore` and is covered by unit tests.
 
 - macOS 14 or later.
 - **Toolchain:** Xcode 27.0 (build 27A266a), Swift 6.4 (swiftlang-6.4.0.34.1). It's pinned here because no other build configuration is tested. The scripts use Xcode through `DEVELOPER_DIR`, so `xcode-select` can stay pointed at the Command Line Tools. Accept the Xcode license once, either by launching Xcode or with `sudo /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -license accept`.
-- Claude Code installed and signed in (`claude`, then `/login`).
+- Claude Code installed and signed in (`claude`, then `/login`). If it isn't, the popover walks you through it (see **Setup guide** below). The Claude desktop app's sign-in isn't enough on its own: it doesn't store a login PaceBar can read.
 
 ## Build, test, run
 
@@ -60,6 +60,16 @@ There is no `Package.resolved`. SwiftPM only writes one when a package has depen
 2. macOS asks whether `security` may access the "Claude Code-credentials" Keychain item. Choose **Always Allow**. If you click **Allow** instead, you'll be asked again on every refresh. The first read after launch waits up to 60 seconds for your answer.
    - If no prompt appears, `security` already has access. Another tool that reads Claude Code's login the same way (TokenEater, for example) granted it earlier. The ACL caveat below then already applies.
 3. The menu bar shows something like `5h 42%  7d 18%`. Click it for the dashboard.
+
+### Setup guide
+
+When there's no Claude Code login, or it has expired, the popover shows step-by-step instructions instead of an error. This is meant for people who use the Claude desktop app but have never used Claude Code.
+- **Copy & Open Terminal** puts one command on the clipboard and opens Terminal.app. On a Mac without Claude Code, the command is `curl -fsSL https://claude.ai/install.sh | bash && ~/.local/bin/claude`, which installs Claude Code with Anthropic's installer and then starts it. If Claude Code is already installed, the command just starts it. The command is shown in the popover, so it's never hidden from the person running it.
+- The person pastes it with ⌘V, signs in through Claude Code's prompts, and answers the Keychain prompt with **Always Allow**.
+- To renew an expired login, they start Claude Code and run `/usage`, which makes Claude Code refresh its token.
+- While the guide is showing, PaceBar checks the Keychain every 5 seconds and continues on its own. These checks never touch the network until a valid login exists.
+
+PaceBar never runs the command itself and never types into Terminal.
 
 **Menu bar managers (Bartender, Ice):** PaceBar's status item has a fixed autosave name (`io.github.mdjhnson.pacebar.status`), so these tools remember where you put it across launches and rebuilds. In their item lists it appears with the PaceBar icon, a small pacing bar on a dark tile.
 
@@ -142,6 +152,7 @@ PaceBar holds a **full-scope Claude Code OAuth token** in memory while a request
 - **Not sandboxed.** An App Sandbox would prevent running `/usr/bin/security` to read another app's Keychain item, which is the only way PaceBar gets the token.
 - **Hardened runtime is on.** The only entitlement is `com.apple.security.network.client`. There are no library-validation or JIT exceptions.
 - There are no listening sockets, no URL scheme handlers, no AppleScript, and no files written into `~/.claude`.
+- The only app PaceBar opens is `/System/Applications/Utilities/Terminal.app`, at a fixed path, from the setup guide. It opens no URLs.
 - **No auto-update.** You update by pulling and rebuilding.
 
 ### Failure behavior
@@ -158,7 +169,8 @@ On any error, the last good data stays on screen, dimmed, with "Last updated N m
 ### Auditing
 
 `./scripts/audit.sh` lists every line in `Sources/` containing `http://`, `https://`, `Process`, `URLSession`, `UserDefaults`, `print(` or `NSLog(`. It then fails if any rule is broken:
-- the only literal host is `api.anthropic.com`, and a URL whose host is built at runtime also fails.
+- the only literal host is `api.anthropic.com`, and a URL whose host is built at runtime also fails. The one exception is `https://claude.ai/install.sh` in `SetupGuideView.swift`, which is copied to the clipboard and never fetched.
+- the only app launch is one `openApplication` call in `SetupGuideView.swift`, opening the fixed Terminal.app path
 - networking APIs (`URLSession`, `URLRequest`, `URLComponents`, host assignment) appear only in `UsageClient.swift`
 - `Process` appears only once, in `KeychainTokenReader.swift`
 - no forbidden constructs:

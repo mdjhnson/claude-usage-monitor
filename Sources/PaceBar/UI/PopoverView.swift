@@ -41,7 +41,14 @@ struct PopoverView: View {
             .padding(.bottom, 10)
 
             VStack(spacing: 10) {
-                if let error = store.lastError {
+                if let error = store.lastError, let need = error.setupNeed {
+                    SetupGuideView(
+                        need: need,
+                        isChecking: store.isRefreshing,
+                        textColor: text,
+                        onCheckNow: store.retry
+                    )
+                } else if let error = store.lastError {
                     ErrorBanner(
                         message: error.message(retryAt: store.retryNotBefore),
                         isAuthProblem: error.isAuthProblem,

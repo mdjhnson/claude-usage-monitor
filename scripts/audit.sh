@@ -4,6 +4,8 @@
 #   - the only host is api.anthropic.com, and networking lives only in UsageClient.swift
 #   - the only subprocess is the one Process in KeychainTokenReader.swift
 #   - no shells, exec/spawn, AppleScript, listeners, URL opening, or Keychain data/write APIs
+#   - the only app launch is Terminal.app, from the setup guide
+#   - the only other URL is Claude Code's installer, shown and copied by the setup guide, never fetched
 #   - Sources/ holds Swift only; Package.swift has no dependencies, binaries, plugins or flags
 #   - the entitlements file grants exactly com.apple.security.network.client
 set -u
@@ -14,6 +16,9 @@ TESTS="Tests"
 RESOURCES="Resources"
 CLIENT="Sources/PaceBarCore/UsageClient.swift"
 READER="Sources/PaceBarCore/KeychainTokenReader.swift"
+GUIDE="Sources/PaceBar/UI/SetupGuideView.swift"
+TERMINAL_URL='URL(fileURLWithPath: "/System/Applications/Utilities/Terminal.app")'
+INSTALL_URL="https://claude.ai/install.sh"
 status=0
 
 section() { printf '\n== %s ==\n' "$1"; }
@@ -25,6 +30,11 @@ rhits() { grep -rnE -- "$1" "$2" 2>/dev/null; }
 code_only() { grep -vE '^[^:]+:[0-9]+:[[:space:]]*//'; }
 # Hits outside one allowed file.
 outside() { grep -v "^$1:"; }
+# Removes the copy-only installer URL from setup guide hits, so any other URL there still counts.
+strip_copy_only() {
+    awk -v f="$GUIDE:" -v u="$INSTALL_URL" \
+        'index($0, f) == 1 { while ((i = index($0, u)) > 0) $0 = substr($0, 1, i - 1) substr($0, i + length(u)) } { print }'
+}
 
 echo "PaceBar source audit ($(date '+%Y-%m-%d %H:%M'))"
 
@@ -39,9 +49,20 @@ forbidden=$(rhits \
 'osascript|NSAppleScript|OSAScript|NSUserUnixTask|NSUserAppleScriptTask|/bin/(ba|z)?sh|launchPath|'\
 'posix_spawn|execv|execl|(^|[^.A-Za-z0-9_])(popen|system|dlopen|bind|listen|socket)\(|'\
 'NWListener|NWConnection|CFStream|'\
-'NSAppleEventManager|handleGetURLEvent|WKWebView|openURL|(^|[^.A-Za-z0-9_])Link\(|NSWorkspace[^(]*\.open(Application)?\(|'\
+'NSAppleEventManager|handleGetURLEvent|WKWebView|openURL|(^|[^.A-Za-z0-9_])Link\(|NSWorkspace[^(]*\.open\(|'\
 'FileManager.*\.claude|NSPasteboard.*[Tt]oken' "$SRC" | code_only)
 if [ -n "$forbidden" ]; then echo "$forbidden"; fail "forbidden construct(s) above"; else echo "(none)"; fi
+
+section "App launches"
+launches=$(rhits 'openApplication|NSRunningApplication|LSOpen|launchApplication' "$SRC" | code_only)
+echo "${launches:-(none)}"
+if [ -n "$launches" ]; then
+    stray=$(printf '%s\n' "$launches" | grep -vF "$GUIDE:" )
+    [ -n "$stray" ] && fail "app launched outside SetupGuideView.swift"
+    [ "$(printf '%s\n' "$launches" | grep -c .)" -gt 1 ] && fail "more than one app launch call site"
+    printf '%s\n' "$launches" | grep -qF 'openApplication(at: Self.terminalURL,' || fail "the app launch must open Self.terminalURL"
+    [ "$(grep -cF "terminalURL = $TERMINAL_URL" "$GUIDE")" -eq 1 ] || fail "terminalURL must be the fixed Terminal.app path"
+fi
 
 section "Networking outside $CLIENT"
 net=$(rhits 'URLSession|URLRequest\(|URLComponents|\.host *=' "$SRC" | code_only | outside "$CLIENT")
@@ -79,7 +100,7 @@ for pattern in 'https://' 'URLSession' 'Process' 'UserDefaults'; do
 done
 
 section "Summary"
-hosts=$(rhits 'https?://' "$SRC" | code_only \
+hosts=$(rhits 'https?://' "$SRC" | code_only | strip_copy_only \
     | grep -oE 'https?://[A-Za-z0-9.-]*' | sed -E 's#^https?://##; s#\.+$##' | sort -u)
 host_count=$(printf '%s' "$hosts" | grep -c .)
 http_count=$(hits 'http://' "$SRC" | code_only | wc -l | tr -d ' ')
