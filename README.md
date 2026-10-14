@@ -1,6 +1,6 @@
 # PaceBar
 
-A small macOS menu bar app that shows your Claude usage limits and whether you are spending them faster or slower than a steady pace. Its look follows [TokenEater](https://github.com/AThevon/TokenEater), with a code base small enough to audit in one sitting: about 2,500 lines of Swift (plus about 900 lines of tests), with no dependencies.
+A small macOS menu bar app that shows your Claude usage limits and whether you are spending them faster or slower than a steady pace. Its look follows [TokenEater](https://github.com/AThevon/TokenEater), with a code base small enough to audit in one sitting: about 4,200 lines of Swift (plus about 1,400 lines of tests), with no dependencies.
 
 - **Menu bar:** live percentages for the windows you choose (default: 5-hour session and weekly), colored by pacing zone or by usage thresholds.
 - **Popover:** one card per window, each showing:
@@ -50,6 +50,7 @@ The pure logic lives in `Sources/PaceBarCore` and is covered by unit tests.
 ./scripts/audit.sh        # security review listing; exits non-zero on a violation
 ./build.sh                # Release build → build/PaceBar.app (ad hoc signed, hardened runtime)
 open build/PaceBar.app
+./deploy.sh               # build, quit the running copy, install to /Applications and relaunch
 ```
 
 To sign with your development identity instead of ad hoc: `SIGN_ID="Apple Development: Your Name (TEAMID)" ./build.sh`. Add `UNIVERSAL=1` to build for both Apple silicon and Intel.
@@ -58,7 +59,9 @@ There is no `Package.resolved`. SwiftPM only writes one when a package has depen
 
 ### First launch
 
-1. If Gatekeeper blocks the app, right-click `PaceBar.app`, choose **Open**, then **Open** again. A copy built on your own Mac normally isn't quarantined, so this is rare.
+If you were given a DMG, open it and drag **PaceBar** into **Applications**, then open it from there. The DMG built by `release.sh` is notarized, so it opens without a warning.
+
+1. If Gatekeeper blocks an unnotarized copy (one built with `build.sh` and sent to another Mac), click **Done**, then go to System Settings › Privacy & Security, scroll to the message about PaceBar and click **Open Anyway**. Right-click › Open no longer bypasses Gatekeeper on current macOS. A copy built on your own Mac normally isn't quarantined, so this is rare.
 2. macOS asks whether `security` may access the "Claude Code-credentials" Keychain item. Choose **Always Allow**. If you click **Allow** instead, you'll be asked again on every refresh. The first read after launch waits up to 60 seconds for your answer.
    - If no prompt appears, `security` already has access. Another tool that reads Claude Code's login the same way (TokenEater, for example) granted it earlier. The ACL caveat below then already applies.
 3. The menu bar shows something like `5h 42%  7d 18%`. Click it for the dashboard.
@@ -79,7 +82,7 @@ PaceBar never runs the command itself and never types into Terminal.
 
 The item is drawn lazily. Its label color follows the menu bar when macOS switches between light and dark menu bar text, for example with a rotating wallpaper. Theme colors stay fixed. If they're hard to read on your wallpaper, try the Pill style or Monochrome.
 
-To move the app, copy `build/PaceBar.app` to `/Applications`. Launch at login works from anywhere, but `/Applications` is the conventional place.
+To move the app, run `./deploy.sh` or copy `build/PaceBar.app` to `/Applications`. Launch at login works from anywhere, but `/Applications` is the conventional place.
 
 ## Distributing to others
 
@@ -88,6 +91,14 @@ To move the app, copy `build/PaceBar.app` to `/Applications`. Launch at login wo
 ```sh
 TEAM_ID=ABCDE12345 ./release.sh
 ```
+
+For each release:
+
+1. `git checkout main && git pull`, so the build includes everything merged on GitHub.
+2. Bump `CFBundleShortVersionString` (and `CFBundleVersion`) in `Resources/Info.plist` and commit it. Settings › About shows the commit a build came from, marked `-dirty` if the tree had uncommitted changes, so release from a clean tree.
+3. `TEAM_ID=<your team ID> ./release.sh`, then share `dist/PaceBar-<version>.dmg`.
+
+`DEPLOYMENT_COMMANDS.md` is gitignored, so you can keep your filled-in release command there.
 
 One-time setup:
 
@@ -175,8 +186,9 @@ PaceBar holds a **full-scope Claude Code OAuth token** in memory while a request
 - **Not sandboxed.** An App Sandbox would prevent running `/usr/bin/security` to read another app's Keychain item, which is the only way PaceBar gets the token.
 - **Hardened runtime is on.** The only entitlement is `com.apple.security.network.client`. There are no library-validation or JIT exceptions.
 - There are no listening sockets, no URL scheme handlers, no AppleScript, and no files written into `~/.claude`.
-- The only app PaceBar opens is `/System/Applications/Utilities/Terminal.app`, at a fixed path, from the setup guide. It opens two URLs: this repository's GitHub page, from the link in Settings › About, in your default browser, and PaceBar's page in System Settings › Notifications (`x-apple.systempreferences:…?id=io.github.mdjhnson.pacebar`), from the Notifications tab, which opens locally.
-- **No auto-update.** You update by pulling and rebuilding.
+- The only app PaceBar launches is `/System/Applications/Utilities/Terminal.app`, at a fixed path, from the setup guide.
+- It opens exactly two fixed URLs: this repository's GitHub page, from the link in Settings › About, in your default browser; and PaceBar's page in System Settings › Notifications (`x-apple.systempreferences:…?id=io.github.mdjhnson.pacebar`), from the Notifications tab, which opens locally.
+- **No auto-update.** You update by pulling and rebuilding, or by installing a newer DMG.
 
 ### Failure behavior
 
@@ -195,14 +207,14 @@ On any error, the last good data stays on screen, dimmed, with "Last updated N m
 
 `./scripts/audit.sh` lists every line in `Sources/` containing `http://`, `https://`, `Process`, `URLSession`, `UserDefaults`, `print(` or `NSLog(`. It then fails if any rule is broken:
 - the only literal host is `api.anthropic.com`, and a URL whose host is built at runtime also fails. The one exception is `https://claude.ai/install.sh` in `SetupGuideView.swift`, which is copied to the clipboard and never fetched. The other is `https://github.com/mdjhnson/claude-usage-monitor` in `AboutView.swift`, the About tab's link.
-- the only link is one `Link(Self.repository, destination: Self.repositoryURL)` in `AboutView.swift`, with `repositoryURL` fixed to the repository address. Any other `Link(`, `openURL` or `NSWorkspace.open(` fails.
+- URLs are opened in exactly two places: one `Link(Self.repository, destination: Self.repositoryURL)` in `AboutView.swift`, with `repositoryURL` fixed to the repository address, and one `NSWorkspace.shared.open(Self.notificationSettingsURL)` in `Notifier.swift`, with `notificationSettingsURL` fixed to PaceBar's System Settings page. Any other `Link(`, `openURL` or `NSWorkspace.open(` fails.
 - the only app launch is one `openApplication` call in `SetupGuideView.swift`, opening the fixed Terminal.app path
 - networking APIs (`URLSession`, `URLRequest`, `URLComponents`, host assignment) appear only in `UsageClient.swift`
 - `Process` appears only once, in `KeychainTokenReader.swift`
 - no forbidden constructs:
   - Keychain data or write APIs
   - shells, exec/spawn/popen, AppleScript
-  - sockets and listeners, web views, URL opening (other than the About link)
+  - sockets and listeners, web views, URL opening (other than the two links above)
 - `Sources/` contains only Swift files
 - `Package.swift` declares no dependencies, binary targets, plugins or unsafe/linker flags
 - the entitlements are exactly `com.apple.security.network.client`, and Info.plist declares no URL schemes
