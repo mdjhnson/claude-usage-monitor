@@ -9,11 +9,11 @@ import PaceBarCore
 final class SettingsWindowController {
     private let window: NSWindow
 
-    init(store: UsageStore, settings: SettingsStore) {
+    init(store: UsageStore, settings: SettingsStore, notifier: Notifier) {
         let tabs = NSTabViewController()
         tabs.tabStyle = .toolbar
         for pane in SettingsView.Pane.allCases {
-            let hosting = NSHostingController(rootView: SettingsView(pane: pane, store: store, settings: settings))
+            let hosting = NSHostingController(rootView: SettingsView(pane: pane, store: store, settings: settings, notifier: notifier))
             hosting.sizingOptions = [.preferredContentSize]
             hosting.title = pane.title
             let item = NSTabViewItem(viewController: hosting)
@@ -36,13 +36,14 @@ final class SettingsWindowController {
 
 struct SettingsView: View {
     enum Pane: CaseIterable {
-        case pacing, menuBar, appearance, general, about
+        case pacing, menuBar, appearance, notifications, general, about
 
         var title: String {
             switch self {
             case .pacing: "Pacing"
             case .menuBar: "Menu Bar"
             case .appearance: "Appearance"
+            case .notifications: "Notifications"
             case .general: "General"
             case .about: "About"
             }
@@ -53,6 +54,7 @@ struct SettingsView: View {
             case .pacing: "gauge.with.needle"
             case .menuBar: "menubar.rectangle"
             case .appearance: "paintpalette"
+            case .notifications: "bell"
             case .general: "gearshape"
             case .about: "info.circle"
             }
@@ -62,6 +64,7 @@ struct SettingsView: View {
     let pane: Pane
     let store: UsageStore
     @Bindable var settings: SettingsStore
+    let notifier: Notifier
 
     @State private var launchAtLogin = [.enabled, .requiresApproval].contains(SMAppService.mainApp.status)
     @State private var launchStatus = SMAppService.mainApp.status
@@ -78,6 +81,8 @@ struct SettingsView: View {
                 menuBarSection
             case .appearance:
                 appearanceSection
+            case .notifications:
+                notificationsSection
             case .general:
                 generalSection
                 diagnosticsSection
@@ -257,6 +262,46 @@ struct SettingsView: View {
             settings.criticalThreshold = newValue
             if settings.warningThreshold >= newValue { settings.warningThreshold = max(newValue - 5, 5) }
         }
+    }
+
+    // MARK: Notifications
+
+    private var notificationsSection: some View {
+        Section {
+            Toggle("Usage alerts", isOn: notificationBinding(\.notifyUsage))
+            Toggle("Running hot and back on pace", isOn: notificationBinding(\.notifyPace))
+            Picker("Before the session resets", selection: notificationBinding(\.sessionReminderMinutes)) {
+                ForEach(SettingsStore.sessionReminderChoices, id: \.self) { Text(reminderTitle($0)).tag($0) }
+            }
+            Picker("Before the weekly reset", selection: notificationBinding(\.weeklyReminderMinutes)) {
+                ForEach(SettingsStore.weeklyReminderChoices, id: \.self) { Text(reminderTitle($0)).tag($0) }
+            }
+            if notifier.isDenied && settings.anyNotificationsOn {
+                Text("Notifications are turned off for PaceBar. Turn them on in System Settings › Notifications › PaceBar.")
+                    .font(.callout)
+                    .foregroundStyle(.orange)
+            }
+        } header: {
+            Text("Notifications")
+        } footer: {
+            Text("Usage alerts fire once per reset cycle at your warning (\(Int(settings.warningThreshold))%) and critical (\(Int(settings.criticalThreshold))%) thresholds, set under Appearance. Running hot fires when a limit enters the Hot zone, and again when it's back on pace. Only limits shown in the popover notify.")
+                .foregroundStyle(.secondary)
+        }
+        .task { await notifier.refreshAuthorization() }
+    }
+
+    /// Turning any notification on asks macOS for permission the first time.
+    private func notificationBinding<Value>(_ keyPath: ReferenceWritableKeyPath<SettingsStore, Value>) -> Binding<Value> {
+        Binding {
+            settings[keyPath: keyPath]
+        } set: { newValue in
+            settings[keyPath: keyPath] = newValue
+            if settings.anyNotificationsOn { notifier.requestAuthorization() }
+        }
+    }
+
+    private func reminderTitle(_ minutes: Int) -> String {
+        minutes == 0 ? "Off" : Notifier.lead(TimeInterval(minutes * 60)) + " before"
     }
 
     // MARK: General

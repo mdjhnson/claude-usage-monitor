@@ -4,6 +4,7 @@
 #   - the only host is api.anthropic.com, and networking lives only in UsageClient.swift
 #   - the only subprocess is the one Process in KeychainTokenReader.swift
 #   - no shells, exec/spawn, AppleScript, listeners, URL opening, or Keychain data/write APIs
+#   - notifications use UserNotifications only (no deprecated NSUserNotification)
 #   - the only app launch is Terminal.app, from the setup guide
 #   - the only other URLs are Claude Code's installer, shown and copied by the setup guide, never fetched,
 #     and the source repository, the one link in the app (About tab), opened in the default browser
@@ -54,7 +55,7 @@ forbidden=$(rhits \
 'kSecReturnData|"r_Data"|SecItemAdd|SecItemUpdate|SecItemDelete|SecItemExport|SecKeychainFindGenericPassword|SecKeychainItemCopyContent|SecKeychainAdd|'\
 'osascript|NSAppleScript|OSAScript|NSUserUnixTask|NSUserAppleScriptTask|/bin/(ba|z)?sh|launchPath|'\
 'posix_spawn|execv|execl|(^|[^.A-Za-z0-9_])(popen|system|dlopen|bind|listen|socket)\(|'\
-'NWListener|NWConnection|CFStream|'\
+'NWListener|NWConnection|CFStream|NSUserNotification|'\
 'NSAppleEventManager|handleGetURLEvent|WKWebView|openURL|(^|[^.A-Za-z0-9_])Link\(|NSWorkspace[^(]*\.open\(|'\
 'FileManager.*\.claude|NSPasteboard.*[Tt]oken' "$SRC" | code_only \
     | awk -v f="$ABOUT:" -v l="$REPO_LINK" '!(index($0, f) == 1 && index($0, l) > 0)')

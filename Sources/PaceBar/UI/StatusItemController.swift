@@ -50,16 +50,21 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     }
 
     @objc private func togglePopover(_ sender: Any?) {
-        guard let button = statusItem.button else { return }
         if popover.isShown {
             popover.performClose(sender)
         } else {
-            store.popoverOpened()
-            // Without this the previously active app keeps keyboard focus, so ⌘Q would quit it.
-            NSApp.activate()
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            popover.contentViewController?.view.window?.makeKey()
+            showPopover()
         }
+    }
+
+    /// Also used when a notification is clicked.
+    func showPopover() {
+        guard let button = statusItem.button, !popover.isShown else { return }
+        store.popoverOpened()
+        // Without this the previously active app keeps keyboard focus, so ⌘Q would quit it.
+        NSApp.activate()
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        popover.contentViewController?.view.window?.makeKey()
     }
 
     func closePopover() {
