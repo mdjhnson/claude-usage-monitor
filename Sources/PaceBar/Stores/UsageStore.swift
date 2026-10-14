@@ -73,11 +73,13 @@ enum StoreError: Equatable {
             "Reading the Claude Code login failed (security exit \(code))."
         case .expiredLogin, .client(.tokenExpired):
             "Your Claude Code login has expired. Open Claude Code so it can refresh its login."
+        // Anthropic throttles the usage endpoint per login, sometimes for hours. Nothing on the
+        // person's side fixes it, so don't send them to Terminal for it.
         case .client(.rateLimited):
             if let retryAt {
-                "Rate limited by Anthropic. Retrying at \(retryAt.formatted(date: .omitted, time: .shortened))."
+                "Anthropic is limiting usage checks for now. Nothing to fix on your end: PaceBar tries again at \(retryAt.formatted(date: .omitted, time: .shortened))."
             } else {
-                "Rate limited by Anthropic. Retrying later."
+                "Anthropic is limiting usage checks for now. Nothing to fix on your end: PaceBar tries again on its own."
             }
         case .client(.http(let status)):
             "Anthropic returned an error (HTTP \(status))."
@@ -101,6 +103,9 @@ final class UsageStore {
     private(set) var isRefreshing = false
     /// Set while a 429 backoff is in force.
     private(set) var retryNotBefore: Date?
+    /// The login's expiry when the 429 arrived. The limit is per login, so when Claude Code
+    /// renews its login (a new expiry) the backoff ends early. Nil when there's nothing to compare.
+    @ObservationIgnored private var rateLimitedLoginExpiry: Date?
 
     // Diagnostic facts. Never the token itself.
     private(set) var tokenPresent = false
@@ -125,6 +130,9 @@ final class UsageStore {
 
     /// How often the Keychain is checked while the setup guide is waiting on the person.
     static let setupPollInterval: TimeInterval = 5
+
+    /// How often a rate-limit backoff checks the Keychain (locally, no request) for a renewed login.
+    static let renewedLoginPollInterval: TimeInterval = 60
 
     init(settings: SettingsStore) {
         self.settings = settings
@@ -216,7 +224,8 @@ final class UsageStore {
     private func nextDelay(now: Date) -> TimeInterval {
         let interval = min(max(settings.refreshInterval, SettingsStore.refreshRange.lowerBound), SettingsStore.refreshRange.upperBound)
         if let retryNotBefore, retryNotBefore > now {
-            return max(retryNotBefore.timeIntervalSince(now), 1)
+            let remaining = max(retryNotBefore.timeIntervalSince(now), 1)
+            return rateLimitedLoginExpiry == nil ? remaining : min(remaining, Self.renewedLoginPollInterval)
         }
         if lastError?.clearsLocally == true { return min(interval, Self.setupPollInterval) }
         return interval
@@ -227,7 +236,9 @@ final class UsageStore {
     func refresh(userInitiated: Bool) async {
         guard !isRefreshing else { return }
         let now = Date()
-        if isBackingOff(now: now) { return }
+        // During a backoff the only work is a local check for a renewed login.
+        let backingOff = isBackingOff(now: now)
+        if backingOff && rateLimitedLoginExpiry == nil { return }
         if keychainPaused && !userInitiated { return }
 
         isRefreshing = true
@@ -243,6 +254,9 @@ final class UsageStore {
         // The token is re-read every cycle and lives only in this scope.
         let credential: OAuthCredential
         switch await reader.read(timeout: timeout) {
+        case .failure where backingOff:
+            // Leave the rate-limit state alone; the refresh after the backoff reports this.
+            return
         case .failure(let error):
             tokenPresent = false
             tokenExpiresAt = nil
@@ -251,6 +265,12 @@ final class UsageStore {
             return
         case .success(let c):
             credential = c
+        }
+
+        if backingOff {
+            // Same login: keep waiting. A renewed one has its own limit, so try it now.
+            guard credential.expiresAt != rateLimitedLoginExpiry else { return }
+            endBackoff()
         }
 
         tokenPresent = true
@@ -266,8 +286,7 @@ final class UsageStore {
             lastResponseShape = result.shape
             lastHTTPStatus = 200
             lastError = nil
-            backoff.recordSuccess()
-            retryNotBefore = nil
+            endBackoff()
         } catch {
             // Cancelled because polling was restarted or the Mac is going to sleep: not an error.
             if case .network(let code) = error, code == URLError.Code.cancelled.rawValue { return }
@@ -277,12 +296,19 @@ final class UsageStore {
                 lastHTTPStatus = 429
                 let delay = backoff.recordRateLimit(retryAfter: retryAfter, baseInterval: settings.refreshInterval)
                 retryNotBefore = Date().addingTimeInterval(delay)
+                rateLimitedLoginExpiry = credential.expiresAt
             case .tokenExpired(let status), .http(let status), .redirectRefused(let status):
                 lastHTTPStatus = status
             case .hostNotAllowed, .network, .decoding:
                 break
             }
         }
+    }
+
+    private func endBackoff() {
+        backoff.recordSuccess()
+        retryNotBefore = nil
+        rateLimitedLoginExpiry = nil
     }
 
     // MARK: Diagnostic

@@ -108,6 +108,7 @@ Note 1: the brief says "gradient fill from the theme's low color to the theme's 
 - **Retry button:** a capsule with 11 semibold text, padding 10×4.
   - Fill is `white 0.08` for auth errors and `orange 0.3` for network or rate-limit errors.
   - While a rate-limit backoff is active, the button is disabled and the message shows the retry time.
+  - The rate-limit message says it's on Anthropic's side with nothing to fix. It never sends people to Terminal, since many have forgotten Claude Code exists.
 - **First-run states, before any data:**
   - Before any data: a spinner with "Reading Claude Code login…".
   - If reading the login fails, the banner appears on its own.
@@ -128,7 +129,12 @@ Note 1: the brief says "gradient fill from the theme's low color to the theme's 
 - **Pill style:**
   - Capsule 17pt tall, horizontal padding 7, radius 8.5.
   - Fill: tint at 0.18 alpha. Stroke: tint at 0.55 alpha, 0.8pt wide.
-  - Text "5h 42%": `systemFont 11 .bold` in the tint.
+  - Text "5h 42%": `monospacedDigitSystemFont 11 .bold` in the tint.
+- **After each value** (setting, default Nothing):
+  - **Reset countdown:** "1h25m", "42m" or "3d 4h". Classic: `monospacedDigitSystemFont 9 .medium` in `labelColor`, after a space. Pill: appended as " · 1h25m" in the pill's text style.
+  - **Pace arrows:** SF Symbols in the zone color: `chevron.down` (Chill), `chevron.up` (Watch out), `chevron.up.2` (Hot).
+  - **Fire & ice:** `snowflake` in ice blue `#64D2FF` (Chill), `flame` in amber `#FF9500` (Watch out), `flame.fill` in red `#FF453A` (Hot). Fixed colors, so the joke reads in every theme.
+  - Symbols are bold, 9pt in Classic and 10pt in Pill, 3pt after the text. On track shows none, nor does a window without a reset time. Monochrome draws them in `labelColor`.
 - **Monochrome option:** draws with `labelColor` instead of theme colors, for people who want a quiet menu bar.
 - **Fallback states:**
   - No data yet, or no windows selected: a `gauge.with.needle` template SF Symbol.
@@ -160,6 +166,7 @@ Sections:
 3. **Menu bar:**
    - Style: Classic / Pill.
    - Color mode: Pacing zone / Usage threshold.
+   - After each value: Nothing / Reset countdown / Pace arrows / Fire & ice, with a footer explaining the selected one.
    - Monochrome toggle.
 4. **Appearance:**
    - Theme preset picker, showing four colored dots per preset.

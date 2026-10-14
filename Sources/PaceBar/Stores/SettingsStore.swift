@@ -14,6 +14,20 @@ enum MenuBarStyle: String, CaseIterable, Identifiable {
     var title: String { self == .classic ? "Classic" : "Pill" }
 }
 
+/// What the menu bar shows after each percentage.
+enum MenuBarExtra: String, CaseIterable, Identifiable {
+    case none, countdown, arrows, fireAndIce
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .none: "Nothing"
+        case .countdown: "Reset countdown"
+        case .arrows: "Pace arrows"
+        case .fireAndIce: "Fire & ice"
+        }
+    }
+}
+
 /// Non-sensitive preferences only. Nothing here may ever hold a token or response data.
 @MainActor @Observable
 final class SettingsStore {
@@ -31,6 +45,7 @@ final class SettingsStore {
         static let menuBarStyle = "pacebar.menuBar.style"
         static let colorMode = "pacebar.menuBar.colorMode"
         static let monochrome = "pacebar.menuBar.monochrome"
+        static let menuBarExtra = "pacebar.menuBar.extra"
         static let theme = "pacebar.theme"
         static let warningThreshold = "pacebar.threshold.warning"
         static let criticalThreshold = "pacebar.threshold.critical"
@@ -53,6 +68,7 @@ final class SettingsStore {
     var menuBarStyle: MenuBarStyle { didSet { defaults.set(menuBarStyle.rawValue, forKey: Key.menuBarStyle) } }
     var colorMode: ColorMode { didSet { defaults.set(colorMode.rawValue, forKey: Key.colorMode) } }
     var monochromeMenuBar: Bool { didSet { defaults.set(monochromeMenuBar, forKey: Key.monochrome) } }
+    var menuBarExtra: MenuBarExtra { didSet { defaults.set(menuBarExtra.rawValue, forKey: Key.menuBarExtra) } }
     var themePreset: ThemePreset { didSet { defaults.set(themePreset.rawValue, forKey: Key.theme) } }
     var warningThreshold: Double { didSet { defaults.set(warningThreshold, forKey: Key.warningThreshold) } }
     var criticalThreshold: Double { didSet { defaults.set(criticalThreshold, forKey: Key.criticalThreshold) } }
@@ -88,6 +104,7 @@ final class SettingsStore {
         menuBarStyle = MenuBarStyle(rawValue: defaults.string(forKey: Key.menuBarStyle) ?? "") ?? .classic
         colorMode = ColorMode(rawValue: defaults.string(forKey: Key.colorMode) ?? "") ?? .pacing
         monochromeMenuBar = bool(Key.monochrome, false)
+        menuBarExtra = MenuBarExtra(rawValue: defaults.string(forKey: Key.menuBarExtra) ?? "") ?? .none
         themePreset = ThemePreset(rawValue: defaults.string(forKey: Key.theme) ?? "") ?? .default
         warningThreshold = double(Key.warningThreshold, 60, 5...95)
         criticalThreshold = double(Key.criticalThreshold, 85, 10...100)

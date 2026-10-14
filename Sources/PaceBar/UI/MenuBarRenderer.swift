@@ -10,6 +10,13 @@ enum MenuBarRenderer {
         let label: String
         let value: String
         let color: NSColor
+        var accessory: Accessory? = nil
+    }
+
+    /// Drawn after the value: a reset countdown, or a symbol for the pacing zone.
+    enum Accessory: Sendable {
+        case text(String)
+        case symbol(name: String, color: NSColor)
     }
 
     static let height: CGFloat = 22
@@ -41,27 +48,44 @@ enum MenuBarRenderer {
         let tint = dimmed ? segment.color.withAlphaComponent(0.5) : segment.color
         switch style {
         case .classic:
+            let labelFont = NSFont.systemFont(ofSize: 9, weight: .medium)
             let text = NSMutableAttributedString(string: segment.label + " ", attributes: [
-                .font: NSFont.systemFont(ofSize: 9, weight: .medium),
+                .font: labelFont,
                 .foregroundColor: NSColor.labelColor,
             ])
             text.append(NSAttributedString(string: segment.value, attributes: [
                 .font: NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .bold),
                 .foregroundColor: tint,
             ]))
+            if case .text(let detail) = segment.accessory {
+                text.append(NSAttributedString(string: " " + detail, attributes: [
+                    .font: NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .medium),
+                    .foregroundColor: NSColor.labelColor,
+                ]))
+            }
             let size = text.size()
-            return Piece(width: ceil(size.width)) { rect in
+            let symbol = symbolImage(segment.accessory, pointSize: 9, dimmed: dimmed)
+            let symbolWidth = symbol.map { symbolGap + $0.size.width } ?? 0
+            return Piece(width: ceil(size.width + symbolWidth)) { rect in
                 text.draw(at: NSPoint(x: rect.minX, y: rect.midY - size.height / 2))
+                if let symbol {
+                    symbol.draw(at: NSPoint(x: rect.minX + size.width + symbolGap, y: rect.midY - symbol.size.height / 2),
+                                from: .zero, operation: .sourceOver, fraction: 1)
+                }
             }
 
         case .pill:
-            let text = NSAttributedString(string: "\(segment.label) \(segment.value)", attributes: [
-                .font: NSFont.systemFont(ofSize: 11, weight: .bold),
+            var string = "\(segment.label) \(segment.value)"
+            if case .text(let detail) = segment.accessory { string += " · " + detail }
+            let text = NSAttributedString(string: string, attributes: [
+                .font: NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .bold),
                 .foregroundColor: tint,
             ])
             let textSize = text.size()
+            let symbol = symbolImage(segment.accessory, pointSize: 10, dimmed: dimmed)
+            let symbolWidth = symbol.map { symbolGap + $0.size.width } ?? 0
             let pillHeight: CGFloat = 17
-            let width = ceil(textSize.width) + 14
+            let width = ceil(textSize.width + symbolWidth) + 14
             return Piece(width: width) { rect in
                 let pillRect = NSRect(x: rect.minX + 0.4, y: rect.midY - pillHeight / 2, width: width - 0.8, height: pillHeight)
                 let path = NSBezierPath(roundedRect: pillRect, xRadius: 8.5, yRadius: 8.5)
@@ -71,7 +95,23 @@ enum MenuBarRenderer {
                 path.lineWidth = 0.8
                 path.stroke()
                 text.draw(at: NSPoint(x: rect.minX + 7, y: rect.midY - textSize.height / 2))
+                if let symbol {
+                    symbol.draw(at: NSPoint(x: rect.minX + 7 + textSize.width + symbolGap, y: rect.midY - symbol.size.height / 2),
+                                from: .zero, operation: .sourceOver, fraction: 1)
+                }
             }
         }
+    }
+
+    static let symbolGap: CGFloat = 3
+
+    /// The accessory's SF Symbol in its own color. Called inside the drawing handler, so a
+    /// dynamic color such as the label color resolves for the menu bar's current appearance.
+    private static func symbolImage(_ accessory: Accessory?, pointSize: CGFloat, dimmed: Bool) -> NSImage? {
+        guard case .symbol(let name, let color) = accessory else { return nil }
+        let tint = dimmed ? color.withAlphaComponent(0.5) : color
+        let config = NSImage.SymbolConfiguration(pointSize: pointSize, weight: .bold)
+            .applying(NSImage.SymbolConfiguration(paletteColors: [tint]))
+        return NSImage(systemSymbolName: name, accessibilityDescription: nil)?.withSymbolConfiguration(config)
     }
 }
