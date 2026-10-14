@@ -129,6 +129,7 @@ Open Settings from the gear in the popover. Settings are split into six tabs: Pa
 ### Notifications
 
 Notifications are local, through `UserNotifications`, and are evaluated after each refresh. The first time you turn one on, macOS asks for permission. Clicking a notification opens the popover.
+- **If permission is missing,** the Notifications tab shows a button. It reads **Allow Notifications…** when macOS hasn't asked yet, and **Open Notification Settings** when notifications were turned off. macOS never asks again after a no, so System Settings is the only way back. The tab picks up the change when you return to PaceBar.
 - **No repeats:** the state behind them is kept in memory only. After a launch, PaceBar first records where each limit stands without notifying, so restarting never repeats an alert.
 - **New cycles:** a new cycle starts only when a limit's reset time actually moves. Usage easing off as time passes never counts as a reset.
 - **No flapping:** Hot notifies once, then re-arms only after the limit is back on track or under pace. That gap is a whole margin wide, so a limit sitting at a zone boundary can't flap.
@@ -173,7 +174,7 @@ PaceBar holds a **full-scope Claude Code OAuth token** in memory while a request
 - **Not sandboxed.** An App Sandbox would prevent running `/usr/bin/security` to read another app's Keychain item, which is the only way PaceBar gets the token.
 - **Hardened runtime is on.** The only entitlement is `com.apple.security.network.client`. There are no library-validation or JIT exceptions.
 - There are no listening sockets, no URL scheme handlers, no AppleScript, and no files written into `~/.claude`.
-- The only app PaceBar opens is `/System/Applications/Utilities/Terminal.app`, at a fixed path, from the setup guide. The only URL it opens is this repository's GitHub page, from the link in Settings › About, in your default browser.
+- The only app PaceBar opens is `/System/Applications/Utilities/Terminal.app`, at a fixed path, from the setup guide. It opens two URLs: this repository's GitHub page, from the link in Settings › About, in your default browser, and PaceBar's page in System Settings › Notifications (`x-apple.systempreferences:…?id=io.github.mdjhnson.pacebar`), from the Notifications tab, which opens locally.
 - **No auto-update.** You update by pulling and rebuilding.
 
 ### Failure behavior

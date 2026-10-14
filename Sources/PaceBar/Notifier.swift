@@ -7,8 +7,17 @@ import PaceBarCore
 /// API PaceBar uses. Everything it tracks lives in memory; nothing is written to disk.
 @MainActor @Observable
 final class Notifier: NSObject, UNUserNotificationCenterDelegate {
-    /// True when macOS has notifications turned off for PaceBar.
-    private(set) var isDenied = false
+    enum Permission {
+        /// Not checked yet, or running unbundled where there's no notification center.
+        case unknown
+        /// macOS hasn't asked yet, so asking shows its prompt.
+        case notDetermined
+        /// Turned off. macOS won't ask again; only System Settings can turn it back on.
+        case denied
+        case allowed
+    }
+
+    private(set) var permission = Permission.unknown
 
     @ObservationIgnored private let store: UsageStore
     @ObservationIgnored private let settings: SettingsStore
@@ -19,6 +28,10 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
     @ObservationIgnored private let onOpen: () -> Void
 
     static let reminderPrefix = "pacebar.reset."
+
+    /// PaceBar's page in System Settings › Notifications. The only other URL PaceBar opens
+    /// besides the repository link; it opens locally in System Settings, never on the network.
+    static let notificationSettingsURL = URL(string: "x-apple.systempreferences:com.apple.Notifications-Settings.extension?id=io.github.mdjhnson.pacebar")!
 
     init(store: UsageStore, settings: SettingsStore, onOpen: @escaping () -> Void) {
         self.store = store
@@ -45,7 +58,16 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
 
     func refreshAuthorization() async {
         guard let center else { return }
-        isDenied = await center.notificationSettings().authorizationStatus == .denied
+        permission = switch await center.notificationSettings().authorizationStatus {
+        case .notDetermined: .notDetermined
+        case .denied: .denied
+        case .authorized, .provisional, .ephemeral: .allowed
+        @unknown default: .unknown
+        }
+    }
+
+    func openNotificationSettings() {
+        NSWorkspace.shared.open(Self.notificationSettingsURL)
     }
 
     // MARK: Observation
