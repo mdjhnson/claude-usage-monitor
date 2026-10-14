@@ -113,7 +113,7 @@ Note 1: the brief says "gradient fill from the theme's low color to the theme's 
 - **Hover:**
   - Snaps to the nearest reading. Draws a 0.5pt guide at `white 0.3` and a 7pt dot in the zone color with a 1.25pt white ring.
   - The label row switches to "2:14 PM · 42% · pace 38%" (weekly: "Wed 3:30 PM · …") at text 0.75. It's aligned leading, center or trailing by which third of the graph the reading is in, so it never covers the line or runs off the edge.
-- Readings are kept in memory per window and cleared when the reset time moves. Past 2,000, every other one is dropped.
+- Readings are kept in memory per window and cleared when the reset time moves. Past 2,000, every other one is dropped. The widgets get a copy of up to 120 per window, through the snapshot (see Widgets).
 
 **Card variants:**
 - **No reset time** (`resets_at` is null): the percentage, then "Reset time not reported, so pacing is unavailable." in 10 medium at `white 0.4`. No bar, pill or quip.

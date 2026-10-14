@@ -95,11 +95,13 @@ enum StoreError: Equatable {
     }
 }
 
-/// Owns polling, backoff and the last good data. Everything lives in memory only.
+/// Owns polling, backoff and the last good data, in memory. `WidgetPublisher` writes a
+/// token-free copy of the data and readings for the widgets; nothing else leaves memory.
 @MainActor @Observable
 final class UsageStore {
     private(set) var snapshot: UsageSnapshot?
-    /// Readings for each window's current cycle, for the card graphs. Memory only.
+    /// Readings for each window's current cycle, for the card graphs. The widgets get a
+    /// downsampled copy through `WidgetSnapshot`.
     private(set) var history = UsageHistory()
     private(set) var lastError: StoreError?
     private(set) var isRefreshing = false
