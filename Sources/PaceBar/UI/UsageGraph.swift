@@ -8,6 +8,8 @@ import PaceBarCore
 /// - Zone color: readings since launch. The window starts at 0%, so the line from the window's
 ///   start to the first reading is drawn dashed, since nothing was measured in between.
 /// - White dot: the latest reading.
+/// - Hover: snaps to the nearest reading and shows its time, usage and the pace at that moment
+///   in the axis row, so the label never covers the line.
 struct UsageGraph: View {
     let samples: [UsageSample]
     let pace: [GraphPoint]
@@ -21,21 +23,27 @@ struct UsageGraph: View {
 
     static let height: CGFloat = 44
 
+    /// Pointer position across the graph, 0...1, while hovering.
+    @State private var hoverX: Double?
+    @State private var graphWidth: CGFloat = 1
+
     private var start: Date { resetsAt.addingTimeInterval(-kind.duration) }
 
     /// Readings inside this window, falling back to the current value at `now`.
-    private var readings: [GraphPoint] {
-        let duration = kind.duration
-        let points = samples
-            .filter { $0.date >= start && $0.date <= resetsAt }
-            .map { GraphPoint(x: $0.date.timeIntervalSince(start) / duration, y: $0.utilization) }
-        if !points.isEmpty { return points }
-        return [GraphPoint(x: min(max(now.timeIntervalSince(start) / duration, 0), 1), y: current)]
+    private var readingSamples: [UsageSample] {
+        let inWindow = samples.filter { $0.date >= start && $0.date <= resetsAt }
+        return inWindow.isEmpty ? [UsageSample(date: min(max(now, start), resetsAt), utilization: current)] : inWindow
+    }
+
+    private func graphPoint(_ sample: UsageSample) -> GraphPoint {
+        GraphPoint(x: sample.date.timeIntervalSince(start) / kind.duration, y: sample.utilization)
     }
 
     var body: some View {
-        let readings = readings
+        let readingSamples = readingSamples
+        let readings = readingSamples.map(graphPoint)
         let yMax = max(100, readings.map(\.y).max() ?? 0)
+        let hovered = hoverX.flatMap { GraphMath.nearestIndex(in: readings, toX: $0) }
 
         VStack(spacing: 2) {
             Canvas { context, size in
@@ -87,18 +95,65 @@ struct UsageGraph: View {
 
                 let dot = CGRect(x: last.x - 2.5, y: last.y - 2.5, width: 5, height: 5)
                 context.fill(Path(ellipseIn: dot), with: .color(.white))
+
+                // Hovered reading: a guide line and a ringed dot in the zone color.
+                if let hovered {
+                    let p = measured[hovered]
+                    var guide = Path()
+                    guide.move(to: CGPoint(x: p.x, y: 0))
+                    guide.addLine(to: CGPoint(x: p.x, y: size.height))
+                    context.stroke(guide, with: .color(.white.opacity(0.3)), lineWidth: 0.5)
+                    let ring = CGRect(x: p.x - 3.5, y: p.y - 3.5, width: 7, height: 7)
+                    context.fill(Path(ellipseIn: ring), with: .color(color.color))
+                    context.stroke(Path(ellipseIn: ring), with: .color(.white), lineWidth: 1.25)
+                }
             }
             .frame(height: Self.height)
+            .contentShape(Rectangle())
+            .onContinuousHover { phase in
+                switch phase {
+                case .active(let location):
+                    hoverX = Double(location.x / max(graphWidth, 1))
+                case .ended:
+                    hoverX = nil
+                }
+            }
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { graphWidth = $0 }
 
-            HStack {
-                Text(label(start))
-                Spacer()
-                Text(label(resetsAt))
+            Group {
+                if let hovered {
+                    let reading = readings[hovered]
+                    Text(detail(readingSamples[hovered], pace: GraphMath.value(of: pace, at: reading.x)))
+                        .foregroundStyle(textColor.opacity(0.75))
+                        .frame(maxWidth: .infinity, alignment: alignment(forX: reading.x))
+                } else {
+                    HStack {
+                        Text(label(start))
+                        Spacer()
+                        Text(label(resetsAt))
+                    }
+                    .foregroundStyle(textColor.opacity(0.3))
+                }
             }
             .font(.system(size: 9, design: .monospaced))
-            .foregroundStyle(textColor.opacity(0.3))
+            .lineLimit(1)
         }
         .accessibilityHidden(true)
+    }
+
+    /// "2:14 PM · 42% · pace 38%" for the session; weekly readings add the weekday.
+    private func detail(_ sample: UsageSample, pace: Double?) -> String {
+        let when = kind == .session ? Format.time(sample.date) : Format.weekdayTime(sample.date)
+        var parts = [when, Format.percent(sample.utilization)]
+        if let pace { parts.append("pace " + Format.percent(pace)) }
+        return parts.joined(separator: " · ")
+    }
+
+    /// Keeps the hover label under the point without running off either edge.
+    private func alignment(forX x: Double) -> Alignment {
+        if x < 1.0 / 3 { return .leading }
+        if x > 2.0 / 3 { return .trailing }
+        return .center
     }
 
     /// Session ends show the time; weekly ends add the weekday ("Sat 4 AM").
