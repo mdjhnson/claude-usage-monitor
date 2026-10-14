@@ -8,6 +8,8 @@ import PaceBarCore
 /// - Zone color: readings since launch. The window starts at 0%, so the line from the window's
 ///   start to the first reading is drawn dashed, since nothing was measured in between.
 /// - White dot: the latest reading.
+/// - Weekly graphs can split into days: faint lines at local midnights, optionally with day
+///   names underneath (today's brighter).
 /// - Hover: snaps to the nearest reading and shows its time, usage and the pace at that moment
 ///   in the axis row, so the label never covers the line.
 struct UsageGraph: View {
@@ -20,8 +22,12 @@ struct UsageGraph: View {
     let color: ThemeColor
     let textColor: Color
     let now: Date
+    var dayMarkers: WeeklyDayMarkers = .off
 
     static let height: CGFloat = 44
+    static let dayNameHeight: CGFloat = 10
+    /// A partial day narrower than this gets a line but no name.
+    static let minDayNameWidth: CGFloat = 22
 
     /// Pointer position across the graph, 0...1, while hovering.
     @State private var hoverX: Double?
@@ -44,6 +50,8 @@ struct UsageGraph: View {
         let readings = readingSamples.map(graphPoint)
         let yMax = max(100, readings.map(\.y).max() ?? 0)
         let hovered = hoverX.flatMap { GraphMath.nearestIndex(in: readings, toX: $0) }
+        let days = kind == .session || dayMarkers == .off
+            ? [] : GraphMath.days(from: start, to: resetsAt, calendar: .current)
 
         VStack(spacing: 2) {
             Canvas { context, size in
@@ -60,6 +68,14 @@ struct UsageGraph: View {
                 baseline.move(to: CGPoint(x: 0, y: size.height - 0.25))
                 baseline.addLine(to: CGPoint(x: size.width, y: size.height - 0.25))
                 context.stroke(baseline, with: .color(.white.opacity(0.06)), lineWidth: 0.5)
+
+                // Day lines at local midnights, behind the data.
+                for day in days.dropFirst() {
+                    var line = Path()
+                    line.move(to: CGPoint(x: size.width * day.start, y: 0))
+                    line.addLine(to: CGPoint(x: size.width * day.start, y: size.height))
+                    context.stroke(line, with: .color(.white.opacity(0.09)), lineWidth: 0.5)
+                }
 
                 // Area under the whole line, origin through the latest reading.
                 var area = Path()
@@ -119,6 +135,19 @@ struct UsageGraph: View {
                 }
             }
             .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { graphWidth = $0 }
+
+            if dayMarkers == .linesAndNames && !days.isEmpty {
+                Canvas { context, size in
+                    for day in days where (day.end - day.start) * size.width >= Self.minDayNameWidth {
+                        let isToday = Calendar.current.isDate(day.date, inSameDayAs: now)
+                        let name = Text(day.date.formatted(.dateTime.weekday(.abbreviated)))
+                            .font(.system(size: 8, weight: isToday ? .semibold : .medium))
+                            .foregroundStyle(textColor.opacity(isToday ? 0.7 : 0.35))
+                        context.draw(name, at: CGPoint(x: size.width * (day.start + day.end) / 2, y: size.height / 2))
+                    }
+                }
+                .frame(height: Self.dayNameHeight)
+            }
 
             Group {
                 if let hovered {

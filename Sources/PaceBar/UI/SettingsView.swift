@@ -226,6 +226,10 @@ struct SettingsView: View {
     private var appearanceSection: some View {
         Section {
             Toggle("Usage graph on each card", isOn: $settings.showUsageGraph)
+            Picker("Days on weekly graphs", selection: $settings.weeklyDayMarkers) {
+                ForEach(WeeklyDayMarkers.allCases) { Text($0.title).tag($0) }
+            }
+            .disabled(!settings.showUsageGraph)
             Picker("Theme", selection: themeSelection) {
                 ForEach(ThemePreset.allCases) { preset in
                     HStack(spacing: 6) {

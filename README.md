@@ -116,6 +116,7 @@ Open Settings from the gear in the popover. Settings are split into six tabs: Pa
 | After each value | Nothing | **Reset countdown** (`1h25m`, `3d 4h`), **Pace arrows** (˅ under pace, ˄ ahead, double ˄ when Hot), or **Fire & ice** (❄ running cold, a flame outline for Watch out, a filled flame when Hot). Nothing shows while on track. |
 | Monochrome menu bar | Off | Draws in the system label color. |
 | Usage graph on each card | On | Plots readings since launch against the pace line. Kept in memory only, so it starts fresh when PaceBar launches; the stretch from the window's start to the first reading is dashed. |
+| Days on weekly graphs | Lines and day names | Off, Lines, or Lines and day names. Faint lines at each local midnight split weekly graphs into days; names sit underneath, with today's brighter. |
 | Theme | Default | Default, Monochrome, Neon, Pastel (TokenEater's presets), or Custom. |
 | Custom colors | The theme you switched from | Shown when Theme is Custom. Set any of the nine colors (four pacing zones, three usage thresholds, popover background and text) with a hex code (`#0A84FF` or `#08F`) or the system color picker. "Start from" copies a preset. A warning appears when text contrast drops below 4.5:1. |
 | Warning / Critical at | 60% / 85% | Used for threshold coloring. |

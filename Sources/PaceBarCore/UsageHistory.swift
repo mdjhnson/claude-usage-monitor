@@ -102,3 +102,39 @@ public enum GraphMath {
         return last.y
     }
 }
+
+/// One calendar day's column on a graph, as fractions of the window's calendar time.
+public struct GraphDay: Equatable, Sendable {
+    public let start: Double
+    public let end: Double
+    /// When this column starts: the window's start for the first, local midnight for the rest.
+    public let date: Date
+
+    public init(start: Double, end: Double, date: Date) {
+        self.start = start
+        self.end = end
+        self.date = date
+    }
+}
+
+extension GraphMath {
+    /// Splits a window at local midnights. The first and last columns may be partial days.
+    /// Midnights come from the calendar, so 23- and 25-hour DST days get their true widths.
+    public static func days(from start: Date, to end: Date, calendar: Calendar) -> [GraphDay] {
+        guard end > start else { return [] }
+        let span = end.timeIntervalSince(start)
+        func x(_ date: Date) -> Double { min(max(date.timeIntervalSince(start) / span, 0), 1) }
+
+        var days: [GraphDay] = []
+        var dayStart = start
+        // Bounded so a broken calendar can't loop forever; a weekly window has 8 columns at most.
+        while dayStart < end, days.count < 64 {
+            let midnight = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: dayStart)) ?? end
+            let dayEnd = min(midnight, end)
+            guard dayEnd > dayStart else { break }
+            days.append(GraphDay(start: x(dayStart), end: x(dayEnd), date: dayStart))
+            dayStart = dayEnd
+        }
+        return days
+    }
+}

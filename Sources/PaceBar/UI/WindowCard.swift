@@ -12,6 +12,7 @@ struct WindowCard: View {
     let now: Date
     /// This cycle's readings and the pace line, when the graph is on and the window has a reset time.
     var graph: (samples: [UsageSample], pace: [GraphPoint])? = nil
+    var dayMarkers: WeeklyDayMarkers = .off
 
     private var text: Color { theme.textColor }
 
@@ -112,7 +113,8 @@ struct WindowCard: View {
         if let graph, let resetsAt = window.bucket.resetsAt {
             UsageGraph(
                 samples: graph.samples, pace: graph.pace, resetsAt: resetsAt, kind: window.kind,
-                current: window.bucket.utilization, color: zoneColor, textColor: text, now: now
+                current: window.bucket.utilization, color: zoneColor, textColor: text, now: now,
+                dayMarkers: dayMarkers
             )
             .opacity(stale ? 0.45 : 1)
         }
