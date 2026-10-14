@@ -20,6 +20,11 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN_DIR/PaceBar" "$APP/Contents/MacOS/PaceBar"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
+# Records the source commit for the About tab, marked "-dirty" if there were uncommitted changes.
+if COMMIT="$(git rev-parse --short HEAD 2>/dev/null)"; then
+    [[ -n "$(git status --porcelain 2>/dev/null)" ]] && COMMIT="$COMMIT-dirty"
+    /usr/libexec/PlistBuddy -c "Add :PaceBarCommit string $COMMIT" "$APP/Contents/Info.plist"
+fi
 
 ICONSET="$(mktemp -d)/AppIcon.iconset"
 swift scripts/make-icon.swift "$ICONSET"

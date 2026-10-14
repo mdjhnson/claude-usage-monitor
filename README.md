@@ -100,7 +100,7 @@ People who install it still go through **First launch** step 2. The Keychain pro
 
 ## Settings
 
-Open Settings from the gear in the popover. Settings are split into four tabs: Pacing, Menu Bar, Appearance and General.
+Open Settings from the gear in the popover. Settings are split into five tabs: Pacing, Menu Bar, Appearance, General and About. About shows the version, build number and source commit (written in by `build.sh`), the author, a link to this repository, and credits.
 
 | Setting | Default | Notes |
 |---|---|---|
@@ -154,7 +154,7 @@ PaceBar holds a **full-scope Claude Code OAuth token** in memory while a request
 - **Not sandboxed.** An App Sandbox would prevent running `/usr/bin/security` to read another app's Keychain item, which is the only way PaceBar gets the token.
 - **Hardened runtime is on.** The only entitlement is `com.apple.security.network.client`. There are no library-validation or JIT exceptions.
 - There are no listening sockets, no URL scheme handlers, no AppleScript, and no files written into `~/.claude`.
-- The only app PaceBar opens is `/System/Applications/Utilities/Terminal.app`, at a fixed path, from the setup guide. It opens no URLs.
+- The only app PaceBar opens is `/System/Applications/Utilities/Terminal.app`, at a fixed path, from the setup guide. The only URL it opens is this repository's GitHub page, from the link in Settings › About, in your default browser.
 - **No auto-update.** You update by pulling and rebuilding.
 
 ### Failure behavior
@@ -171,14 +171,15 @@ On any error, the last good data stays on screen, dimmed, with "Last updated N m
 ### Auditing
 
 `./scripts/audit.sh` lists every line in `Sources/` containing `http://`, `https://`, `Process`, `URLSession`, `UserDefaults`, `print(` or `NSLog(`. It then fails if any rule is broken:
-- the only literal host is `api.anthropic.com`, and a URL whose host is built at runtime also fails. The one exception is `https://claude.ai/install.sh` in `SetupGuideView.swift`, which is copied to the clipboard and never fetched.
+- the only literal host is `api.anthropic.com`, and a URL whose host is built at runtime also fails. The one exception is `https://claude.ai/install.sh` in `SetupGuideView.swift`, which is copied to the clipboard and never fetched. The other is `https://github.com/mdjhnson/claude-usage-monitor` in `AboutView.swift`, the About tab's link.
+- the only link is one `Link(Self.repository, destination: Self.repositoryURL)` in `AboutView.swift`, with `repositoryURL` fixed to the repository address. Any other `Link(`, `openURL` or `NSWorkspace.open(` fails.
 - the only app launch is one `openApplication` call in `SetupGuideView.swift`, opening the fixed Terminal.app path
 - networking APIs (`URLSession`, `URLRequest`, `URLComponents`, host assignment) appear only in `UsageClient.swift`
 - `Process` appears only once, in `KeychainTokenReader.swift`
 - no forbidden constructs:
   - Keychain data or write APIs
   - shells, exec/spawn/popen, AppleScript
-  - sockets and listeners, web views, URL opening
+  - sockets and listeners, web views, URL opening (other than the About link)
 - `Sources/` contains only Swift files
 - `Package.swift` declares no dependencies, binary targets, plugins or unsafe/linker flags
 - the entitlements are exactly `com.apple.security.network.client`, and Info.plist declares no URL schemes

@@ -5,7 +5,8 @@
 #   - the only subprocess is the one Process in KeychainTokenReader.swift
 #   - no shells, exec/spawn, AppleScript, listeners, URL opening, or Keychain data/write APIs
 #   - the only app launch is Terminal.app, from the setup guide
-#   - the only other URL is Claude Code's installer, shown and copied by the setup guide, never fetched
+#   - the only other URLs are Claude Code's installer, shown and copied by the setup guide, never fetched,
+#     and the source repository, the one link in the app (About tab), opened in the default browser
 #   - Sources/ holds Swift only; Package.swift has no dependencies, binaries, plugins or flags
 #   - the entitlements file grants exactly com.apple.security.network.client
 set -u
@@ -19,6 +20,9 @@ READER="Sources/PaceBarCore/KeychainTokenReader.swift"
 GUIDE="Sources/PaceBar/UI/SetupGuideView.swift"
 TERMINAL_URL='URL(fileURLWithPath: "/System/Applications/Utilities/Terminal.app")'
 INSTALL_URL="https://claude.ai/install.sh"
+ABOUT="Sources/PaceBar/UI/AboutView.swift"
+REPO_URL="https://github.com/mdjhnson/claude-usage-monitor"
+REPO_LINK='Link(Self.repository, destination: Self.repositoryURL)'
 status=0
 
 section() { printf '\n== %s ==\n' "$1"; }
@@ -30,11 +34,13 @@ rhits() { grep -rnE -- "$1" "$2" 2>/dev/null; }
 code_only() { grep -vE '^[^:]+:[0-9]+:[[:space:]]*//'; }
 # Hits outside one allowed file.
 outside() { grep -v "^$1:"; }
-# Removes the copy-only installer URL from setup guide hits, so any other URL there still counts.
-strip_copy_only() {
-    awk -v f="$GUIDE:" -v u="$INSTALL_URL" \
+# Removes one allowed URL from one file's hits, so any other URL in that file still counts.
+strip_url() {
+    awk -v f="$1:" -v u="$2" \
         'index($0, f) == 1 { while ((i = index($0, u)) > 0) $0 = substr($0, 1, i - 1) substr($0, i + length(u)) } { print }'
 }
+# The installer URL in the setup guide and the repository URL in the About tab.
+strip_allowed_urls() { strip_url "$GUIDE" "$INSTALL_URL" | strip_url "$ABOUT" "$REPO_URL"; }
 
 echo "PaceBar source audit ($(date '+%Y-%m-%d %H:%M'))"
 
@@ -50,7 +56,8 @@ forbidden=$(rhits \
 'posix_spawn|execv|execl|(^|[^.A-Za-z0-9_])(popen|system|dlopen|bind|listen|socket)\(|'\
 'NWListener|NWConnection|CFStream|'\
 'NSAppleEventManager|handleGetURLEvent|WKWebView|openURL|(^|[^.A-Za-z0-9_])Link\(|NSWorkspace[^(]*\.open\(|'\
-'FileManager.*\.claude|NSPasteboard.*[Tt]oken' "$SRC" | code_only)
+'FileManager.*\.claude|NSPasteboard.*[Tt]oken' "$SRC" | code_only \
+    | awk -v f="$ABOUT:" -v l="$REPO_LINK" '!(index($0, f) == 1 && index($0, l) > 0)')
 if [ -n "$forbidden" ]; then echo "$forbidden"; fail "forbidden construct(s) above"; else echo "(none)"; fi
 
 section "App launches"
@@ -62,6 +69,18 @@ if [ -n "$launches" ]; then
     [ "$(printf '%s\n' "$launches" | grep -c .)" -gt 1 ] && fail "more than one app launch call site"
     printf '%s\n' "$launches" | grep -qF 'openApplication(at: Self.terminalURL,' || fail "the app launch must open Self.terminalURL"
     [ "$(grep -cF "terminalURL = $TERMINAL_URL" "$GUIDE")" -eq 1 ] || fail "terminalURL must be the fixed Terminal.app path"
+fi
+
+section "Links"
+links=$(rhits '(^|[^.A-Za-z0-9_])Link\(|openURL|NSWorkspace[^(]*\.open\(' "$SRC" | code_only)
+echo "${links:-(none)}"
+stray_links=$(printf '%s\n' "$links" | grep . | outside "$ABOUT")
+[ -n "$stray_links" ] && fail "link opened outside AboutView.swift"
+[ "$(printf '%s\n' "$links" | grep -c .)" -gt 1 ] && fail "more than one link"
+if [ -n "$links" ]; then
+    printf '%s\n' "$links" | grep -qF "$REPO_LINK" || fail "the link must be $REPO_LINK"
+    [ "$(grep -cF "static let repositoryURL = URL(string: \"$REPO_URL\")!" "$ABOUT")" -eq 1 ] \
+        || fail "repositoryURL must be the fixed repository address"
 fi
 
 section "Networking outside $CLIENT"
@@ -100,7 +119,7 @@ for pattern in 'https://' 'URLSession' 'Process' 'UserDefaults'; do
 done
 
 section "Summary"
-hosts=$(rhits 'https?://' "$SRC" | code_only | strip_copy_only \
+hosts=$(rhits 'https?://' "$SRC" | code_only | strip_allowed_urls \
     | grep -oE 'https?://[A-Za-z0-9.-]*' | sed -E 's#^https?://##; s#\.+$##' | sort -u)
 host_count=$(printf '%s' "$hosts" | grep -c .)
 http_count=$(hits 'http://' "$SRC" | code_only | wc -l | tr -d ' ')

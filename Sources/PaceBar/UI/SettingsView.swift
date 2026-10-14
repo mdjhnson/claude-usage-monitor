@@ -36,7 +36,7 @@ final class SettingsWindowController {
 
 struct SettingsView: View {
     enum Pane: CaseIterable {
-        case pacing, menuBar, appearance, general
+        case pacing, menuBar, appearance, general, about
 
         var title: String {
             switch self {
@@ -44,6 +44,7 @@ struct SettingsView: View {
             case .menuBar: "Menu Bar"
             case .appearance: "Appearance"
             case .general: "General"
+            case .about: "About"
             }
         }
 
@@ -53,6 +54,7 @@ struct SettingsView: View {
             case .menuBar: "menubar.rectangle"
             case .appearance: "paintpalette"
             case .general: "gearshape"
+            case .about: "info.circle"
             }
         }
     }
@@ -79,6 +81,8 @@ struct SettingsView: View {
             case .general:
                 generalSection
                 diagnosticsSection
+            case .about:
+                AboutPane()
             }
         }
         .formStyle(.grouped)
