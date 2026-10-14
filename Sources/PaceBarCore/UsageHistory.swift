@@ -1,6 +1,6 @@
 import Foundation
 
-public struct UsageSample: Equatable, Sendable {
+public struct UsageSample: Codable, Equatable, Sendable {
     public let date: Date
     public let utilization: Double
 
@@ -10,8 +10,8 @@ public struct UsageSample: Equatable, Sendable {
     }
 }
 
-/// Usage readings for each window's current cycle, for the graph on each card. Memory only:
-/// it starts empty at launch and nothing is written to disk.
+/// Usage readings for each window's current cycle, for the graph on each card. It starts empty
+/// at launch. The only copy outside memory is the downsampled one in `WidgetSnapshot`.
 public struct UsageHistory: Equatable, Sendable {
     struct Series: Equatable, Sendable {
         var resetsAt: Date?
@@ -44,6 +44,26 @@ public struct UsageHistory: Equatable, Sendable {
             }
             series[id] = entry
         }
+    }
+}
+
+extension UsageSample {
+    /// At most `limit` readings with the same shape: one per equal slice of the time span, the
+    /// last reading in each slice, always keeping the first and the latest. Expects date order.
+    public static func downsampled(_ samples: [UsageSample], to limit: Int) -> [UsageSample] {
+        guard limit >= 2, samples.count > limit, let first = samples.first, let last = samples.last else {
+            return limit >= 1 ? Array(samples.suffix(max(limit, 0))) : []
+        }
+        // The first and the latest take two slots; the rest share the slices in between.
+        let span = last.date.timeIntervalSince(first.date)
+        let slices = limit - 2
+        guard span > 0, slices > 0 else { return [first, last] }
+        var picked: [Int: UsageSample] = [:]
+        for sample in samples.dropFirst().dropLast() {
+            let slice = min(Int(sample.date.timeIntervalSince(first.date) / span * Double(slices)), slices - 1)
+            picked[slice] = sample
+        }
+        return [first] + picked.keys.sorted().compactMap { picked[$0] } + [last]
     }
 }
 

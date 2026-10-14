@@ -23,6 +23,8 @@ struct UsageGraph: View {
     let textColor: Color
     let now: Date
     var dayMarkers: WeeklyDayMarkers = .off
+    /// The plot's height. The large widget shrinks it to fit three windows.
+    var height: CGFloat = Self.height
 
     static let height: CGFloat = 44
     static let dayNameHeight: CGFloat = 10
@@ -124,7 +126,7 @@ struct UsageGraph: View {
                     context.stroke(Path(ellipseIn: ring), with: .color(.white), lineWidth: 1.25)
                 }
             }
-            .frame(height: Self.height)
+            .frame(height: height)
             .contentShape(Rectangle())
             .onContinuousHover { phase in
                 switch phase {

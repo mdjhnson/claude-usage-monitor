@@ -172,6 +172,21 @@ struct Theme: Equatable {
 
     var popoverBackground: Color { popoverBackgroundColor.color }
 
+    /// Every token as `0xRRGGBB` for the widget, with `background` already resolved to the
+    /// popover's actual background.
+    var widgetColors: [String: UInt32] {
+        var colors = Dictionary(uniqueKeysWithValues: Token.allCases.map { ($0.rawValue, self[$0].hex) })
+        colors[Token.background.rawValue] = popoverBackgroundColor.hex
+        return colors
+    }
+
+    /// The theme the app handed the widget. It's custom, so the resolved background is used as is.
+    static func widget(_ colors: [String: UInt32]) -> Theme {
+        .custom(colors.reduce(into: [:]) { result, entry in
+            if let token = Token(rawValue: entry.key) { result[token] = ThemeColor(hex: entry.value) }
+        })
+    }
+
     /// WCAG contrast between the text and the popover background.
     var textContrast: Double { HexColor.contrastRatio(text.hex, popoverBackgroundColor.hex) }
 

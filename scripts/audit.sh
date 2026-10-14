@@ -10,8 +10,15 @@
 #     and the source repository, the one link in the app (About tab), opened in the default browser
 #   - the only other URL opened is PaceBar's page in System Settings › Notifications (a fixed
 #     x-apple.systempreferences: URL, from the Notifications tab), which opens locally
-#   - Sources/ holds Swift only; Package.swift has no dependencies, binaries, plugins or flags
-#   - the entitlements file grants exactly com.apple.security.network.client
+#   - Sources/ holds Swift only; Package.swift and project.yml have no dependencies, binaries,
+#     plugins or flags
+#   - the app's entitlements are exactly network.client plus the PaceBar App Group; the widget's
+#     are exactly app-sandbox plus that group; Release builds carry no get-task-allow
+#   - the only file written is the widget snapshot, from WidgetSnapshot.swift, the only code that
+#     opens the App Group container
+#   - the widget extension has no networking, subprocess, Keychain, notification or URL-opening code
+#   - the only Darwin notification is the widgets' refresh request: posted only by RefreshIntent.swift,
+#     observed only by WidgetPublisher.swift, named only by WidgetSnapshot.swift
 set -u
 cd "$(dirname "$0")/.." || exit 2
 
@@ -27,6 +34,11 @@ ABOUT="Sources/PaceBar/UI/AboutView.swift"
 REPO_URL="https://github.com/mdjhnson/claude-usage-monitor"
 REPO_LINK='Link(Self.repository, destination: Self.repositoryURL)'
 NOTIFIER="Sources/PaceBar/Notifier.swift"
+WIDGET="Sources/PaceBarWidget"
+SNAPSHOT="Sources/PaceBarCore/WidgetSnapshot.swift"
+PUBLISHER="Sources/PaceBar/WidgetPublisher.swift"
+REFRESH_INTENT="Sources/PaceBarWidget/RefreshIntent.swift"
+APP_GROUP='$(TeamIdentifierPrefix)io.github.mdjhnson.pacebar'
 SETTINGS_URL="x-apple.systempreferences:com.apple.Notifications-Settings.extension?id=io.github.mdjhnson.pacebar"
 SETTINGS_LINK='NSWorkspace.shared.open(Self.notificationSettingsURL)'
 status=0
@@ -111,6 +123,30 @@ stray=$(printf '%s' "$procs" | grep . | outside "$READER")
 [ -n "$stray" ] && fail "Process used outside KeychainTokenReader.swift"
 [ "$process_count" -gt 1 ] && fail "more than one Process call site"
 
+section "File writes and the App Group container"
+writes=$(rhits '\.write\(to:|createFile\(|FileHandle\(forWriting|fopen\(|containerURL\(' "$SRC" | code_only)
+echo "${writes:-(none)}"
+stray_writes=$(printf '%s' "$writes" | grep . | outside "$SNAPSHOT")
+[ -n "$stray_writes" ] && fail "file written or App Group container opened outside WidgetSnapshot.swift"
+
+section "Darwin notifications (the widgets' refresh request)"
+darwin=$(rhits 'CFNotificationCenter|notify_post|notify_register|DistributedNotificationCenter' "$SRC" | code_only)
+echo "${darwin:-(none)}"
+[ -n "$(printf '%s' "$darwin" | grep . | outside "$PUBLISHER" | outside "$REFRESH_INTENT")" ] \
+    && fail "Darwin or distributed notifications outside WidgetPublisher.swift and RefreshIntent.swift"
+printf '%s' "$darwin" | grep -F "$PUBLISHER:" | grep -q 'Post' && fail "the app must only observe the refresh request"
+printf '%s' "$darwin" | grep -F "$REFRESH_INTENT:" | grep -q 'AddObserver' && fail "the widget must only post the refresh request"
+[ -n "$(rhits 'refreshNotificationName\(' "$SRC" | code_only | grep -v 'refreshNotificationName()' | outside "$SNAPSHOT")" ] \
+    && fail "the refresh notification name is built outside WidgetSnapshot.swift"
+
+section "Widget extension  [$WIDGET]"
+widget_forbidden=$(rhits 'URLSession|URLRequest|\bProcess\b|SecItem|SecKeychain|UsageClient|KeychainTokenReader|UNUserNotification|NSWorkspace|openURL|Link\(' "$WIDGET" | code_only)
+if [ -n "$widget_forbidden" ]; then
+    echo "$widget_forbidden"; fail "networking, subprocess, Keychain, notification or URL code in the widget"
+else
+    echo "(none)"
+fi
+
 section "Non-Swift files in Sources"
 others=$(find "$SRC" -type f ! -name '*.swift')
 if [ -n "$others" ]; then echo "$others"; fail "non-Swift sources are not covered by this audit"; else echo "(none)"; fi
@@ -122,11 +158,36 @@ if [ -d "$RESOURCES" ]; then
     else
         echo "no URL schemes, document types or services"
     fi
-    keys=$(grep -ho '<key>[^<]*</key>' "$RESOURCES"/*.entitlements 2>/dev/null | sed 's/<[^>]*>//g')
-    echo "entitlements:"
-    echo "$keys" | sed 's/^/  /'
-    [ "$keys" = "com.apple.security.network.client" ] || fail "entitlements must be exactly com.apple.security.network.client"
+    # Keys, sorted, and every string value, which must all be the one App Group.
+    ent_keys() { grep -o '<key>[^<]*</key>' "$1" | sed 's/<[^>]*>//g' | sort | paste -sd ' ' -; }
+    ent_strings() { grep -o '<string>[^<]*</string>' "$1" | sed 's/<[^>]*>//g' | sort -u; }
+    files=$(ls "$RESOURCES"/*.entitlements 2>/dev/null | paste -sd ' ' -)
+    echo "entitlements files: $files"
+    [ "$files" = "$RESOURCES/PaceBar.entitlements $RESOURCES/PaceBarWidget.entitlements" ] \
+        || fail "expected exactly PaceBar.entitlements and PaceBarWidget.entitlements"
+    for f in "$RESOURCES/PaceBar.entitlements" "$RESOURCES/PaceBarWidget.entitlements"; do
+        echo "$f: $(ent_keys "$f")"
+        echo "  groups: $(ent_strings "$f")"
+        [ "$(ent_strings "$f")" = "$APP_GROUP" ] || fail "$f: the only App Group must be $APP_GROUP"
+    done
+    [ "$(ent_keys "$RESOURCES/PaceBar.entitlements")" = "com.apple.security.application-groups com.apple.security.network.client" ] \
+        || fail "app entitlements must be exactly network.client and application-groups"
+    [ "$(ent_keys "$RESOURCES/PaceBarWidget.entitlements")" = "com.apple.security.app-sandbox com.apple.security.application-groups" ] \
+        || fail "widget entitlements must be exactly app-sandbox and application-groups"
+    grep -A1 'com.apple.security.app-sandbox' "$RESOURCES/PaceBarWidget.entitlements" | grep -q '<true/>' \
+        || fail "the widget must be sandboxed"
 fi
+
+section "Xcode project  [project.yml]"
+if grep -qE '^packages:|^ *- (package|framework|carthage):|OTHER_LDFLAGS|OTHER_SWIFT_FLAGS' project.yml; then
+    fail "project.yml declares packages, prebuilt frameworks or extra flags"
+else
+    echo "dependencies: system SDKs only"
+fi
+grep -qE '^ *CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO' project.yml \
+    || fail "Release builds must not inject get-task-allow (CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO)"
+grep -q 'XCRemoteSwiftPackageReference' PaceBar.xcodeproj/project.pbxproj \
+    && fail "PaceBar.xcodeproj references a remote package; regenerate it from project.yml"
 
 section "Tests (informational: stubbed sessions and fixtures live here)"
 for pattern in 'https://' 'URLSession' 'Process' 'UserDefaults'; do

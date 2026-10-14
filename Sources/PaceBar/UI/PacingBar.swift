@@ -10,6 +10,8 @@ struct PacingBar: View {
     let zoneColor: ThemeColor
     let offTimeRanges: [ClosedRange<Double>]
     let isOffTime: Bool
+    /// Widgets render a single frame and never run `onAppear` animations, so they turn this off.
+    var animated = true
 
     @State private var animatedActual: Double = 0
     @State private var pulsing = false
@@ -22,7 +24,8 @@ struct PacingBar: View {
     var body: some View {
         GeometryReader { geo in
             let width = geo.size.width
-            let fillWidth = width * CGFloat(min(max(animatedActual, 0), 100) / 100)
+            let shown = animated ? animatedActual : actual
+            let fillWidth = width * CGFloat(min(max(shown, 0), 100) / 100)
 
             ZStack(alignment: .leading) {
                 Capsule()
@@ -47,7 +50,7 @@ struct PacingBar: View {
                 Circle()
                     .fill(isOffTime ? Color.white.opacity(0.45) : Color.white)
                     .frame(width: knobSize, height: knobSize)
-                    .shadow(color: .white.opacity(isOffTime ? 0.2 : 0.5), radius: pulsing ? 6 : 2)
+                    .shadow(color: .white.opacity(isOffTime ? 0.2 : 0.5), radius: pulsing && animated ? 6 : 2)
                     .offset(x: fillWidth - knobSize / 2)
             }
             .frame(width: width, height: geo.size.height)

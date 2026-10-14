@@ -216,6 +216,42 @@ Sections:
 7. **Diagnostics:**
    - "Copy diagnostic" button, with a short caption saying what is included.
 
+## Widgets
+
+Three WidgetKit widgets:
+- **Claude Limit:** kind `PaceBarLimit`, small, configurable.
+- **Claude Usage, medium:** kind `PaceBarGraph`, configurable.
+- **Claude Usage, large:** kind `PaceBarUsage`.
+
+Medium and large share a display name. They're separate widgets because a widget's settings apply to every size. It draws with the app's own `Theme`, `PacingBar`, `UsageGraph` and `ZonePill` (the extension compiles those files too), so it matches the popover.
+- **Background:** the popover background, already resolved by the app (`popoverBackgroundColor`) and sent as the snapshot's `background` token. Text uses the `text` token.
+- **Colors:** percentages use the same `Theme.tint` as the cards (pacing zone or usage threshold, per Color by). Rings, bars and graph lines use the zone color.
+- **Windows:** the popover's visible limits, in the popover's order.
+- **Pacing bar:** `PacingBar` with `animated: false`, since widgets render one frame and never run `onAppear`. No pulse.
+- **Small (Claude Limit):**
+  - Its one setting, **Limit**, is an App Intent parameter whose choices come from `WindowKind`: the 5-hour session, Weekly, and the per-model weekly limits in the latest snapshot. The default is the 5-hour session.
+  - A limit missing from the snapshot (hidden in the popover) falls back to the session, then the first shown limit.
+  - Layout: title row (9 semibold caps at text 0.45), then a ring: 8pt stroke, white 0.08 track, zone-tinted round-capped arc from 12 o'clock to usage. Inside: the percentage (22 black rounded, tint) and the zone title (9 semibold, zone color). Bottom: the reset countdown (10 medium at text 0.45).
+- **Medium:** two columns, 14pt apart.
+  - Left: up to two rows. Each has the title, then the percentage (15 black rounded, tint), the pacing bar and the reset countdown (10 medium at text 0.35).
+  - Right: the graph chosen in the **Graph** setting (default: the 5-hour session) with its title, at 44pt.
+  - "5-Hour Session and Weekly" stacks both graphs, 8pt apart, at 24pt each, with title spacing tightened to 2.
+  - Weekly graphs here get day lines but never names, which don't fit at this width.
+  - A choice missing from the snapshot falls back to the session, then the first shown window.
+  - The graph column is dropped when the usage graph setting is off.
+- **Large:** up to three windows, 14pt apart (10pt with three). Each has:
+  - Title, zone pill and percentage on one row, then the pacing bar.
+  - The graph, with no countdown line because the graph's axis already ends at the reset. The countdown line appears only when there's no graph.
+  - The cooling line (10 medium at text 0.4) in Watch out and Hot, with two or fewer windows.
+  - With three windows, graphs shrink to 34pt and "Lines and day names" shows lines only.
+- **Refresh button:** `arrow.clockwise`, 10 semibold at text 0.4, in a 16pt hit area, as an App Intent button (`RefreshIntent`).
+  - Small: trailing the title row.
+  - Medium: trailing the first graph's title, or the top-right corner when there's no graph column.
+  - Large: bottom right, after the stale line when there is one.
+- **Stale** (a failed refresh, or data older than the larger of 2× the refresh interval and 10 minutes): values at 0.45 opacity and a bottom line "Updated 12 min ago" with `clock.arrow.circlepath`, 10pt at text 0.45. In the small widget it replaces the countdown.
+- **Empty:** a 22pt `gauge.with.needle` over 11 medium text at text 0.6, centered: "Open PaceBar to start." when there's no snapshot, or "No limits to show. Choose some in PaceBar's Settings › Windows." when every limit is hidden.
+- **Gallery:** sample data (session 52%, weekly 38%) in the Default theme until there's a real snapshot.
+
 ## Fonts summary
 
 All text uses SF (`.system`). Percentages and deltas use `.rounded`. Axis labels use `.monospaced`. Menu bar values use monospaced digits so widths don't jitter.

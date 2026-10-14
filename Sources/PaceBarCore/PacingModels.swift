@@ -15,7 +15,7 @@ public enum PacingZone: String, CaseIterable, Sendable {
 }
 
 /// A usage window reported by the API.
-public enum WindowKind: Hashable, Sendable {
+public enum WindowKind: Hashable, Codable, Sendable {
     /// The rolling 5 hour session.
     case session
     /// The all-models weekly limit (`seven_day`).

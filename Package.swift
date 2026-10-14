@@ -5,15 +5,11 @@ import PackageDescription
 let package = Package(
     name: "PaceBar",
     platforms: [.macOS(.v14)],
+    // The app and its widget build from PaceBar.xcodeproj (see project.yml). This package
+    // builds the same PaceBarCore sources for `swift test`.
     targets: [
         // Pure logic and the two I/O services. Foundation + Security only, no AppKit.
         .target(name: "PaceBarCore", path: "Sources/PaceBarCore"),
-        // The menu bar app: AppKit + SwiftUI. build.sh wraps it into PaceBar.app.
-        .executableTarget(
-            name: "PaceBar",
-            dependencies: ["PaceBarCore"],
-            path: "Sources/PaceBar"
-        ),
         .testTarget(
             name: "PaceBarCoreTests",
             dependencies: ["PaceBarCore"],

@@ -7,6 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: StatusItemController?
     private var settingsWindow: SettingsWindowController?
     private var notifier: Notifier?
+    private var widgetPublisher: WidgetPublisher?
     private var workspaceObservers: [NSObjectProtocol] = []
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -17,6 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         notifier = Notifier(store: store, settings: settings) { [weak self] in
             self?.statusItem?.showPopover()
         }
+        widgetPublisher = WidgetPublisher(store: store, settings: settings)
         store.start()
 
         // Pause polling while asleep; refresh on wake.
@@ -29,6 +31,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 MainActor.assumeIsolated { self?.store.handleWake() }
             },
         ]
+    }
+
+    /// Opening PaceBar while it's running, for example by clicking a widget, shows the popover.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        statusItem?.showPopover()
+        return false
     }
 
     func applicationWillTerminate(_ notification: Notification) {

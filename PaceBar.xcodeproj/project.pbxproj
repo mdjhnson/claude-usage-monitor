@@ -1,0 +1,840 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		04D32D8684C063FC40E06899 /* ResetCycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8558C61F20A72F8EF9B12D4B /* ResetCycle.swift */; };
+		060983C9D3002E18542D6188 /* RefreshIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6134898BC439BF2FB976CBEF /* RefreshIntent.swift */; };
+		17814983E4F7DD6727899489 /* UsageGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0A07A191C13D5251B86F33 /* UsageGraph.swift */; };
+		1C031134740EBEF2DD81417A /* Notifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 714321F97820E192390FDCB2 /* Notifier.swift */; };
+		3D00E96FDD67C545A9EC51CD /* UsageModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5548113E2B17156552C56D9 /* UsageModels.swift */; };
+		406BF5FF7BDFBDB001B89086 /* Backoff.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD32BF3A10423B126352AB8A /* Backoff.swift */; };
+		42F9FB879890DD549FC974A0 /* WorkSchedule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46DB01208603BC937C15EE0E /* WorkSchedule.swift */; };
+		4347C315D9270FD65F391409 /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62C4B4303371B5E559362BC4 /* SettingsStore.swift */; };
+		438D2A2162176A31B9C48CFF /* MenuBarRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1170C1D2E62E30C31C792AE3 /* MenuBarRenderer.swift */; };
+		4756B74870066EF7352296AC /* CredentialParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A2798B69A699BC3A438D555 /* CredentialParser.swift */; };
+		49B08F5DB0D15F76318FBF9C /* PacingCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A74C21096DD2B381A960619 /* PacingCalculator.swift */; };
+		4F85DE2B3502E3DE669AEB3A /* UsageWidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4816AFCE94908A145968A4 /* UsageWidgetViews.swift */; };
+		505BCA0D6381125ABA378DDD /* PacingBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F759645F76618CFCD4B7D71 /* PacingBar.swift */; };
+		51C030E9E2FC4C340A0415B9 /* KeychainTokenReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C9BBCA54B4119979A5699D5 /* KeychainTokenReader.swift */; };
+		5261871826D63101FF2313F1 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3753A08B490F3DD7610EAC2 /* SettingsView.swift */; };
+		660AF7165F410FF57795B53A /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A79B16A35CE8D21B7A0F0CE /* Theme.swift */; };
+		67F108D1A18180B04ABBC051 /* WindowCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5F3D940AD8CE77C77B322A7 /* WindowCard.swift */; };
+		6FBD3D418E72BA081BF98F48 /* Diagnostic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A2F64B484D3C36DC179FD69 /* Diagnostic.swift */; };
+		724DABA36F4D05125B4210E7 /* SetupGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5CB929DB1DC1FEE94D5D926 /* SetupGuideView.swift */; };
+		765DDE367E7DFC942748030C /* PacingModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E6304B08ACF51654358C1FF /* PacingModels.swift */; };
+		77C1F95D3A795786E3BD7D6A /* WidgetPublisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 190F21674E87BDB717CD0408 /* WidgetPublisher.swift */; };
+		8492FB767B7A9F6FA331D89F /* PaceBarWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C37BBB41BBDBD805580588B /* PaceBarWidgetBundle.swift */; };
+		8CB8BB70A91DCDC065621373 /* HexColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED1D966E7483461CDE109DB5 /* HexColor.swift */; };
+		9593CB69F08FB33455E162F6 /* WindowCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5F3D940AD8CE77C77B322A7 /* WindowCard.swift */; };
+		9CD8B09429C57E54D30B57EE /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51E6A3260E67E3EE897B3FFF /* WidgetSnapshot.swift */; };
+		A8F472579D48DF600552BBBE /* UsageClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A6715D2D68F867579FEB36 /* UsageClient.swift */; };
+		B51513D59936F94ED8B5F294 /* UsageHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0005B0C281DB00A3B886AAE4 /* UsageHistory.swift */; };
+		B57ADF513E28A2B3CD399D0E /* PaceBarWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DDB5CA570372BB0A622C87DF /* PaceBarWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C22F423393C1172C15A5F027 /* Provider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CECBE5740D844735A15A77EC /* Provider.swift */; };
+		C701694D06BDE7FDB01B6F80 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FD5B28E75CE7E8F00E60A69 /* AppDelegate.swift */; };
+		C7B5C19816442B8674049FBB /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E90EA4A312368A8596118CE2 /* AppIntents.framework */; };
+		C9325AB02E618AA6EE77E06A /* Formatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FEEE1CE08307437A4306906 /* Formatting.swift */; };
+		C9D63E3623A8FED145989CF1 /* AlertTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF38408E7D17CC23141D64E1 /* AlertTracker.swift */; };
+		C9E616ADB090E91A529B2AD3 /* libPaceBarCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D929652656B3C47B7BAC51F6 /* libPaceBarCore.a */; };
+		CB52F53B72BAA0ADBED3E07E /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ABBF192BAED824C1D3A122E7 /* WidgetKit.framework */; };
+		CCA966A0FAFA836A03746553 /* UsageGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0A07A191C13D5251B86F33 /* UsageGraph.swift */; };
+		CD6CC57A1B6BBF800743DD58 /* DisplayOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ED8071EF824E8A7C5AD007E /* DisplayOptions.swift */; };
+		D21DD27960B067C3B1A93E31 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C60F03E822EC71914BDE7E57 /* StatusItemController.swift */; };
+		D298307E51A5DA0A60E28814 /* UsageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8BE6407DB93C6A020DE3737 /* UsageStore.swift */; };
+		D42E23148AE6C721C30EC11E /* LimitIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 925F8CD478E572786A8899FE /* LimitIntent.swift */; };
+		E257CF26545794C064FC802D /* PopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC9F3C1983B7FFB047DE1BCA /* PopoverView.swift */; };
+		E760BA5DC385BBCA3164A6CB /* DisplayOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ED8071EF824E8A7C5AD007E /* DisplayOptions.swift */; };
+		EA3962E51B1BA7FC23800356 /* PacingBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F759645F76618CFCD4B7D71 /* PacingBar.swift */; };
+		EF6C155055F6ED03435C0DA5 /* Formatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FEEE1CE08307437A4306906 /* Formatting.swift */; };
+		F6192559406FFB8B7A20735C /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4722B57576C9FFF541DB83C /* main.swift */; };
+		F99B0084F14D317CF227E5CC /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DF7CB3223E8889CCD574AAA /* AboutView.swift */; };
+		FA059FBF11CDB9900877D22F /* libPaceBarCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D929652656B3C47B7BAC51F6 /* libPaceBarCore.a */; };
+		FB7BACBCE1942F6AE0E66984 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A79B16A35CE8D21B7A0F0CE /* Theme.swift */; };
+		FE35018E898F00E75F765785 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 09B15F999654C93742DC51B7 /* SwiftUI.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		2C0B698D67F2E05B23CF4CFC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 07455904A64A2A6E80270F54 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 625FC48B9929EF7527CC46F8;
+			remoteInfo = PaceBarWidget;
+		};
+		4FC09A896970E20313540EF7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 07455904A64A2A6E80270F54 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 29C128F6FA9EF729944567BB;
+			remoteInfo = PaceBarCore;
+		};
+		794E0B646E3F870F1205A2ED /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 07455904A64A2A6E80270F54 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 29C128F6FA9EF729944567BB;
+			remoteInfo = PaceBarCore;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		3F14D656D7608CC70C47217E /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				B57ADF513E28A2B3CD399D0E /* PaceBarWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		0005B0C281DB00A3B886AAE4 /* UsageHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageHistory.swift; sourceTree = "<group>"; };
+		09B15F999654C93742DC51B7 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		0DF7CB3223E8889CCD574AAA /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
+		1170C1D2E62E30C31C792AE3 /* MenuBarRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarRenderer.swift; sourceTree = "<group>"; };
+		190F21674E87BDB717CD0408 /* WidgetPublisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetPublisher.swift; sourceTree = "<group>"; };
+		2A2798B69A699BC3A438D555 /* CredentialParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialParser.swift; sourceTree = "<group>"; };
+		2A79B16A35CE8D21B7A0F0CE /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		2F759645F76618CFCD4B7D71 /* PacingBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PacingBar.swift; sourceTree = "<group>"; };
+		46DB01208603BC937C15EE0E /* WorkSchedule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkSchedule.swift; sourceTree = "<group>"; };
+		4A74C21096DD2B381A960619 /* PacingCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PacingCalculator.swift; sourceTree = "<group>"; };
+		4C9BBCA54B4119979A5699D5 /* KeychainTokenReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainTokenReader.swift; sourceTree = "<group>"; };
+		4E6304B08ACF51654358C1FF /* PacingModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PacingModels.swift; sourceTree = "<group>"; };
+		51E6A3260E67E3EE897B3FFF /* WidgetSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshot.swift; sourceTree = "<group>"; };
+		6134898BC439BF2FB976CBEF /* RefreshIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefreshIntent.swift; sourceTree = "<group>"; };
+		62C4B4303371B5E559362BC4 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
+		6E0A07A191C13D5251B86F33 /* UsageGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageGraph.swift; sourceTree = "<group>"; };
+		6ED8071EF824E8A7C5AD007E /* DisplayOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayOptions.swift; sourceTree = "<group>"; };
+		714321F97820E192390FDCB2 /* Notifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notifier.swift; sourceTree = "<group>"; };
+		75A801DA324A6F62BB25AF92 /* PaceBar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PaceBar.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8558C61F20A72F8EF9B12D4B /* ResetCycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetCycle.swift; sourceTree = "<group>"; };
+		925F8CD478E572786A8899FE /* LimitIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LimitIntent.swift; sourceTree = "<group>"; };
+		9A2F64B484D3C36DC179FD69 /* Diagnostic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Diagnostic.swift; sourceTree = "<group>"; };
+		9C37BBB41BBDBD805580588B /* PaceBarWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaceBarWidgetBundle.swift; sourceTree = "<group>"; };
+		9FD5B28E75CE7E8F00E60A69 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		9FEEE1CE08307437A4306906 /* Formatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Formatting.swift; sourceTree = "<group>"; };
+		ABBF192BAED824C1D3A122E7 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		AF38408E7D17CC23141D64E1 /* AlertTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertTracker.swift; sourceTree = "<group>"; };
+		B4722B57576C9FFF541DB83C /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		BF4816AFCE94908A145968A4 /* UsageWidgetViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageWidgetViews.swift; sourceTree = "<group>"; };
+		C5A6715D2D68F867579FEB36 /* UsageClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageClient.swift; sourceTree = "<group>"; };
+		C60F03E822EC71914BDE7E57 /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
+		CECBE5740D844735A15A77EC /* Provider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Provider.swift; sourceTree = "<group>"; };
+		D3753A08B490F3DD7610EAC2 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		D5CB929DB1DC1FEE94D5D926 /* SetupGuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupGuideView.swift; sourceTree = "<group>"; };
+		D8BE6407DB93C6A020DE3737 /* UsageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageStore.swift; sourceTree = "<group>"; };
+		D929652656B3C47B7BAC51F6 /* libPaceBarCore.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPaceBarCore.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		DC9F3C1983B7FFB047DE1BCA /* PopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverView.swift; sourceTree = "<group>"; };
+		DD32BF3A10423B126352AB8A /* Backoff.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Backoff.swift; sourceTree = "<group>"; };
+		DDB5CA570372BB0A622C87DF /* PaceBarWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PaceBarWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		E5548113E2B17156552C56D9 /* UsageModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageModels.swift; sourceTree = "<group>"; };
+		E5F3D940AD8CE77C77B322A7 /* WindowCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowCard.swift; sourceTree = "<group>"; };
+		E90EA4A312368A8596118CE2 /* AppIntents.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppIntents.framework; path = System/Library/Frameworks/AppIntents.framework; sourceTree = SDKROOT; };
+		ED1D966E7483461CDE109DB5 /* HexColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HexColor.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		77BED6E54ABE3E30DA33316A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C9E616ADB090E91A529B2AD3 /* libPaceBarCore.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		79050ADDAD446A4FF9FB4F30 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FA059FBF11CDB9900877D22F /* libPaceBarCore.a in Frameworks */,
+				CB52F53B72BAA0ADBED3E07E /* WidgetKit.framework in Frameworks */,
+				FE35018E898F00E75F765785 /* SwiftUI.framework in Frameworks */,
+				C7B5C19816442B8674049FBB /* AppIntents.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2703B9DE93BD99F72481C2E5 = {
+			isa = PBXGroup;
+			children = (
+				EDDC4C44B17599525A0B1003 /* Sources */,
+				D2BB9BF9E2ADEA32A840C0E7 /* Frameworks */,
+				2939463B5DB3B84352D422ED /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		2939463B5DB3B84352D422ED /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D929652656B3C47B7BAC51F6 /* libPaceBarCore.a */,
+				75A801DA324A6F62BB25AF92 /* PaceBar.app */,
+				DDB5CA570372BB0A622C87DF /* PaceBarWidget.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		36EF59B7D12BB7216FCC3738 /* PaceBarWidget */ = {
+			isa = PBXGroup;
+			children = (
+				925F8CD478E572786A8899FE /* LimitIntent.swift */,
+				9C37BBB41BBDBD805580588B /* PaceBarWidgetBundle.swift */,
+				CECBE5740D844735A15A77EC /* Provider.swift */,
+				6134898BC439BF2FB976CBEF /* RefreshIntent.swift */,
+				BF4816AFCE94908A145968A4 /* UsageWidgetViews.swift */,
+			);
+			path = PaceBarWidget;
+			sourceTree = "<group>";
+		};
+		7D8FD376FDB6F52178ADA92E /* PaceBar */ = {
+			isa = PBXGroup;
+			children = (
+				9FD5B28E75CE7E8F00E60A69 /* AppDelegate.swift */,
+				B4722B57576C9FFF541DB83C /* main.swift */,
+				714321F97820E192390FDCB2 /* Notifier.swift */,
+				190F21674E87BDB717CD0408 /* WidgetPublisher.swift */,
+				BFE0BFC9D04BFC493B7A621C /* Stores */,
+				DAC83B573F3D70FF1F3B74AB /* UI */,
+			);
+			path = PaceBar;
+			sourceTree = "<group>";
+		};
+		8715B72A021EE1F7FF86ABF4 /* PaceBarCore */ = {
+			isa = PBXGroup;
+			children = (
+				AF38408E7D17CC23141D64E1 /* AlertTracker.swift */,
+				DD32BF3A10423B126352AB8A /* Backoff.swift */,
+				2A2798B69A699BC3A438D555 /* CredentialParser.swift */,
+				9A2F64B484D3C36DC179FD69 /* Diagnostic.swift */,
+				ED1D966E7483461CDE109DB5 /* HexColor.swift */,
+				4C9BBCA54B4119979A5699D5 /* KeychainTokenReader.swift */,
+				4A74C21096DD2B381A960619 /* PacingCalculator.swift */,
+				4E6304B08ACF51654358C1FF /* PacingModels.swift */,
+				8558C61F20A72F8EF9B12D4B /* ResetCycle.swift */,
+				C5A6715D2D68F867579FEB36 /* UsageClient.swift */,
+				0005B0C281DB00A3B886AAE4 /* UsageHistory.swift */,
+				E5548113E2B17156552C56D9 /* UsageModels.swift */,
+				51E6A3260E67E3EE897B3FFF /* WidgetSnapshot.swift */,
+				46DB01208603BC937C15EE0E /* WorkSchedule.swift */,
+			);
+			path = PaceBarCore;
+			sourceTree = "<group>";
+		};
+		BFE0BFC9D04BFC493B7A621C /* Stores */ = {
+			isa = PBXGroup;
+			children = (
+				62C4B4303371B5E559362BC4 /* SettingsStore.swift */,
+				D8BE6407DB93C6A020DE3737 /* UsageStore.swift */,
+			);
+			path = Stores;
+			sourceTree = "<group>";
+		};
+		D2BB9BF9E2ADEA32A840C0E7 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				E90EA4A312368A8596118CE2 /* AppIntents.framework */,
+				09B15F999654C93742DC51B7 /* SwiftUI.framework */,
+				ABBF192BAED824C1D3A122E7 /* WidgetKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		DAC83B573F3D70FF1F3B74AB /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				0DF7CB3223E8889CCD574AAA /* AboutView.swift */,
+				6ED8071EF824E8A7C5AD007E /* DisplayOptions.swift */,
+				9FEEE1CE08307437A4306906 /* Formatting.swift */,
+				1170C1D2E62E30C31C792AE3 /* MenuBarRenderer.swift */,
+				2F759645F76618CFCD4B7D71 /* PacingBar.swift */,
+				DC9F3C1983B7FFB047DE1BCA /* PopoverView.swift */,
+				D3753A08B490F3DD7610EAC2 /* SettingsView.swift */,
+				D5CB929DB1DC1FEE94D5D926 /* SetupGuideView.swift */,
+				C60F03E822EC71914BDE7E57 /* StatusItemController.swift */,
+				2A79B16A35CE8D21B7A0F0CE /* Theme.swift */,
+				6E0A07A191C13D5251B86F33 /* UsageGraph.swift */,
+				E5F3D940AD8CE77C77B322A7 /* WindowCard.swift */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		EDDC4C44B17599525A0B1003 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				7D8FD376FDB6F52178ADA92E /* PaceBar */,
+				8715B72A021EE1F7FF86ABF4 /* PaceBarCore */,
+				36EF59B7D12BB7216FCC3738 /* PaceBarWidget */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1D4104920116741027941A80 /* PaceBar */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BCAE30C3FFD8A7E27BCCDFD9 /* Build configuration list for PBXNativeTarget "PaceBar" */;
+			buildPhases = (
+				E6F514E6FE635BC646B871EE /* Sources */,
+				77BED6E54ABE3E30DA33316A /* Frameworks */,
+				3F14D656D7608CC70C47217E /* Embed Foundation Extensions */,
+				5768C40A2102D6BA663A117E /* Record source commit */,
+				A506B3FE622616E224EA74CD /* Draw app icon */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F96BB8F61658C590DCDDC597 /* PBXTargetDependency */,
+				D7575601621D131AD26A72A7 /* PBXTargetDependency */,
+			);
+			name = PaceBar;
+			packageProductDependencies = (
+			);
+			productName = PaceBar;
+			productReference = 75A801DA324A6F62BB25AF92 /* PaceBar.app */;
+			productType = "com.apple.product-type.application";
+		};
+		29C128F6FA9EF729944567BB /* PaceBarCore */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1EBAFB054D3A3E1241197F5F /* Build configuration list for PBXNativeTarget "PaceBarCore" */;
+			buildPhases = (
+				F1D815C1DD0422E1E5B48E44 /* Sources */,
+				D28B4B3A9042D5CE1A8D6F19 /* Copy Swift Objective-C Interface Header */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PaceBarCore;
+			packageProductDependencies = (
+			);
+			productName = PaceBarCore;
+			productReference = D929652656B3C47B7BAC51F6 /* libPaceBarCore.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		625FC48B9929EF7527CC46F8 /* PaceBarWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 81B774A842E79C2ADB1855E7 /* Build configuration list for PBXNativeTarget "PaceBarWidget" */;
+			buildPhases = (
+				C42D1388A9BF3F1CB488594A /* Sources */,
+				79050ADDAD446A4FF9FB4F30 /* Frameworks */,
+				9BC819E914B5FA90BBC9D25A /* Match app version */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				6E8318E021873D136D5FD112 /* PBXTargetDependency */,
+			);
+			name = PaceBarWidget;
+			packageProductDependencies = (
+			);
+			productName = PaceBarWidget;
+			productReference = DDB5CA570372BB0A622C87DF /* PaceBarWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		07455904A64A2A6E80270F54 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					1D4104920116741027941A80 = {
+						ProvisioningStyle = Manual;
+					};
+					29C128F6FA9EF729944567BB = {
+						ProvisioningStyle = Manual;
+					};
+					625FC48B9929EF7527CC46F8 = {
+						ProvisioningStyle = Manual;
+					};
+				};
+			};
+			buildConfigurationList = 8BF474A11CCE6DF122CC88BB /* Build configuration list for PBXProject "PaceBar" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 2703B9DE93BD99F72481C2E5;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 2939463B5DB3B84352D422ED /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				29C128F6FA9EF729944567BB /* PaceBarCore */,
+				1D4104920116741027941A80 /* PaceBar */,
+				625FC48B9929EF7527CC46F8 /* PaceBarWidget */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		5768C40A2102D6BA663A117E /* Record source commit */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)",
+			);
+			name = "Record source commit";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# The commit for Settings › About, marked \"-dirty\" if there were uncommitted changes.\nPLIST=\"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\n/usr/libexec/PlistBuddy -c \"Delete :PaceBarCommit\" \"$PLIST\" 2>/dev/null || true\nif COMMIT=\"$(git -C \"$SRCROOT\" rev-parse --short HEAD 2>/dev/null)\"; then\n    [ -n \"$(git -C \"$SRCROOT\" status --porcelain 2>/dev/null)\" ] && COMMIT=\"$COMMIT-dirty\"\n    /usr/libexec/PlistBuddy -c \"Add :PaceBarCommit string $COMMIT\" \"$PLIST\"\nfi\n";
+		};
+		9BC819E914B5FA90BBC9D25A /* Match app version */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)",
+			);
+			name = "Match app version";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Info.plist is the one place the version is set; the extension must match it.\nPLIST=\"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\nfor key in CFBundleShortVersionString CFBundleVersion; do\n    value=\"$(/usr/libexec/PlistBuddy -c \"Print :$key\" \"$SRCROOT/Resources/Info.plist\")\"\n    /usr/libexec/PlistBuddy -c \"Set :$key $value\" \"$PLIST\"\ndone\n";
+		};
+		A506B3FE622616E224EA74CD /* Draw app icon */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Draw app icon";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Generated at build time, which keeps binary assets out of the repo.\nset -e\nICONSET=\"$DERIVED_FILE_DIR/AppIcon.iconset\"\nrm -rf \"$ICONSET\"\nenv -i PATH=\"/usr/bin:/bin\" HOME=\"$HOME\" DEVELOPER_DIR=\"$DEVELOPER_DIR\" \\\n    xcrun swift \"$SRCROOT/scripts/make-icon.swift\" \"$ICONSET\"\nRESOURCES=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH\"\nmkdir -p \"$RESOURCES\"\niconutil --convert icns --output \"$RESOURCES/AppIcon.icns\" \"$ICONSET\"\n";
+		};
+		D28B4B3A9042D5CE1A8D6F19 /* Copy Swift Objective-C Interface Header */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(DERIVED_SOURCES_DIR)/$(SWIFT_OBJC_INTERFACE_HEADER_NAME)",
+			);
+			name = "Copy Swift Objective-C Interface Header";
+			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/include/$(PRODUCT_MODULE_NAME)/$(SWIFT_OBJC_INTERFACE_HEADER_NAME)",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "ditto \"${SCRIPT_INPUT_FILE_0}\" \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C42D1388A9BF3F1CB488594A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E760BA5DC385BBCA3164A6CB /* DisplayOptions.swift in Sources */,
+				EF6C155055F6ED03435C0DA5 /* Formatting.swift in Sources */,
+				D42E23148AE6C721C30EC11E /* LimitIntent.swift in Sources */,
+				8492FB767B7A9F6FA331D89F /* PaceBarWidgetBundle.swift in Sources */,
+				505BCA0D6381125ABA378DDD /* PacingBar.swift in Sources */,
+				C22F423393C1172C15A5F027 /* Provider.swift in Sources */,
+				060983C9D3002E18542D6188 /* RefreshIntent.swift in Sources */,
+				FB7BACBCE1942F6AE0E66984 /* Theme.swift in Sources */,
+				CCA966A0FAFA836A03746553 /* UsageGraph.swift in Sources */,
+				4F85DE2B3502E3DE669AEB3A /* UsageWidgetViews.swift in Sources */,
+				67F108D1A18180B04ABBC051 /* WindowCard.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E6F514E6FE635BC646B871EE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F99B0084F14D317CF227E5CC /* AboutView.swift in Sources */,
+				C701694D06BDE7FDB01B6F80 /* AppDelegate.swift in Sources */,
+				CD6CC57A1B6BBF800743DD58 /* DisplayOptions.swift in Sources */,
+				C9325AB02E618AA6EE77E06A /* Formatting.swift in Sources */,
+				438D2A2162176A31B9C48CFF /* MenuBarRenderer.swift in Sources */,
+				1C031134740EBEF2DD81417A /* Notifier.swift in Sources */,
+				EA3962E51B1BA7FC23800356 /* PacingBar.swift in Sources */,
+				E257CF26545794C064FC802D /* PopoverView.swift in Sources */,
+				4347C315D9270FD65F391409 /* SettingsStore.swift in Sources */,
+				5261871826D63101FF2313F1 /* SettingsView.swift in Sources */,
+				724DABA36F4D05125B4210E7 /* SetupGuideView.swift in Sources */,
+				D21DD27960B067C3B1A93E31 /* StatusItemController.swift in Sources */,
+				660AF7165F410FF57795B53A /* Theme.swift in Sources */,
+				17814983E4F7DD6727899489 /* UsageGraph.swift in Sources */,
+				D298307E51A5DA0A60E28814 /* UsageStore.swift in Sources */,
+				77C1F95D3A795786E3BD7D6A /* WidgetPublisher.swift in Sources */,
+				9593CB69F08FB33455E162F6 /* WindowCard.swift in Sources */,
+				F6192559406FFB8B7A20735C /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F1D815C1DD0422E1E5B48E44 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C9D63E3623A8FED145989CF1 /* AlertTracker.swift in Sources */,
+				406BF5FF7BDFBDB001B89086 /* Backoff.swift in Sources */,
+				4756B74870066EF7352296AC /* CredentialParser.swift in Sources */,
+				6FBD3D418E72BA081BF98F48 /* Diagnostic.swift in Sources */,
+				8CB8BB70A91DCDC065621373 /* HexColor.swift in Sources */,
+				51C030E9E2FC4C340A0415B9 /* KeychainTokenReader.swift in Sources */,
+				49B08F5DB0D15F76318FBF9C /* PacingCalculator.swift in Sources */,
+				765DDE367E7DFC942748030C /* PacingModels.swift in Sources */,
+				04D32D8684C063FC40E06899 /* ResetCycle.swift in Sources */,
+				A8F472579D48DF600552BBBE /* UsageClient.swift in Sources */,
+				B51513D59936F94ED8B5F294 /* UsageHistory.swift in Sources */,
+				3D00E96FDD67C545A9EC51CD /* UsageModels.swift in Sources */,
+				9CD8B09429C57E54D30B57EE /* WidgetSnapshot.swift in Sources */,
+				42F9FB879890DD549FC974A0 /* WorkSchedule.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		6E8318E021873D136D5FD112 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 29C128F6FA9EF729944567BB /* PaceBarCore */;
+			targetProxy = 794E0B646E3F870F1205A2ED /* PBXContainerItemProxy */;
+		};
+		D7575601621D131AD26A72A7 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 625FC48B9929EF7527CC46F8 /* PaceBarWidget */;
+			targetProxy = 2C0B698D67F2E05B23CF4CFC /* PBXContainerItemProxy */;
+		};
+		F96BB8F61658C590DCDDC597 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 29C128F6FA9EF729944567BB /* PaceBarCore */;
+			targetProxy = 4FC09A896970E20313540EF7 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		075ECE8AFB67AE086D889A9C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		122CF0585E6E2BB9E2FB98C3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Resources/PaceBarWidget.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = "Resources/PaceBarWidget-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.mdjhnson.pacebar.widget;
+				PRODUCT_NAME = PaceBarWidget;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		460C152FA0887B5BFFE118B0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Resources/PaceBarWidget.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = "Resources/PaceBarWidget-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.mdjhnson.pacebar.widget;
+				PRODUCT_NAME = PaceBarWidget;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		5489448A692E5E2A75042219 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Resources/PaceBar.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.mdjhnson.pacebar;
+				PRODUCT_NAME = PaceBar;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		75132DD794C925A825EBC469 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.mdjhnson.PaceBarCore;
+				PRODUCT_NAME = PaceBarCore;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		7B21DC5DB3AAE234526C9E6F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.mdjhnson.PaceBarCore;
+				PRODUCT_NAME = PaceBarCore;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		80C1DA06DF0037A481C78925 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Resources/PaceBar.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.mdjhnson.pacebar;
+				PRODUCT_NAME = PaceBar;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		A50FFA411ABF5D570AF52CC4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
+				CODE_SIGN_STYLE = Manual;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1EBAFB054D3A3E1241197F5F /* Build configuration list for PBXNativeTarget "PaceBarCore" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				75132DD794C925A825EBC469 /* Debug */,
+				7B21DC5DB3AAE234526C9E6F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		81B774A842E79C2ADB1855E7 /* Build configuration list for PBXNativeTarget "PaceBarWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				122CF0585E6E2BB9E2FB98C3 /* Debug */,
+				460C152FA0887B5BFFE118B0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		8BF474A11CCE6DF122CC88BB /* Build configuration list for PBXProject "PaceBar" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				075ECE8AFB67AE086D889A9C /* Debug */,
+				A50FFA411ABF5D570AF52CC4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		BCAE30C3FFD8A7E27BCCDFD9 /* Build configuration list for PBXNativeTarget "PaceBar" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5489448A692E5E2A75042219 /* Debug */,
+				80C1DA06DF0037A481C78925 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 07455904A64A2A6E80270F54 /* Project object */;
+}

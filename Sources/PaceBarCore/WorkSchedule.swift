@@ -1,7 +1,7 @@
 import Foundation
 
 /// Optional workweek pacing: only active days and hours advance the expected pace.
-public struct WorkSchedule: Equatable, Sendable {
+public struct WorkSchedule: Codable, Equatable, Sendable {
     /// Gregorian weekday numbers, 1 = Sunday ... 7 = Saturday.
     public static let allDays: Set<Int> = Set(1...7)
     public static let workweek: Set<Int> = [2, 3, 4, 5, 6]

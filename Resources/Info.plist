@@ -32,5 +32,7 @@
 	<string>PaceBar. Pacing design after TokenEater (MIT).</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>PaceBarAppGroup</key>
+	<string>$(TeamIdentifierPrefix)io.github.mdjhnson.pacebar</string>
 </dict>
 </plist>
