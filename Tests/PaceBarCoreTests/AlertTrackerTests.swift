@@ -59,9 +59,13 @@ final class AlertTrackerTests: XCTestCase {
     }
 
     func testSessionGapStartsANewCycle() {
-        XCTAssertTrue(AlertTracker.isNewCycle(old: reset, new: nil))
-        XCTAssertTrue(AlertTracker.isNewCycle(old: nil, new: reset))
-        XCTAssertFalse(AlertTracker.isNewCycle(old: nil, new: nil))
+        var t = AlertTracker()
+        _ = update(&t, session(10))
+        _ = update(&t, session(65))
+        // The session ends (no reset time), then a new one starts already past the threshold.
+        XCTAssertEqual(update(&t, AlertInput(kind: .session, utilization: 0, resetsAt: nil, zone: nil)), [])
+        let next = reset.addingTimeInterval(5 * 3600)
+        XCTAssertEqual(update(&t, session(61, resetsAt: next)), [.threshold(session(61, resetsAt: next), .warning)])
     }
 
     func testHotThenBackOnPace() {

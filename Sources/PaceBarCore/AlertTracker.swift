@@ -57,9 +57,6 @@ public struct AlertTracker: Sendable {
         var hotAlerted: Bool
     }
 
-    /// Reset times that differ by less than this are the same cycle (the API's timestamps jitter).
-    static let cycleTolerance: TimeInterval = 5 * 60
-
     private var states: [String: WindowState] = [:]
 
     public init() {}
@@ -77,7 +74,7 @@ public struct AlertTracker: Sendable {
                 continue
             }
 
-            if Self.isNewCycle(old: state.resetsAt, new: window.resetsAt) {
+            if ResetCycle.isNew(old: state.resetsAt, new: window.resetsAt) {
                 state = WindowState(resetsAt: window.resetsAt, level: .normal, hotAlerted: false)
             }
 
@@ -100,14 +97,6 @@ public struct AlertTracker: Sendable {
         // Windows that stopped being reported are forgotten; they start silently if they return.
         states = next
         return events
-    }
-
-    static func isNewCycle(old: Date?, new: Date?) -> Bool {
-        switch (old, new) {
-        case (nil, nil): false
-        case (nil, _?), (_?, nil): true
-        case let (old?, new?): abs(new.timeIntervalSince(old)) > cycleTolerance
-        }
     }
 }
 
