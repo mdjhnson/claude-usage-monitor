@@ -166,7 +166,7 @@ struct SettingsView: View {
     // MARK: Menu bar
 
     private var menuBarSection: some View {
-        Section("Menu bar") {
+        Section {
             Picker("Style", selection: $settings.menuBarStyle) {
                 ForEach(MenuBarStyle.allCases) { Text($0.title).tag($0) }
             }
@@ -175,7 +175,24 @@ struct SettingsView: View {
                 ForEach(ColorMode.allCases) { Text($0.title).tag($0) }
             }
             .pickerStyle(.segmented)
+            Picker("After each value", selection: $settings.menuBarExtra) {
+                ForEach(MenuBarExtra.allCases) { Text($0.title).tag($0) }
+            }
             Toggle("Monochrome menu bar", isOn: $settings.monochromeMenuBar)
+        } header: {
+            Text("Menu bar")
+        } footer: {
+            Text(menuBarExtraFooter)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var menuBarExtraFooter: String {
+        switch settings.menuBarExtra {
+        case .none: "Add a reset countdown or a pace symbol after each percentage."
+        case .countdown: "Time until each limit resets, like 1h25m or 3d 4h."
+        case .arrows: "Down when you're under pace and can ramp up. Up when you're ahead of pace (two when Hot) and should back off. Nothing when on track."
+        case .fireAndIce: "Ice when you're running cold and can ramp up. A flame when you're running hot (filled when Hot) and should back off. Nothing when on track."
         }
     }
 

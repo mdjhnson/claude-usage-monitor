@@ -61,6 +61,8 @@ There is no `Package.resolved`. SwiftPM only writes one when a package has depen
    - If no prompt appears, `security` already has access. Another tool that reads Claude Code's login the same way (TokenEater, for example) granted it earlier. The ACL caveat below then already applies.
 3. The menu bar shows something like `5h 42%  7d 18%`. Click it for the dashboard.
 
+Opening the popover brings PaceBar to the front, so the usual shortcuts apply to it rather than to the app you were in: ⌘Q quits PaceBar, ⌘, opens Settings, ⌘W closes Settings, and ⌘C copies selected text.
+
 ### Setup guide
 
 When there's no Claude Code login, or it has expired, the popover shows step-by-step instructions instead of an error. This is meant for people who use the Claude desktop app but have never used Claude Code.
@@ -109,6 +111,7 @@ Open Settings from the gear in the popover. Settings are split into five tabs: P
 | Windows | Menu bar: 5-hour, Weekly. Popover: all | For each limit, choose whether it appears in the menu bar and in the popover. Per-model weekly limits (for example Fable) appear here once the API reports them. |
 | Menu bar style | Classic | Classic (label plus colored value) or Pill. |
 | Color by | Pacing zone | Or Usage threshold. Windows without a reset time always use thresholds. |
+| After each value | Nothing | **Reset countdown** (`1h25m`, `3d 4h`), **Pace arrows** (˅ under pace, ˄ ahead, double ˄ when Hot), or **Fire & ice** (❄ running cold, a flame outline for Watch out, a filled flame when Hot). Nothing shows while on track. |
 | Monochrome menu bar | Off | Draws in the system label color. |
 | Theme | Default | Default, Monochrome, Neon, Pastel. These are TokenEater's presets. |
 | Warning / Critical at | 60% / 85% | Used for threshold coloring. |
@@ -165,6 +168,8 @@ On any error, the last good data stays on screen, dimmed, with "Last updated N m
   - `Retry-After` is honored, whether sent as seconds or as an HTTP date, up to a one-hour sanity bound.
   - Without the header, the wait doubles from the refresh interval each time, capped at 15 minutes.
   - Waking the Mac doesn't skip a running backoff.
+  - The limit applies per login, so while waiting PaceBar checks the Keychain once a minute (locally, no request). If Claude Code has renewed its login since the 429, PaceBar retries straight away.
+  - The message says this is on Anthropic's side and there's nothing to fix. It doesn't send people to Terminal.
 - **Keychain timeouts:** background refreshes allow the `security` call 3 seconds (on recent macOS it can hang when launched from a menu bar app). The first read after launch, and any read you start with Retry, allow 60 seconds, so there's time to answer the macOS prompt.
 - **Keychain denial:** if you deny access, background refreshes stop asking until you click Retry.
 

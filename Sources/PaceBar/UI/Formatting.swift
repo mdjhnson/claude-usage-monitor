@@ -66,6 +66,15 @@ enum Format {
         return m == 0 ? "\(h)h" : "\(h)h \(m)m"
     }
 
+    /// Menu bar countdown: "42m", "1h25m", "3d 4h". Rounds up, like `duration`.
+    static func compactDuration(_ interval: TimeInterval) -> String {
+        let totalMinutes = max(1, Int((min(interval, 365 * 86_400) / 60).rounded(.up)))
+        let d = totalMinutes / 1440, h = totalMinutes % 1440 / 60, m = totalMinutes % 60
+        if d > 0 { return h == 0 ? "\(d)d" : "\(d)d \(h)h" }
+        if h > 0 { return m == 0 ? "\(h)h" : "\(h)h\(String(format: "%02d", m))m" }
+        return "\(m)m"
+    }
+
     static func weekdayTime(_ date: Date) -> String {
         date.formatted(.dateTime.weekday(.abbreviated).hour().minute())
     }
