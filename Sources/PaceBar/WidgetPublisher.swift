@@ -90,7 +90,7 @@ final class WidgetPublisher {
         // Best effort: the widget falls back to its last good file, dimmed once it's stale.
         guard (try? file.write(snapshot)) != nil else { return }
         if shouldReload(snapshot, now: now) {
-            WidgetCenter.shared.reloadTimelines(ofKind: WidgetSnapshot.widgetKind)
+            WidgetCenter.shared.reloadAllTimelines()
             lastReload = now
         }
     }

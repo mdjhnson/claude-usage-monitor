@@ -52,6 +52,9 @@ targets:
     postBuildScripts:
       - name: Record source commit
         basedOnDependencyAnalysis: false
+        # Declared so it runs after Xcode writes the Info.plist, not alongside.
+        inputFiles:
+          - $(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)
         script: |
           # The commit for Settings › About, marked "-dirty" if there were uncommitted changes.
           PLIST="$TARGET_BUILD_DIR/$INFOPLIST_PATH"
@@ -97,9 +100,13 @@ targets:
       - target: PaceBarCore
       - sdk: WidgetKit.framework
       - sdk: SwiftUI.framework
+      - sdk: AppIntents.framework
     postBuildScripts:
       - name: Match app version
         basedOnDependencyAnalysis: false
+        # Declared so it runs after Xcode writes the Info.plist, not alongside.
+        inputFiles:
+          - $(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)
         script: |
           # Info.plist is the one place the version is set; the extension must match it.
           PLIST="$TARGET_BUILD_DIR/$INFOPLIST_PATH"

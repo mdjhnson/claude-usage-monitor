@@ -54,7 +54,7 @@ struct UsageWidgetView: View {
         Group {
             if let model, !model.snapshot.windows.isEmpty {
                 switch family {
-                case .systemSmall: SmallUsageView(model: model)
+                case .systemSmall: SmallUsageView(model: model, limitID: entry.limitID)
                 case .systemMedium: MediumUsageView(model: model)
                 default: LargeUsageView(model: model)
                 }
@@ -73,12 +73,15 @@ struct UsageWidgetView: View {
 
 // MARK: Sizes
 
-/// The 5-hour session (or the first shown window) as a ring.
+/// The chosen limit as a ring. Falls back to the 5-hour session, then the first shown limit,
+/// when the chosen one isn't in the snapshot (hidden in the popover, or not reported).
 struct SmallUsageView: View {
     let model: WidgetModel
+    let limitID: String?
 
     var body: some View {
-        let window = model.snapshot.windows.first { $0.kind == .session } ?? model.snapshot.windows[0]
+        let windows = model.snapshot.windows
+        let window = windows.first { $0.kind.id == limitID } ?? windows.first { $0.kind == .session } ?? windows[0]
         let pacing = model.pacing(window)
         let tint = model.tint(window, pacing)
 

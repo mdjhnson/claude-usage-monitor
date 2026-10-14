@@ -6,6 +6,17 @@ struct UsageEntry: TimelineEntry {
     let date: Date
     /// Nil until PaceBar has written its first snapshot.
     let snapshot: WidgetSnapshot?
+    /// The `WindowKind.id` the small widget was set to show. Nil for the other sizes.
+    var limitID: String? = nil
+
+    /// Entries at now and every `step` after, each recomputing pacing for its own time.
+    static func timeline(_ snapshot: WidgetSnapshot?, limitID: String? = nil, now: Date = Date()) -> Timeline<UsageEntry> {
+        let entries = (0...Provider.steps).map {
+            UsageEntry(date: now.addingTimeInterval(Double($0) * Provider.step), snapshot: snapshot, limitID: limitID)
+        }
+        // The app also asks for a reload when something visible changes.
+        return Timeline(entries: entries, policy: .atEnd)
+    }
 }
 
 /// Reads the app's snapshot and lays out a short timeline from it. Each entry recomputes pacing
@@ -27,13 +38,25 @@ struct Provider: TimelineProvider {
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<UsageEntry>) -> Void) {
+        completion(UsageEntry.timeline(WidgetSnapshotStore()?.read()))
+    }
+}
+
+/// The small widget's provider: the same timeline, carrying the chosen limit.
+struct LimitProvider: AppIntentTimelineProvider {
+    func placeholder(in context: Context) -> UsageEntry {
+        UsageEntry(date: Date(), snapshot: .sample(now: Date()))
+    }
+
+    func snapshot(for configuration: LimitWidgetIntent, in context: Context) async -> UsageEntry {
         let now = Date()
         let stored = WidgetSnapshotStore()?.read()
-        let entries = (0...Self.steps).map {
-            UsageEntry(date: now.addingTimeInterval(Double($0) * Self.step), snapshot: stored)
-        }
-        // The app also asks for a reload when something visible changes.
-        completion(Timeline(entries: entries, policy: .atEnd))
+        return UsageEntry(date: now, snapshot: context.isPreview ? stored ?? .sample(now: now) : stored,
+                          limitID: configuration.limit?.id)
+    }
+
+    func timeline(for configuration: LimitWidgetIntent, in context: Context) async -> Timeline<UsageEntry> {
+        UsageEntry.timeline(WidgetSnapshotStore()?.read(), limitID: configuration.limit?.id)
     }
 }
 

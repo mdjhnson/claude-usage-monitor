@@ -160,10 +160,13 @@ Notifications are local, through `UserNotifications`, and are evaluated after ea
 
 ## Widgets
 
-Add them like any other widget: click the date in the menu bar and choose **Edit Widgets**, or right-click the desktop and choose **Edit Widgets**, then search for PaceBar.
-- **Small:** the 5-hour session as a ring, with its zone and reset time. If the session is hidden in the popover, the first limit shown there.
-- **Medium:** the first two limits as pacing bars, with the first one's usage graph.
-- **Large:** up to three limits, each with its zone, pacing bar and usage graph. With two or fewer, it also shows weekday names on weekly graphs and when you'd be back on pace.
+Add them like any other widget: click the date in the menu bar and choose **Edit Widgets**, or right-click the desktop and choose **Edit Widgets**, then search for PaceBar. There are two:
+- **Claude Limit** (small): one limit as a ring, with its zone and reset time.
+  - To choose the limit, right-click the widget and choose **Edit Widget**. The choices are the 5-hour session, Weekly, and any per-model weekly limit the API has reported. The default is the 5-hour session.
+  - If the chosen limit is hidden in the popover, the widget falls back to the 5-hour session, then to the first limit shown.
+- **Claude Usage** (medium and large):
+  - **Medium:** the first two limits as pacing bars, with the first one's usage graph.
+  - **Large:** up to three limits, each with its zone, pacing bar and usage graph. With two or fewer, it also shows weekday names on weekly graphs and when you'd be back on pace.
 
 Widgets follow your settings: theme (including Custom colors), color mode, thresholds, workweek pacing, which limits the popover shows, and the usage graph and day options. Clicking a widget opens the popover.
 

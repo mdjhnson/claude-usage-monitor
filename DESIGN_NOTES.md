@@ -218,12 +218,15 @@ Sections:
 
 ## Widgets
 
-One WidgetKit widget, kind `PaceBarUsage`, in three sizes. It draws with the app's own `Theme`, `PacingBar`, `UsageGraph` and `ZonePill` (the extension compiles those files too), so it matches the popover.
+Two WidgetKit widgets: **Claude Limit** (kind `PaceBarLimit`, small only, configurable) and **Claude Usage** (kind `PaceBarUsage`, medium and large). It draws with the app's own `Theme`, `PacingBar`, `UsageGraph` and `ZonePill` (the extension compiles those files too), so it matches the popover.
 - **Background:** the popover background, already resolved by the app (`popoverBackgroundColor`) and sent as the snapshot's `background` token. Text uses the `text` token.
 - **Colors:** percentages use the same `Theme.tint` as the cards (pacing zone or usage threshold, per Color by). Rings, bars and graph lines use the zone color.
 - **Windows:** the popover's visible limits, in the popover's order.
 - **Pacing bar:** `PacingBar` with `animated: false`, since widgets render one frame and never run `onAppear`. No pulse.
-- **Small:** title row (9 semibold caps at text 0.45), then a ring: 8pt stroke, white 0.08 track, zone-tinted round-capped arc from 12 o'clock to usage. Inside: the percentage (22 black rounded, tint) and the zone title (9 semibold, zone color). Bottom: the reset countdown (10 medium at text 0.45).
+- **Small (Claude Limit):**
+  - Its one setting, **Limit**, is an App Intent parameter whose choices come from `WindowKind`: the 5-hour session, Weekly, and the per-model weekly limits in the latest snapshot. The default is the 5-hour session.
+  - A limit missing from the snapshot (hidden in the popover) falls back to the session, then the first shown limit.
+  - Layout: title row (9 semibold caps at text 0.45), then a ring: 8pt stroke, white 0.08 track, zone-tinted round-capped arc from 12 o'clock to usage. Inside: the percentage (22 black rounded, tint) and the zone title (9 semibold, zone color). Bottom: the reset countdown (10 medium at text 0.45).
 - **Medium:** two columns, 14pt apart.
   - Left: up to two rows. Each has the title, then the percentage (15 black rounded, tint), the pacing bar and the reset countdown (10 medium at text 0.35).
   - Right: the first window's title and its graph, at 44pt, without day markers. It's dropped when the usage graph setting is off.

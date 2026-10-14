@@ -55,9 +55,6 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
         }
     }
 
-    /// The widget's kind, shared by the app (to reload it) and the extension (to declare it).
-    public static let widgetKind = "PaceBarUsage"
-
     /// Readings kept per window. Enough for the graph's shape at widget size.
     public static let maxSamples = 120
 

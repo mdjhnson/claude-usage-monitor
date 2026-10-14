@@ -36,6 +36,7 @@
 		B57ADF513E28A2B3CD399D0E /* PaceBarWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DDB5CA570372BB0A622C87DF /* PaceBarWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C22F423393C1172C15A5F027 /* Provider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CECBE5740D844735A15A77EC /* Provider.swift */; };
 		C701694D06BDE7FDB01B6F80 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FD5B28E75CE7E8F00E60A69 /* AppDelegate.swift */; };
+		C7B5C19816442B8674049FBB /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E90EA4A312368A8596118CE2 /* AppIntents.framework */; };
 		C9325AB02E618AA6EE77E06A /* Formatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FEEE1CE08307437A4306906 /* Formatting.swift */; };
 		C9D63E3623A8FED145989CF1 /* AlertTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF38408E7D17CC23141D64E1 /* AlertTracker.swift */; };
 		C9E616ADB090E91A529B2AD3 /* libPaceBarCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D929652656B3C47B7BAC51F6 /* libPaceBarCore.a */; };
@@ -44,6 +45,7 @@
 		CD6CC57A1B6BBF800743DD58 /* DisplayOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ED8071EF824E8A7C5AD007E /* DisplayOptions.swift */; };
 		D21DD27960B067C3B1A93E31 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C60F03E822EC71914BDE7E57 /* StatusItemController.swift */; };
 		D298307E51A5DA0A60E28814 /* UsageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8BE6407DB93C6A020DE3737 /* UsageStore.swift */; };
+		D42E23148AE6C721C30EC11E /* LimitIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 925F8CD478E572786A8899FE /* LimitIntent.swift */; };
 		E257CF26545794C064FC802D /* PopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC9F3C1983B7FFB047DE1BCA /* PopoverView.swift */; };
 		E760BA5DC385BBCA3164A6CB /* DisplayOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ED8071EF824E8A7C5AD007E /* DisplayOptions.swift */; };
 		EA3962E51B1BA7FC23800356 /* PacingBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F759645F76618CFCD4B7D71 /* PacingBar.swift */; };
@@ -113,6 +115,7 @@
 		714321F97820E192390FDCB2 /* Notifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notifier.swift; sourceTree = "<group>"; };
 		75A801DA324A6F62BB25AF92 /* PaceBar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PaceBar.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8558C61F20A72F8EF9B12D4B /* ResetCycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetCycle.swift; sourceTree = "<group>"; };
+		925F8CD478E572786A8899FE /* LimitIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LimitIntent.swift; sourceTree = "<group>"; };
 		9A2F64B484D3C36DC179FD69 /* Diagnostic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Diagnostic.swift; sourceTree = "<group>"; };
 		9C37BBB41BBDBD805580588B /* PaceBarWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaceBarWidgetBundle.swift; sourceTree = "<group>"; };
 		9FD5B28E75CE7E8F00E60A69 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -133,6 +136,7 @@
 		DDB5CA570372BB0A622C87DF /* PaceBarWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PaceBarWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		E5548113E2B17156552C56D9 /* UsageModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageModels.swift; sourceTree = "<group>"; };
 		E5F3D940AD8CE77C77B322A7 /* WindowCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowCard.swift; sourceTree = "<group>"; };
+		E90EA4A312368A8596118CE2 /* AppIntents.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppIntents.framework; path = System/Library/Frameworks/AppIntents.framework; sourceTree = SDKROOT; };
 		ED1D966E7483461CDE109DB5 /* HexColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HexColor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -152,6 +156,7 @@
 				FA059FBF11CDB9900877D22F /* libPaceBarCore.a in Frameworks */,
 				CB52F53B72BAA0ADBED3E07E /* WidgetKit.framework in Frameworks */,
 				FE35018E898F00E75F765785 /* SwiftUI.framework in Frameworks */,
+				C7B5C19816442B8674049FBB /* AppIntents.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -180,6 +185,7 @@
 		36EF59B7D12BB7216FCC3738 /* PaceBarWidget */ = {
 			isa = PBXGroup;
 			children = (
+				925F8CD478E572786A8899FE /* LimitIntent.swift */,
 				9C37BBB41BBDBD805580588B /* PaceBarWidgetBundle.swift */,
 				CECBE5740D844735A15A77EC /* Provider.swift */,
 				BF4816AFCE94908A145968A4 /* UsageWidgetViews.swift */,
@@ -233,6 +239,7 @@
 		D2BB9BF9E2ADEA32A840C0E7 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				E90EA4A312368A8596118CE2 /* AppIntents.framework */,
 				09B15F999654C93742DC51B7 /* SwiftUI.framework */,
 				ABBF192BAED824C1D3A122E7 /* WidgetKit.framework */,
 			);
@@ -383,6 +390,7 @@
 			inputFileListPaths = (
 			);
 			inputPaths = (
+				"$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)",
 			);
 			name = "Record source commit";
 			outputFileListPaths = (
@@ -402,6 +410,7 @@
 			inputFileListPaths = (
 			);
 			inputPaths = (
+				"$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)",
 			);
 			name = "Match app version";
 			outputFileListPaths = (
@@ -456,6 +465,7 @@
 			files = (
 				E760BA5DC385BBCA3164A6CB /* DisplayOptions.swift in Sources */,
 				EF6C155055F6ED03435C0DA5 /* Formatting.swift in Sources */,
+				D42E23148AE6C721C30EC11E /* LimitIntent.swift in Sources */,
 				8492FB767B7A9F6FA331D89F /* PaceBarWidgetBundle.swift in Sources */,
 				505BCA0D6381125ABA378DDD /* PacingBar.swift in Sources */,
 				C22F423393C1172C15A5F027 /* Provider.swift in Sources */,

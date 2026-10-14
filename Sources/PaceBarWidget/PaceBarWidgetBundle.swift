@@ -7,17 +7,31 @@ import PaceBarCore
 @main
 struct PaceBarWidgetBundle: WidgetBundle {
     var body: some Widget {
+        LimitWidget()
         UsageWidget()
     }
 }
 
+/// Small: one limit as a ring. Edit Widget chooses which.
+struct LimitWidget: Widget {
+    var body: some WidgetConfiguration {
+        AppIntentConfiguration(kind: "PaceBarLimit", intent: LimitWidgetIntent.self, provider: LimitProvider()) { entry in
+            UsageWidgetView(entry: entry)
+        }
+        .configurationDisplayName("Claude Limit")
+        .description("One limit and whether you're on pace. Choose which with Edit Widget.")
+        .supportedFamilies([.systemSmall])
+    }
+}
+
+/// Medium and large: the popover's limits with bars and graphs.
 struct UsageWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: WidgetSnapshot.widgetKind, provider: Provider()) { entry in
+        StaticConfiguration(kind: "PaceBarUsage", provider: Provider()) { entry in
             UsageWidgetView(entry: entry)
         }
         .configurationDisplayName("Claude Usage")
         .description("Your Claude limits and whether you're on pace.")
-        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+        .supportedFamilies([.systemMedium, .systemLarge])
     }
 }
