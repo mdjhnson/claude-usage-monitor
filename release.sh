@@ -2,8 +2,11 @@
 # Builds a universal PaceBar.app, has Xcode sign it with the team's cloud-managed Developer ID
 # certificate and notarize it, then packages the stapled app as dist/PaceBar-<version>.dmg.
 #   TEAM_ID=ABCDE12345 ./release.sh
-#   PUBLISH=1 TEAM_ID=… ./release.sh   also publish it as GitHub Release v<version>, which is what
-#                                      Settings › About › Check for Updates reads
+#   PUBLISH=1 TEAM_ID=… ./release.sh   also publish it: the DMG goes to PaceBar's page on the staff
+#                                      site (scripts/publish-staff-site.sh), then GitHub Release
+#                                      v<version> is created with notes and no DMG attached. Check
+#                                      for Updates reads the version from GitHub; the download stays
+#                                      behind the staff site's Campus Outreach sign-in.
 # Needs Xcode signed in (Settings › Accounts) to an account on that team with
 # "Access to Cloud Managed Developer ID Certificate". No local certificate or notary password.
 # One-time setup is in README.md under "Distributing to others".
@@ -53,6 +56,8 @@ if [[ -n "${PUBLISH:-}" ]]; then
         echo "Push $(git rev-parse --short HEAD) to GitHub first; the tag is created on that commit." >&2
         exit 1
     fi
+    # The staff-site token is in the keychain and the tool page exists. Changes nothing.
+    scripts/publish-staff-site.sh --check
 fi
 COMMIT="$(git rev-parse HEAD)"
 
@@ -171,13 +176,23 @@ spctl --assess --type execute --verbose=2 "$NOTARIZED" 2>&1 | grep '^source=' | 
 echo "  architectures: $(lipo -archs "$NOTARIZED/Contents/MacOS/PaceBar")"
 echo "Built $DMG"
 
-PUBLISH_CMD=(gh release create "$TAG" "$DMG" --target "$COMMIT" --title "PaceBar $VERSION" --generate-notes)
+# No DMG on GitHub: the repository is public and the installer is for staff. The notes say where
+# it is. --notes goes above the generated list of changes.
+NOTES="**Staff:** download PaceBar $VERSION from https://staff-services.serve.campusoutreach.org/tools/pacebar (Campus Outreach sign-in). This release has no download attached."
+STAFF_CMD=(scripts/publish-staff-site.sh "$DMG")
+PUBLISH_CMD=(gh release create "$TAG" --target "$COMMIT" --title "PaceBar $VERSION" --notes "$NOTES" --generate-notes)
+echo
 if [[ -n "${PUBLISH:-}" ]]; then
-    echo
+    # Staff site first, so the download is there by the time Check for Updates sees the version.
+    "${STAFF_CMD[@]}"
     echo "Publishing GitHub Release $TAG…"
-    "${PUBLISH_CMD[@]}"
+    if ! "${PUBLISH_CMD[@]}"; then
+        echo "The staff site has $VERSION, but the GitHub Release failed. Retry it with:" >&2
+        echo "  ${(q)PUBLISH_CMD[@]}" >&2
+        exit 1
+    fi
 else
-    echo
-    echo "To publish it, so Check for Updates sees $VERSION:"
+    echo "To publish it, upload to the staff site, then create the GitHub Release Check for Updates reads:"
+    echo "  ${(q)STAFF_CMD[@]}"
     echo "  ${(q)PUBLISH_CMD[@]}"
 fi
