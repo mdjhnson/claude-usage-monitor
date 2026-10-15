@@ -301,10 +301,10 @@ A window without a reset time shows its percentage but no pacing.
 
 ## Design notes
 
-[DESIGN_NOTES.md](DESIGN_NOTES.md) has the exact visual spec. One difference from TokenEater's website is deliberate:
+[DESIGN_NOTES.md](DESIGN_NOTES.md) has the exact visual spec. Two differences from TokenEater are deliberate:
 - **The website** shows the "On track" pill in amber, on a fixed green-to-amber bar.
-- **The app source** colors "On track" blue (`#0A84FF`) in its default theme, uses amber (`#FF9500`) for the "Watch out" zone, and colors the whole bar by the current zone.
-- **PaceBar** follows the app source.
+- **The app source** colors "On track" blue (`#0A84FF`) and "Chill" green in its default theme, uses amber (`#FF9500`) for the "Watch out" zone, and colors the whole bar by the current zone.
+- **PaceBar** follows the app source but swaps the first two: "Chill" is blue (`#0A84FF`) and "On track" is green (`#32D74B`), in every theme except Monochrome.
 
 ## Uninstall
 
