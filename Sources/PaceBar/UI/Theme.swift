@@ -122,7 +122,7 @@ struct Theme: Equatable {
         switch preset {
         case .default, .custom:
             Theme(gaugeNormal: .init(hex: 0x22C55E), gaugeWarning: .init(hex: 0xF97316), gaugeCritical: .init(hex: 0xEF4444),
-                  chill: .init(hex: 0x32D74B), onTrack: .init(hex: 0x0A84FF), warning: .init(hex: 0xFF9500), hot: .init(hex: 0xFF453A),
+                  chill: .init(hex: 0x0A84FF), onTrack: .init(hex: 0x32D74B), warning: .init(hex: 0xFF9500), hot: .init(hex: 0xFF453A),
                   background: .init(hex: 0x000000), text: .init(hex: 0xFFFFFF))
         case .monochrome:
             Theme(gaugeNormal: .init(hex: 0x8E8E93), gaugeWarning: .init(hex: 0xC7C7CC), gaugeCritical: .init(hex: 0xFFFFFF),
@@ -130,11 +130,11 @@ struct Theme: Equatable {
                   background: .init(hex: 0x000000), text: .init(hex: 0xFFFFFF))
         case .neon:
             Theme(gaugeNormal: .init(hex: 0x00FF87), gaugeWarning: .init(hex: 0xFFD000), gaugeCritical: .init(hex: 0xFF006E),
-                  chill: .init(hex: 0x00FF87), onTrack: .init(hex: 0x00D4FF), warning: .init(hex: 0xFFD000), hot: .init(hex: 0xFF006E),
+                  chill: .init(hex: 0x00D4FF), onTrack: .init(hex: 0x00FF87), warning: .init(hex: 0xFFD000), hot: .init(hex: 0xFF006E),
                   background: .init(hex: 0x0A0A0A), text: .init(hex: 0xFFFFFF))
         case .pastel:
             Theme(gaugeNormal: .init(hex: 0x86EFAC), gaugeWarning: .init(hex: 0xFDE68A), gaugeCritical: .init(hex: 0xFCA5A5),
-                  chill: .init(hex: 0x86EFAC), onTrack: .init(hex: 0x93C5FD), warning: .init(hex: 0xFDE68A), hot: .init(hex: 0xFCA5A5),
+                  chill: .init(hex: 0x93C5FD), onTrack: .init(hex: 0x86EFAC), warning: .init(hex: 0xFDE68A), hot: .init(hex: 0xFCA5A5),
                   background: .init(hex: 0x1A1A2E), text: .init(hex: 0xE2E8F0))
         }
     }

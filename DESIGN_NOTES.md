@@ -8,7 +8,7 @@ Sources: `Shared/Models/ThemeModels.swift`, `Shared/Components/PacingBar.swift`,
 
 | Item | Website feature card (per brief) | App source | PaceBar uses |
 |---|---|---|---|
-| "On track" color | Amber border and text | Default theme `pacingOnTrack = #0A84FF` (blue). Amber `#FF9500` is the **warning** zone. | App source (blue) |
+| "On track" color | Amber border and text | Default theme `pacingOnTrack = #0A84FF` (blue). Amber `#FF9500` is the **warning** zone. | Green, with blue for Chill: the reverse of the app source, so blue reads as cool and green as steady. Default `pacingChill = #0A84FF`, `pacingOnTrack = #32D74B`; Neon and Pastel swap the same way. |
 | Bar gradient | Green to amber | Zone color to `zoneColor.lighter()` | Zone color to lighter zone color (see note 1) |
 | Zone pill, "+7%" delta, quip | Shown | Not in the popover. Quips exist in `PacingResult.message`, but no popover cell renders them. | Built per the brief, using app tokens |
 | `0% 50% 100%` axis labels | Dim monospace labels under the bar | Not in `PacingBar` or `HeroPacingGraph` | Built per the brief |
@@ -19,10 +19,10 @@ Note 1: the brief says "gradient fill from the theme's low color to the theme's 
 
 | Preset | gaugeNormal | gaugeWarning | gaugeCritical | pacingChill | pacingOnTrack | pacingWarning | pacingHot | background | text |
 |---|---|---|---|---|---|---|---|---|---|
-| Default | #22C55E | #F97316 | #EF4444 | #32D74B | #0A84FF | #FF9500 | #FF453A | #000000 | #FFFFFF |
+| Default | #22C55E | #F97316 | #EF4444 | #0A84FF | #32D74B | #FF9500 | #FF453A | #000000 | #FFFFFF |
 | Monochrome | #8E8E93 | #C7C7CC | #FFFFFF | #8E8E93 | #AEAEB2 | #D6D6D6 | #FFFFFF | #000000 | #FFFFFF |
-| Neon | #00FF87 | #FFD000 | #FF006E | #00FF87 | #00D4FF | #FFD000 | #FF006E | #0A0A0A | #FFFFFF |
-| Pastel | #86EFAC | #FDE68A | #FCA5A5 | #86EFAC | #93C5FD | #FDE68A | #FCA5A5 | #1A1A2E | #E2E8F0 |
+| Neon | #00FF87 | #FFD000 | #FF006E | #00D4FF | #00FF87 | #FFD000 | #FF006E | #0A0A0A | #FFFFFF |
+| Pastel | #86EFAC | #FDE68A | #FCA5A5 | #93C5FD | #86EFAC | #FDE68A | #FCA5A5 | #1A1A2E | #E2E8F0 |
 
 - **Usage thresholds:** warning at 60% or more, critical at 85% or more. Both are adjustable in Settings.
 - **`lighter()`:** in HSB, saturation goes down by 0.045 and brightness up by 0.15, capped at 1.
