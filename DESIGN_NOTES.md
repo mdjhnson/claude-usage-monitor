@@ -218,7 +218,7 @@ Sections:
    - "Copy diagnostic" button, with a short caption saying what is included.
 8. **Updates** (About tab, between Build and About):
    - Status on the left ("PaceBar 1.1.3", "…is up to date", "PaceBar 1.1.4 is available" in orange, or a short error in secondary), with "Last checked 3 days ago" in caption secondary under it. "Check for Updates" on the right, disabled while a check runs, with a small spinner and "Checking…" in place of the status.
-   - When newer: a "PaceBar 1.1.4" row with a Download link.
+   - When newer: a "PaceBar 1.1.4" row with a Download link to PaceBar's staff-site page.
    - "Check automatically once a week" toggle.
    - Footer: what the check sends (nothing but a version request to api.github.com) and that PaceBar never downloads or installs updates.
 

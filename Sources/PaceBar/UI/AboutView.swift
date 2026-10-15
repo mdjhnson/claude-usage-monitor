@@ -2,12 +2,14 @@ import AppKit
 import SwiftUI
 
 /// The About tab in Settings: version and build, update check, author, source repository and credits.
-/// Its two links, the repository and its latest release, are fixed addresses that scripts/audit.sh
-/// pins. The release link never comes from GitHub's response.
+/// Its two links, the repository and the staff download page, are fixed addresses that
+/// scripts/audit.sh pins. The download link never comes from GitHub's response.
 struct AboutPane: View {
     static let repository = "github.com/mdjhnson/claude-usage-monitor"
     static let repositoryURL = URL(string: "https://github.com/mdjhnson/claude-usage-monitor")!
-    static let releasesURL = URL(string: "https://github.com/mdjhnson/claude-usage-monitor/releases/latest")!
+    /// PaceBar's page on the staff site, which needs a Campus Outreach sign-in. The DMG lives there,
+    /// not on GitHub, so it isn't a public download.
+    static let downloadURL = URL(string: "https://staff-services.serve.campusoutreach.org/tools/pacebar")!
     static let author = "Matt (mdjhnson)"
 
     @Bindable var settings: SettingsStore
@@ -75,7 +77,7 @@ struct AboutPane: View {
             }
             if let version = updates.updateAvailable {
                 LabeledContent("PaceBar \(version.description)") {
-                    Link("Download", destination: Self.releasesURL)
+                    Link("Download", destination: Self.downloadURL)
                 }
             }
             Toggle("Check automatically once a week", isOn: $settings.autoCheckUpdates)

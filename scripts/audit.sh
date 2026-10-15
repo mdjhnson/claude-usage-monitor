@@ -9,8 +9,8 @@
 #   - notifications use UserNotifications only (no deprecated NSUserNotification)
 #   - the only app launch is Terminal.app, from the setup guide
 #   - the only other URLs are Claude Code's installer, shown and copied by the setup guide, never fetched,
-#     and the source repository and its latest release, the About tab's two links, opened in the
-#     default browser
+#     and the source repository and PaceBar's staff download page, the About tab's two links,
+#     opened in the default browser
 #   - the only other URL opened is PaceBar's page in System Settings › Notifications (a fixed
 #     x-apple.systempreferences: URL, from the Notifications tab), which opens locally
 #   - Sources/ holds Swift only; Package.swift and project.yml have no dependencies, binaries,
@@ -38,8 +38,8 @@ INSTALL_URL="https://claude.ai/install.sh"
 ABOUT="Sources/PaceBar/UI/AboutView.swift"
 REPO_URL="https://github.com/mdjhnson/claude-usage-monitor"
 REPO_LINK='Link(Self.repository, destination: Self.repositoryURL)'
-RELEASES_URL="https://github.com/mdjhnson/claude-usage-monitor/releases/latest"
-RELEASES_LINK='Link("Download", destination: Self.releasesURL)'
+DOWNLOAD_URL="https://staff-services.serve.campusoutreach.org/tools/pacebar"
+DOWNLOAD_LINK='Link("Download", destination: Self.downloadURL)'
 NOTIFIER="Sources/PaceBar/Notifier.swift"
 WIDGET="Sources/PaceBarWidget"
 SNAPSHOT="Sources/PaceBarCore/WidgetSnapshot.swift"
@@ -64,10 +64,9 @@ strip_url() {
     awk -v f="$1:" -v u="$2" \
         'index($0, f) == 1 { while ((i = index($0, u)) > 0) $0 = substr($0, 1, i - 1) substr($0, i + length(u)) } { print }'
 }
-# The installer URL in the setup guide and the repository and release URLs in the About tab.
-# The release URL goes first: it starts with the repository URL.
+# The installer URL in the setup guide and the repository and download URLs in the About tab.
 strip_allowed_urls() {
-    strip_url "$GUIDE" "$INSTALL_URL" | strip_url "$ABOUT" "$RELEASES_URL" | strip_url "$ABOUT" "$REPO_URL"
+    strip_url "$GUIDE" "$INSTALL_URL" | strip_url "$ABOUT" "$DOWNLOAD_URL" | strip_url "$ABOUT" "$REPO_URL"
 }
 
 echo "PaceBar source audit ($(date '+%Y-%m-%d %H:%M'))"
@@ -86,7 +85,7 @@ forbidden=$(rhits \
 'NSAppleEventManager|handleGetURLEvent|WKWebView|openURL|(^|[^.A-Za-z0-9_])Link\(|NSWorkspace[^(]*\.open\(|'\
 'FileManager.*\.claude|NSPasteboard.*[Tt]oken' "$SRC" | code_only \
     | awk -v f="$ABOUT:" -v l="$REPO_LINK" '!(index($0, f) == 1 && index($0, l) > 0)' \
-    | awk -v f="$ABOUT:" -v l="$RELEASES_LINK" '!(index($0, f) == 1 && index($0, l) > 0)' \
+    | awk -v f="$ABOUT:" -v l="$DOWNLOAD_LINK" '!(index($0, f) == 1 && index($0, l) > 0)' \
     | awk -v f="$NOTIFIER:" -v l="$SETTINGS_LINK" '!(index($0, f) == 1 && index($0, l) > 0)')
 if [ -n "$forbidden" ]; then echo "$forbidden"; fail "forbidden construct(s) above"; else echo "(none)"; fi
 
@@ -110,12 +109,12 @@ stray_links=$(printf '%s\n' "$links" | grep . | outside "$ABOUT" | outside "$NOT
 about_links=$(printf '%s\n' "$links" | grep -F "$ABOUT:")
 if [ -n "$about_links" ]; then
     [ "$(printf '%s\n' "$about_links" | grep -c .)" -gt 2 ] && fail "more than two links in AboutView.swift"
-    [ -n "$(printf '%s\n' "$about_links" | grep -vF "$REPO_LINK" | grep -vF "$RELEASES_LINK")" ] \
-        && fail "the About links must be $REPO_LINK and $RELEASES_LINK"
+    [ -n "$(printf '%s\n' "$about_links" | grep -vF "$REPO_LINK" | grep -vF "$DOWNLOAD_LINK")" ] \
+        && fail "the About links must be $REPO_LINK and $DOWNLOAD_LINK"
     [ "$(grep -cF "static let repositoryURL = URL(string: \"$REPO_URL\")!" "$ABOUT")" -eq 1 ] \
         || fail "repositoryURL must be the fixed repository address"
-    [ "$(grep -cF "static let releasesURL = URL(string: \"$RELEASES_URL\")!" "$ABOUT")" -eq 1 ] \
-        || fail "releasesURL must be the fixed latest-release address"
+    [ "$(grep -cF "static let downloadURL = URL(string: \"$DOWNLOAD_URL\")!" "$ABOUT")" -eq 1 ] \
+        || fail "downloadURL must be the fixed staff download page"
 fi
 notifier_links=$(printf '%s\n' "$links" | grep -F "$NOTIFIER:")
 if [ -n "$notifier_links" ]; then
