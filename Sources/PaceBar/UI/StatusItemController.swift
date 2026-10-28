@@ -10,7 +10,6 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     private let popover = NSPopover()
     private let store: UsageStore
     private let settings: SettingsStore
-    private var appearanceObservation: NSKeyValueObservation?
     private var ticker: Timer?
 
     /// - Parameter openSettings: opens Settings at a tab, or at the last one shown when nil.
@@ -38,9 +37,9 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
             button.imagePosition = .imageOnly
             button.toolTip = "PaceBar"
-            appearanceObservation = button.observe(\.effectiveAppearance) { [weak self] _, _ in
-                Task { @MainActor in self?.render() }
-            }
+            // No effectiveAppearance observer: the image draws lazily, so it already follows the
+            // menu bar's appearance, and AppKit sets the button's appearance every time it redraws
+            // the menu bar replicants after an image change, so re-rendering on it loops forever.
         }
 
         observeAndRender()
