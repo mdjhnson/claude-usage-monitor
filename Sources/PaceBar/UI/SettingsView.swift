@@ -94,6 +94,7 @@ struct SettingsView: View {
                 notificationsSection
             case .general:
                 generalSection
+                chatsSection
                 diagnosticsSection
             case .about:
                 AboutPane(settings: settings, updates: updates)
@@ -452,6 +453,24 @@ struct SettingsView: View {
             }
             launchStatus = SMAppService.mainApp.status
             launchAtLogin = launchStatus == .enabled || launchStatus == .requiresApproval
+        }
+    }
+
+    // MARK: Claude Code chats
+
+    private var chatsSection: some View {
+        Section {
+            Toggle("Show Claude Code chats in widgets", isOn: $settings.showClaudeChats)
+            Picker("Prompt cache lasts", selection: $settings.chatCacheLifetime) {
+                Text("1 hour (Claude plans)").tag(3600.0)
+                Text("5 minutes (API key)").tag(300.0)
+            }
+            .disabled(!settings.showClaudeChats)
+        } header: {
+            Text("Claude Code chats")
+        } footer: {
+            Text("For the Claude Code Chats widget. PaceBar reads each open chat's status file in ~/.claude/sessions every 5 seconds: its name, folder, and whether it's working, waiting on you or idle. It never reads your conversations.")
+                .foregroundStyle(.secondary)
         }
     }
 

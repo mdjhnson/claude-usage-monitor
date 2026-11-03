@@ -12,6 +12,7 @@ A small macOS menu bar app that shows your Claude usage limits and whether you a
 - **Workweek pacing (optional):** weekly limits pace over your active days and hours only. Weekends and evenings don't count against you.
 - **Notifications (optional, off by default):** usage alerts at your thresholds, running hot and back on pace, and reminders before a reset.
 - **Widgets:** small, medium and large widgets for the desktop and Notification Center, with the same colors, pacing and graphs as the popover (see **Widgets** below).
+- **Claude Code Chats widget (optional, off by default):** which Claude Code chats need you, which are working, and how long each idle chat's prompt cache stays warm.
 
 ## How pacing works
 
@@ -153,6 +154,8 @@ Open Settings from the gear in the popover. Settings are split into six tabs: Pa
 | Before the session resets / weekly reset | Off | A reminder 5–60 min before the 5-hour session resets, or 30 min–6 hours before the weekly reset. |
 | Refresh every | 3 min | 60–600 s. Opening the popover also refreshes, at most once per 30 s. |
 | Launch at login | Off | Uses `SMAppService.mainApp`. macOS may ask you to approve it in Login Items. |
+| Show Claude Code chats in widgets | Off | In General › Claude Code chats. While on, PaceBar reads each open chat's status file in `~/.claude/sessions` every 5 seconds for the **Claude Code Chats** widget (see **Widgets**). Off, it never reads them. |
+| Prompt cache lasts | 1 hour (Claude plans) | Or 5 minutes (API key). How long an idle chat counts as Cached before it goes Cold. Match it to how you sign in to Claude Code. |
 | Copy diagnostic | — | Copies a redacted report (see below). |
 | Check for Updates | — | In About. Asks GitHub for the latest release's version and compares it with this build. If it's newer, About shows a Download link to PaceBar's page on the staff site (Campus Outreach sign-in) and the popover shows "PaceBar x.y.z is available". It never downloads or installs anything. See **Network**. |
 | Check automatically once a week | Off | In About. While on, PaceBar runs the same check at launch, shortly after wake and every 6 hours, but only once a week has passed since the last answer. Automatic checks that fail retry quietly. A found update stays shown, across relaunches, until you install it. |
@@ -169,13 +172,14 @@ Notifications are local, through `UserNotifications`, and are evaluated after ea
 
 ## Widgets
 
-Add them like any other widget: click the date in the menu bar and choose **Edit Widgets**, or right-click the desktop and choose **Edit Widgets**, then search for PaceBar. There are three:
+Add them like any other widget: click the date in the menu bar and choose **Edit Widgets**, or right-click the desktop and choose **Edit Widgets**, then search for PaceBar. There are four:
 - **Claude Limit** (small): one limit as a ring, with its zone and reset time.
   - To choose the limit, right-click the widget and choose **Edit Widget**. The choices are the 5-hour session, Weekly, and any per-model weekly limit the API has reported. The default is the 5-hour session.
   - If the chosen limit is hidden in the popover, the widget falls back to the 5-hour session, then to the first limit shown.
 - **Claude Usage, medium:** the first two limits as pacing bars, beside a usage graph.
   - Right-click › **Edit Widget** › Graph chooses the graph. The choices are the 5-hour session (the default), Weekly, a per-model weekly limit, or **5-Hour Session and Weekly**, which stacks two shorter graphs.
 - **Claude Usage, large:** up to three limits. Each shows its zone, percentage, reset time, how far it is from a steady pace, its pacing bar, and a usage graph that grows to fill the space. With two or fewer limits, it also shows weekday names on weekly graphs and, when you're running hot, when you'd be back on pace. A footer shows when the data was fetched, next to the refresh button.
+- **Claude Code Chats** (medium, large): your open Claude Code chats, most urgent first. Needs the setting **Show Claude Code chats in widgets** (Settings › General); until then it says how to turn it on. See **Claude Code Chats** below.
 
 Widgets follow your settings: theme (including Custom colors), color mode, thresholds, workweek pacing, which limits the popover shows, and the usage graph and day options. Clicking a widget opens the popover.
 
@@ -194,7 +198,29 @@ It never holds the token, any response body, or anything else from the Keychain.
 
 **Updates.** Widgets recompute pacing every 15 minutes from the last snapshot, so zones keep moving even with no new data. PaceBar also asks macOS to redraw them as soon as a setting changes, an error starts or ends, or a limit resets. Other changes reach them at most every 5 minutes, and new graph readings at least every 30 minutes, which keeps PaceBar inside macOS's daily widget update budget. In between, a widget can be a point behind the menu bar; the refresh button catches it up.
 
-**When PaceBar isn't running,** widgets keep showing the last snapshot. After a failed refresh, or once the data is more than 45 minutes old (or twice the refresh interval, if that's longer), they dim it and show "Updated N min ago". The allowance is long because a running PaceBar with unchanged numbers only redraws widgets every 30 minutes, and a widget learns how fresh the data is only when it's redrawn. Before PaceBar has ever run, they show "Open PaceBar to start."
+**When PaceBar isn't running,** the usage widgets keep showing the last snapshot. After a failed refresh, or once the data is more than 45 minutes old (or twice the refresh interval, if that's longer), they dim it and show "Updated N min ago". The allowance is long because a running PaceBar with unchanged numbers only redraws widgets every 30 minutes, and a widget learns how fresh the data is only when it's redrawn. Before PaceBar has ever run, they show "Open PaceBar to start."
+
+### Claude Code Chats
+
+Each chat is in one of four states:
+
+| State | Symbol and color | Means |
+|---|---|---|
+| Needs you | ✋, Watch out color | Claude Code is waiting on you: a permission prompt or other dialog ("Waiting 2m"), or its own reason, such as "Input needed". |
+| Working | ⋯, On track color | Claude is running a turn ("Working 4m"). |
+| Cached | flame, Chill color | Idle, with its prompt cache still warm, so the next message is cheap. A bar under the row burns down over the cache lifetime, and turns to the Watch out color with 10 minutes left ("41m left"). |
+| Cold | snowflake | Idle past the cache lifetime, so the next message re-reads the whole conversation. Counted in the header, not listed. |
+
+- **Medium:** a count per state in the header, then as many chats as fit, most urgent first, and "+N more".
+- **Large:** sections for Needs you, Working and Cached, then the number of cold chats.
+- **Titles:** a chat you've named shows its name, with its project folder beside it. Otherwise it shows the folder.
+- **Closed chats** disappear. A chat counts as open while its process is running and started when its file says, so a reused process ID doesn't keep a closed chat around.
+
+**How it gets data.** Claude Code keeps a small status file for each running chat, `~/.claude/sessions/<pid>.json`. While the setting is on, PaceBar checks that folder every 5 seconds and reads only files that changed. From each it takes the chat's name, project folder, status (`busy`, `idle` or `waiting`, with what it's waiting for) and when that status began. It writes those to `chats.json` beside `snapshot.json`, with the theme's colors and the cache lifetime. It leaves out session IDs, socket paths and full folder paths. It never reads your conversations, the `.key` files in the same folder, or anything else under `~/.claude`.
+
+**Updates.** The widget lays out its own minute-by-minute timeline, so countdowns tick, fuses burn down and chats go cold on time without PaceBar redrawing it. PaceBar redraws it at once when a chat starts or stops needing you, and for other changes (a chat starting or finishing a turn, opening or closing) at most once a minute, to stay inside macOS's widget update budget.
+
+**When PaceBar quits,** the widget says "Open PaceBar to see your Claude Code chats." If PaceBar stops without quitting, the rows dim and show "Updated N min ago" after about 20 minutes. Turning the setting off tells the widget, and stops the reading.
 
 ## Threat model and security design
 
@@ -236,9 +262,10 @@ PaceBar holds a **full-scope Claude Code OAuth token** in memory while a request
 
 - **Not sandboxed.** An App Sandbox would prevent running `/usr/bin/security` to read another app's Keychain item, which is the only way PaceBar gets the token.
 - **Hardened runtime is on.** The app's entitlements are `com.apple.security.network.client` and one App Group, `<TEAM_ID>.io.github.mdjhnson.pacebar`. There are no library-validation or JIT exceptions. Release builds carry no `get-task-allow`, so a debugger can't attach.
-- **The widget extension is sandboxed** (`com.apple.security.app-sandbox`), with no network entitlement. Its only other entitlement is the same App Group. Its code reads `snapshot.json` and draws it. It has no networking, subprocess, Keychain, notification or URL-opening code, and can't reach Claude Code's login.
+- **The widget extension is sandboxed** (`com.apple.security.app-sandbox`), with no network entitlement. Its only other entitlement is the same App Group. Its code reads `snapshot.json` and `chats.json` and draws them. It has no networking, subprocess, Keychain, notification or URL-opening code, and can't reach Claude Code's login.
 - **The refresh button** posts a Darwin notification named `<TEAM_ID>.io.github.mdjhnson.pacebar.refresh`. It carries no data, and PaceBar treats it exactly like opening the popover. Any local process can post one, but the most it can do is ask for a refresh, which is limited to one every 30 seconds and still subject to the rate-limit backoff.
-- **One file on disk:** the widget snapshot (see **Widgets**), written only by `WidgetSnapshot.swift`. It holds usage percentages, reset times, recent readings and display settings, never the token.
+- **Two files on disk,** both in the App Group container and written only by `WidgetSnapshot.swift` (see **Widgets**). `snapshot.json` holds usage percentages, reset times, recent readings and display settings. `chats.json` holds Claude Code chat titles, project folder names, states and times, and only while **Show Claude Code chats in widgets** is on. Neither ever holds the token.
+- **Reading Claude Code's chat states (opt-in, off by default).** While on, `ChatSessionReader.swift` lists `~/.claude/sessions` and reads the `<pid>.json` files in it, read-only. It skips anything that isn't a plain file under 64 KB named with digits only, so it never opens the `<pid>.<hash>.key` files beside them. Those files and the other paths under `~/.claude` (transcripts, history, settings) are never opened. To check that a chat's process is still the one that wrote the file, it asks the kernel (`sysctl`) for that process's start time, and nothing else about it. The status files hold no credentials. Folder and chat names do reach the App Group container, which other apps can't read without your permission.
 - There are no listening sockets, no URL scheme handlers, no AppleScript, and no files written into `~/.claude`.
 - The only app PaceBar launches is `/System/Applications/Utilities/Terminal.app`, at a fixed path, from the setup guide.
 - It opens exactly three fixed URLs: this repository's GitHub page and PaceBar's download page on the staff site, from the links in Settings › About, in your default browser; and PaceBar's page in System Settings › Notifications (`x-apple.systempreferences:…?id=io.github.mdjhnson.pacebar`), from the Notifications tab, which opens locally.
@@ -274,7 +301,8 @@ On any error, the last good data stays on screen, dimmed, with "Last updated N m
 - `Package.swift` declares no dependencies, binary targets, plugins or unsafe/linker flags; `project.yml` declares no packages, prebuilt frameworks or extra flags, and `PaceBar.xcodeproj` references no remote package
 - the app's entitlements are exactly `com.apple.security.network.client` and `com.apple.security.application-groups`; the widget's are exactly `com.apple.security.app-sandbox` (true) and `com.apple.security.application-groups`; the only App Group in either is `$(TeamIdentifierPrefix)io.github.mdjhnson.pacebar`; Release builds don't inject `get-task-allow`; and Info.plist declares no URL schemes
 - files are written, and the App Group container opened, only in `WidgetSnapshot.swift`
-- `Sources/PaceBarWidget` contains no networking, `Process`, Keychain, notification, `NSWorkspace` or link code
+- `~/.claude` is reached only from `ChatSessionReader.swift`: a line naming `.claude` beside a file API (`FileManager`, `contentsOf`, `URL(`, `appendingPathComponent` and so on), or the `".claude"` path component itself, fails anywhere else. That file must build exactly `~/.claude/sessions`, must open only names that pass `SessionFile.isSessionFileName`, and has no `.key`, `projects`, `history`, transcript, Keychain, `Process`, signal, networking, `UserDefaults`, `FileHandle`, or file move, copy, delete or create code. It's also the only `sysctl` call site.
+- `Sources/PaceBarWidget` contains no networking, `Process`, Keychain, `.claude`, `ChatSessionReader`, notification, `NSWorkspace` or link code
 - the only Darwin notification is the refresh request: posted only in `RefreshIntent.swift`, observed only in `WidgetPublisher.swift`, with its name built only in `WidgetSnapshot.swift`. No distributed notifications.
 
 ## Copy diagnostic
@@ -316,7 +344,7 @@ A window without a reset time shows its percentage but no pacing.
 1. If you turned on Launch at login, turn it off in Settings first, or remove PaceBar later in System Settings › General › Login Items.
 2. Quit PaceBar (popover › Quit), then delete `PaceBar.app`.
 3. Remove its preferences: `defaults delete io.github.mdjhnson.pacebar`.
-4. Remove the widget snapshot: `rm -rf ~/Library/Group\ Containers/*.io.github.mdjhnson.pacebar`. Remove any PaceBar widgets first, or they'll show "Open PaceBar to start."
+4. Remove the widget files (`snapshot.json` and `chats.json`): `rm -rf ~/Library/Group\ Containers/*.io.github.mdjhnson.pacebar`. Remove any PaceBar widgets first, or they'll show "Open PaceBar to start."
 5. Optional: in Keychain Access, open "Claude Code-credentials" › Access Control and remove `security` if you don't want other tools to keep prompt-free access.
 
 PaceBar writes nothing else to disk. If you turned on notifications, macOS keeps a PaceBar entry in System Settings › Notifications; deleting the app is enough, or remove it there.
