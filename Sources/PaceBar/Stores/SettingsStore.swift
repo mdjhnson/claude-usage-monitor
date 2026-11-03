@@ -53,6 +53,8 @@ final class SettingsStore {
         static let autoCheckUpdates = "pacebar.update.auto"
         static let lastUpdateCheck = "pacebar.update.lastChecked"
         static let latestRelease = "pacebar.update.latest"
+        static let showClaudeChats = "pacebar.chats.enabled"
+        static let chatCacheLifetime = "pacebar.chats.cacheLifetime"
     }
 
     static let refreshRange: ClosedRange<Double> = 60...600
@@ -98,6 +100,10 @@ final class SettingsStore {
     var lastUpdateCheck: Date? { didSet { defaults.set(lastUpdateCheck, forKey: Key.lastUpdateCheck) } }
     /// The newest version GitHub last reported, such as "1.1.4". Only a version number.
     var latestRelease: String? { didSet { defaults.set(latestRelease, forKey: Key.latestRelease) } }
+    /// Off by default: with it off, PaceBar never reads `~/.claude/sessions`.
+    var showClaudeChats: Bool { didSet { defaults.set(showClaudeChats, forKey: Key.showClaudeChats) } }
+    /// How long an idle chat's prompt cache stays warm: an hour on Claude plans, five minutes on API keys.
+    var chatCacheLifetime: TimeInterval { didSet { defaults.set(chatCacheLifetime, forKey: Key.chatCacheLifetime) } }
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -153,6 +159,9 @@ final class SettingsStore {
         autoCheckUpdates = bool(Key.autoCheckUpdates, false)
         lastUpdateCheck = defaults.object(forKey: Key.lastUpdateCheck) as? Date
         latestRelease = defaults.string(forKey: Key.latestRelease).flatMap(AppVersion.init)?.description
+        showClaudeChats = bool(Key.showClaudeChats, false)
+        let lifetime = defaults.object(forKey: Key.chatCacheLifetime) as? Double ?? ChatBoard.defaultCacheLifetime
+        chatCacheLifetime = ChatBoard.cacheLifetimes.contains(lifetime) ? lifetime : ChatBoard.defaultCacheLifetime
     }
 
     /// The theme in use, including the person's own colors when Custom is chosen.

@@ -17,8 +17,12 @@
 #     plugins or flags
 #   - the app's entitlements are exactly network.client plus the PaceBar App Group; the widget's
 #     are exactly app-sandbox plus that group; Release builds carry no get-task-allow
-#   - the only file written is the widget snapshot, from WidgetSnapshot.swift, the only code that
-#     opens the App Group container
+#   - the only files written are the widget snapshot and the chats board (snapshot.json and
+#     chats.json in the App Group container), from WidgetSnapshot.swift, the only code that opens
+#     the App Group container
+#   - the only code that reads under ~/.claude is ChatSessionReader.swift, which only lists and reads
+#     ~/.claude/sessions/<pid>.json (never the .key files beside them, transcripts or history) and is
+#     the only sysctl call site (a process's start time, to tell a live chat from a reused PID)
 #   - the widget extension has no networking, subprocess, Keychain, notification or URL-opening code
 #   - the only Darwin notification is the widgets' refresh request: posted only by RefreshIntent.swift,
 #     observed only by WidgetPublisher.swift, named only by WidgetSnapshot.swift
@@ -43,6 +47,7 @@ DOWNLOAD_LINK='Link("Download", destination: Self.downloadURL)'
 NOTIFIER="Sources/PaceBar/Notifier.swift"
 WIDGET="Sources/PaceBarWidget"
 SNAPSHOT="Sources/PaceBarCore/WidgetSnapshot.swift"
+CHAT_READER="Sources/PaceBar/Stores/ChatSessionReader.swift"
 PUBLISHER="Sources/PaceBar/WidgetPublisher.swift"
 REFRESH_INTENT="Sources/PaceBarWidget/RefreshIntent.swift"
 APP_GROUP='$(TeamIdentifierPrefix)io.github.mdjhnson.pacebar'
@@ -156,6 +161,29 @@ echo "${writes:-(none)}"
 stray_writes=$(printf '%s' "$writes" | grep . | outside "$SNAPSHOT")
 [ -n "$stray_writes" ] && fail "file written or App Group container opened outside WidgetSnapshot.swift"
 
+section "Claude Code chat state files  [$CHAT_READER]"
+# Any line that names .claude next to a file API, or the ".claude" path component itself.
+claude_paths=$(rhits '"\.claude"|\.claude.*(FileManager|contentsOf|FileHandle|URL\(|appendingPathComponent|NSHomeDirectory|homeDirectory|fopen|open\()|(FileManager|contentsOf|FileHandle|URL\(|appendingPathComponent|NSHomeDirectory|homeDirectory|fopen|open\().*\.claude' "$SRC" | code_only)
+echo "${claude_paths:-(none)}"
+[ -n "$(printf '%s' "$claude_paths" | grep . | outside "$CHAT_READER")" ] && fail "~/.claude accessed outside ChatSessionReader.swift"
+if [ -f "$CHAT_READER" ]; then
+    [ "$(grep -cF '.appendingPathComponent(".claude", isDirectory: true)' "$CHAT_READER")" -eq 1 ] \
+        && [ "$(grep -cF '.appendingPathComponent("sessions", isDirectory: true)' "$CHAT_READER")" -eq 1 ] \
+        || fail "ChatSessionReader.swift must read only ~/.claude/sessions"
+    grep -qF 'where SessionFile.isSessionFileName(name)' "$CHAT_READER" \
+        || fail "ChatSessionReader.swift must open only names that pass SessionFile.isSessionFileName"
+    reader_forbidden=$(grep -nHE '\.key\b|"key"|projects|history|transcript|jsonl|Keychain|SecItem|\bProcess\b|kill\(|signal\(|URLSession|removeItem|moveItem|copyItem|createDirectory|setAttributes|createSymbolicLink|FileHandle|UserDefaults' "$CHAT_READER" | code_only)
+    if [ -n "$reader_forbidden" ]; then
+        echo "$reader_forbidden"; fail "ChatSessionReader.swift may only list and read session files"
+    else
+        echo "reads ~/.claude/sessions/<pid>.json only; no writes, key files, transcripts, Keychain, signals or networking"
+    fi
+fi
+sysctls=$(rhits '(^|[^.A-Za-z0-9_])sysctl(byname)?\(' "$SRC" | code_only)
+echo "${sysctls:-(no sysctl)}"
+[ -n "$(printf '%s' "$sysctls" | grep . | outside "$CHAT_READER")" ] && fail "sysctl used outside ChatSessionReader.swift"
+[ "$(printf '%s' "$sysctls" | grep -c .)" -gt 1 ] && fail "more than one sysctl call site"
+
 section "Darwin notifications (the widgets' refresh request)"
 darwin=$(rhits 'CFNotificationCenter|notify_post|notify_register|DistributedNotificationCenter' "$SRC" | code_only)
 echo "${darwin:-(none)}"
@@ -167,9 +195,9 @@ printf '%s' "$darwin" | grep -F "$REFRESH_INTENT:" | grep -q 'AddObserver' && fa
     && fail "the refresh notification name is built outside WidgetSnapshot.swift"
 
 section "Widget extension  [$WIDGET]"
-widget_forbidden=$(rhits 'URLSession|URLRequest|\bProcess\b|SecItem|SecKeychain|UsageClient|UpdateClient|KeychainTokenReader|UNUserNotification|NSWorkspace|openURL|Link\(' "$WIDGET" | code_only)
+widget_forbidden=$(rhits 'URLSession|URLRequest|\bProcess\b|SecItem|SecKeychain|UsageClient|UpdateClient|KeychainTokenReader|ChatSessionReader|\.claude|UNUserNotification|NSWorkspace|openURL|Link\(' "$WIDGET" | code_only)
 if [ -n "$widget_forbidden" ]; then
-    echo "$widget_forbidden"; fail "networking, subprocess, Keychain, notification or URL code in the widget"
+    echo "$widget_forbidden"; fail "networking, subprocess, Keychain, ~/.claude, notification or URL code in the widget"
 else
     echo "(none)"
 fi

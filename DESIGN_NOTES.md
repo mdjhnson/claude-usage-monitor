@@ -177,7 +177,7 @@ A preferences-style window (`NSTabViewController`, toolbar tabs, `.preference` t
 - **Menu Bar:** Windows, Menu bar
 - **Appearance:** Appearance
 - **Notifications:** Notifications
-- **General:** General, Diagnostics
+- **General:** General, Claude Code chats, Diagnostics
 
 Sections:
 
@@ -214,9 +214,13 @@ Sections:
 6. **General:**
    - Refresh interval stepper, 60–600 s, step 30.
    - Launch at login toggle. Shows "Approve in System Settings › Login Items" when the status is `.requiresApproval`.
-7. **Diagnostics:**
+7. **Claude Code chats:**
+   - "Show Claude Code chats in widgets" toggle, off by default.
+   - "Prompt cache lasts" picker: 1 hour (Claude plans) / 5 minutes (API key). Disabled while the toggle is off.
+   - Footer: what's read (each open chat's status file in `~/.claude/sessions`, every 5 seconds) and that conversations never are.
+8. **Diagnostics:**
    - "Copy diagnostic" button, with a short caption saying what is included.
-8. **Updates** (About tab, between Build and About):
+9. **Updates** (About tab, between Build and About):
    - Status on the left ("PaceBar 1.1.3", "…is up to date", "PaceBar 1.1.4 is available" in orange, or a short error in secondary), with "Last checked 3 days ago" in caption secondary under it. "Check for Updates" on the right, disabled while a check runs, with a small spinner and "Checking…" in place of the status.
    - When newer: a "PaceBar 1.1.4" row with a Download link to PaceBar's staff-site page.
    - "Check automatically once a week" toggle.
@@ -224,10 +228,11 @@ Sections:
 
 ## Widgets
 
-Three WidgetKit widgets:
+Four WidgetKit widgets:
 - **Claude Limit:** kind `PaceBarLimit`, small, configurable.
 - **Claude Usage, medium:** kind `PaceBarGraph`, configurable.
 - **Claude Usage, large:** kind `PaceBarUsage`.
+- **Claude Code Chats:** kind `PaceBarChats`, medium and large. Specified under **Claude Code Chats widget** below.
 
 Medium and large share a display name. They're separate widgets because a widget's settings apply to every size. It draws with the app's own `Theme`, `PacingBar`, `UsageGraph` and `ZonePill` (the extension compiles those files too), so it matches the popover.
 - **Background:** the popover background, already resolved by the app (`popoverBackgroundColor`) and sent as the snapshot's `background` token. Text uses the `text` token.
@@ -259,6 +264,37 @@ Medium and large share a display name. They're separate widgets because a widget
 - **Stale** (a failed refresh, or data older than the larger of 2× the refresh interval and 45 minutes, which outlasts the 30-minute redraw): values at 0.45 opacity and a bottom line "Updated 12 min ago" with `clock.arrow.circlepath`, 10pt at text 0.45. In the small widget it replaces the countdown.
 - **Empty:** a 22pt `gauge.with.needle` over 11 medium text at text 0.6, centered: "Open PaceBar to start." when there's no snapshot, or "No limits to show. Choose some in PaceBar's Settings › Windows." when every limit is hidden.
 - **Gallery:** sample data (session 52%, weekly 38%) in the Default theme until there's a real snapshot.
+
+## Claude Code Chats widget
+
+Draws from `chats.json` with the same `Theme` (the board carries the resolved colors) and the popover background. It's its own visual language within PaceBar's: no rings or graphs, one row per chat. The one memorable element is the **cache fuse**.
+
+- **States:** each has a token color and an SF Symbol, so the state reads without color.
+
+  | State | Color | Symbol |
+  |---|---|---|
+  | Needs you | `warning` | `hand.raised.fill` |
+  | Working | `onTrack` | `ellipsis` |
+  | Cached | `chill`; `warning` with under 10 min left | `flame.fill` |
+  | Cold | text at 0.35 | `snowflake` |
+
+- **Header:** "CLAUDE CODE" (9 semibold caps, tracking 0.6, text 0.45). On the right, for each state with chats, its symbol (9 bold) and count (13 black rounded, monospaced digits) in the state color, 8pt apart.
+- **Row:**
+  - The symbol (10 bold, state color, 14pt column), then the title (12 semibold, text), then the folder when it differs (10 medium, text 0.4).
+  - On the right, the state text: 10 semibold, state color, monospaced digits. "Waiting 1m", "Input needed", "Working 4m", "41m left".
+  - One line, truncated. The whole row is one accessibility element.
+- **Cache fuse:** under a Cached row, inset 20pt to line up with the title. A 2pt capsule on a text-0.08 track, with fill = time left ÷ cache lifetime, in the row's color. It burns down with the timeline, with no animation.
+- **Medium:** header, then rows 7pt apart, as many as fit by measured height (15pt per row, 21 with a fuse), with "+N more" (10 medium, text 0.35, inset 20pt) when some don't fit. Cold chats are only counted in the header.
+- **Large:** header, then sections 10pt apart for Needs you, Working and Cached. Each section has a title (9 semibold caps, tracking 0.6, its state color at 0.85) and rows 6pt apart, fitted the same way. Bottom: `snowflake` and "N cold chats" on the left, the stale line on the right (10 medium, text 0.35).
+- **Nothing working or cached:** "Nothing working or cached." (11 medium, text 0.45) under the header.
+- **Stale** (a live board more than about 20 minutes old): rows at 0.45 opacity, and "Updated N min ago" with `clock.arrow.circlepath`.
+- **Empty:** a 22pt `bubble.left.and.bubble.right` over 11 medium text at text 0.6, centered:
+  - No board yet: "Open PaceBar and turn on Claude Code chats in Settings › General."
+  - Setting off: "Turn on Claude Code chats in PaceBar's Settings › General."
+  - PaceBar quit: "Open PaceBar to see your Claude Code chats."
+  - No chats: "No Claude Code chats open."
+- **Timeline:** an entry every minute for an hour, plus one at each cache expiry, so countdowns, fuses and Cached → Cold need no reload.
+- **Gallery:** sample chats in the Default theme until there's a live board.
 
 ## Fonts summary
 

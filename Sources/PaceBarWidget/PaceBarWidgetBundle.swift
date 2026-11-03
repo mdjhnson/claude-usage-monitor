@@ -10,6 +10,7 @@ struct PaceBarWidgetBundle: WidgetBundle {
         LimitWidget()
         GraphWidget()
         UsageWidget()
+        ChatsWidget()
     }
 }
 

@@ -9,6 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var settingsWindow: SettingsWindowController?
     private var notifier: Notifier?
     private var widgetPublisher: WidgetPublisher?
+    private var chatPublisher: ChatBoardPublisher?
     private var workspaceObservers: [NSObjectProtocol] = []
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -20,6 +21,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.statusItem?.showPopover()
         }
         widgetPublisher = WidgetPublisher(store: store, settings: settings)
+        chatPublisher = ChatBoardPublisher(settings: settings)
         store.start()
         updates.start()
 
@@ -47,6 +49,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         store.stop()
         updates.stop()
+        chatPublisher?.stop()
         notifier?.removeReminders()
         workspaceObservers.forEach(NSWorkspace.shared.notificationCenter.removeObserver)
     }

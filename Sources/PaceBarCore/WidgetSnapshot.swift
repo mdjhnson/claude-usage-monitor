@@ -104,12 +104,14 @@ public struct WidgetSnapshot: Codable, Equatable, Sendable {
     }
 }
 
-/// Reads and writes `snapshot.json` in the App Group container shared with the widget.
-/// This is the only file PaceBar writes.
+/// Reads and writes the App Group container shared with the widgets: `snapshot.json` for the
+/// usage widgets and `chats.json` for the Claude Code Chats widget. These are the only files
+/// PaceBar writes.
 public struct WidgetSnapshotStore: Sendable {
     /// Info.plist key holding the App Group ID. The build fills in the team prefix.
     public static let groupKey = "PaceBarAppGroup"
     public static let fileName = "snapshot.json"
+    public static let chatsFileName = "chats.json"
 
     public let fileURL: URL
 
@@ -150,5 +152,25 @@ public struct WidgetSnapshotStore: Sendable {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         return try? decoder.decode(WidgetSnapshot.self, from: data)
+    }
+
+    /// `chats.json`, beside `snapshot.json`.
+    public var chatsURL: URL {
+        fileURL.deletingLastPathComponent().appendingPathComponent(Self.chatsFileName)
+    }
+
+    public func write(_ board: ChatBoard) throws {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = .sortedKeys
+        try encoder.encode(board).write(to: chatsURL, options: .atomic)
+    }
+
+    /// Nil when there's no chats file yet or it can't be decoded.
+    public func readBoard() -> ChatBoard? {
+        guard let data = try? Data(contentsOf: chatsURL) else { return nil }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try? decoder.decode(ChatBoard.self, from: data)
     }
 }
