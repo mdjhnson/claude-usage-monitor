@@ -10,22 +10,20 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     private let popover = NSPopover()
     private let store: UsageStore
     private let settings: SettingsStore
+    private let updates: UpdateChecker
+    private let openSettings: (SettingsView.Pane?) -> Void
     private var ticker: Timer?
 
     /// - Parameter openSettings: opens Settings at a tab, or at the last one shown when nil.
     init(store: UsageStore, settings: SettingsStore, updates: UpdateChecker, openSettings: @escaping (SettingsView.Pane?) -> Void) {
         self.store = store
         self.settings = settings
+        self.updates = updates
+        self.openSettings = openSettings
         super.init()
         // A stable identity lets macOS and menu bar managers (Bartender, Ice) remember placement.
         statusItem.autosaveName = "io.github.mdjhnson.pacebar.status"
 
-        let hosting = NSHostingController(rootView: PopoverView(store: store, settings: settings, updates: updates) { [weak self] pane in
-            self?.popover.performClose(nil)
-            openSettings(pane)
-        })
-        hosting.sizingOptions = [.preferredContentSize]
-        popover.contentViewController = hosting
         popover.behavior = .transient
         popover.animates = true
         popover.appearance = NSAppearance(named: .darkAqua)
@@ -63,12 +61,30 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         store.popoverOpened()
         // Without this the previously active app keeps keyboard focus, so ⌘Q would quit it.
         NSApp.activate()
+        if popover.contentViewController == nil { popover.contentViewController = makePopoverContent() }
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         popover.contentViewController?.view.window?.makeKey()
     }
 
     func closePopover() {
         if popover.isShown { popover.performClose(nil) }
+    }
+
+    /// The popover's content is built on open and released on close. A closed popover keeps
+    /// its window, and SwiftUI keeps running the pacing knob's repeatForever pulse in it,
+    /// re-laying out and committing every frame for as long as the app runs.
+    private func makePopoverContent() -> NSViewController {
+        let hosting = NSHostingController(rootView: PopoverView(store: store, settings: settings, updates: updates) { [weak self] pane in
+            self?.popover.performClose(nil)
+            self?.openSettings(pane)
+        })
+        hosting.sizingOptions = [.preferredContentSize]
+        return hosting
+    }
+
+    /// Runs after the close animation, so the content goes only once it's off screen.
+    func popoverDidClose(_ notification: Notification) {
+        popover.contentViewController = nil
     }
 
     /// Re-renders whenever anything the menu bar reads changes.
